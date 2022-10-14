@@ -3,14 +3,22 @@
 #include <QLabel>
 #include <QList>
 #include "ui_mainwindow.h"
+#include "Network/network.h"
 #include "tree.h"
 #include "View/view.h"
+#include <QSplitter>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->splitter->setChildrenCollapsible(false);
+    sw=ui->stackedWidget;
+
+
+
+    QWidget* manage_widget = new QWidget;
+    QSplitter* splitter = new QSplitter;
+    splitter->setChildrenCollapsible(false);
 
 
     tree.sizePolicy().setHorizontalStretch(0);
@@ -18,14 +26,22 @@ MainWindow::MainWindow(QWidget *parent)
     tree_policy.setHorizontalStretch(0);
     tree.setSizePolicy(tree_policy);
     tree.setBaseSize(width(),height());
-    ui->splitter->addWidget(&tree);
-
+    splitter->addWidget(&tree);
 
     tw.setTabsClosable(true);
     QSizePolicy tab_policy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
     tab_policy.setHorizontalStretch(100);
     tw.setSizePolicy(tab_policy);
-    ui->splitter->addWidget(&tw);
+    splitter->addWidget(&tw);
+
+
+    sw->addWidget(new QWidget);
+    sw->addWidget(splitter);
+    QWidget* net = new NetWork;
+    sw->addWidget(net);
+    connect(ui->ManagementButton, &QToolButton::pressed,[=]{ sw->setCurrentIndex(1);
+    qDebug()<<"1번 누름";});
+    connect(ui->ChatButton, &QToolButton::pressed,[=]{ sw->setCurrentIndex(2); qDebug()<<"2번 누름"; });
 
 }
 

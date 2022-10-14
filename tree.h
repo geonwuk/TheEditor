@@ -36,10 +36,6 @@ private:
             return new T{mgr};
         }
     };
-
-    struct PTR{
-        ViewFactory* ptr;
-    };
     template<typename T>
     void setChildData(QTreeWidgetItem*, T* view);
 

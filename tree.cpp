@@ -7,7 +7,7 @@
 Tree::Tree(MainWindow* mw) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}
 {
     QList<ViewFactory*> add_views { new ViewMaker<AddClientView>{mgr},new ViewMaker<AddProductView>{mgr},new ViewMaker<AddOrderView>{mgr}};
-    QList<ViewFactory*> show_views { new ViewMaker<ShowClientView>{mgr},new ViewMaker<ShowProductView>{mgr},new ViewMaker<ShowClientView>{mgr}};
+    QList<ViewFactory*> show_views { new ViewMaker<ShowClientView>{mgr},new ViewMaker<ShowProductView>{mgr},new ViewMaker<ShowOrderView>{mgr}};
 
 
     QStringList top_ls = {tr("Client Management"), tr("Product Management"), tr("Order Management")};
@@ -41,17 +41,15 @@ Tree::Tree(MainWindow* mw) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}
 
 void Tree::_itemDoubleClicked(QTreeWidgetItem* item, int){
     QVariant v = item->data(0,Qt::UserRole);
-    ViewFactory* factory = v.value<PTR>().ptr;
+    ViewFactory* factory = v.value<ViewFactory*>();
     View* view = makeView(factory);
     emit treeToTab(view, view->icon, view->label);
 }
 
 template<typename T>
 void Tree::setChildData(QTreeWidgetItem* item,  T* view) {
-    PTR ptr{view};
-    QVariant* data = new QVariant();
-    data->setValue(ptr);
-    item->setData(0, Qt::UserRole, *data);
+    QVariant data = QVariant::fromValue(view);
+    item->setData(0, Qt::UserRole, data);
 }
 
 

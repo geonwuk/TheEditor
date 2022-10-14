@@ -6,13 +6,14 @@ enum Role {id = Qt::UserRole};
 ShowClientView::ShowClientView(Manager& mgr) : CView{mgr} {
     ui.setupUi(this);
     table=ui.tableWidget;
+    table->setColumnCount(col);
+    table->setHorizontalHeaderLabels({tr("Name"),tr("Phone Number"),tr("Address")});
     fillContents();
     label.append(tr("Show Client"));
 }
 void ShowClientView::fillContents(){
-    table->clear();
+    table->clearContents();
     table->setRowCount(getSize());
-    table->setColumnCount(col);
     int i=0;
     for(const auto& client : getCleints()){
         table->setItem(i,0,ceateTableItem(client.getId(), client.getName().c_str()));
@@ -20,6 +21,8 @@ void ShowClientView::fillContents(){
         table->setItem(i,2,ceateTableItem(client.getId(), client.getAddress().c_str()));
         i++;
     }
+    table->resizeColumnsToContents();
+    table->resizeRowsToContents();
 }
 
 void ShowClientView::update(){
@@ -40,13 +43,14 @@ ShowClientView::~ShowClientView(){
 ShowProductView::ShowProductView(Manager& mgr) : PView{mgr} {
     ui.setupUi(this);
     table=ui.tableWidget;
+    table->setColumnCount(col);
+    table->setHorizontalHeaderLabels({tr("Name"),tr("Price"),tr("Quantity")});
     fillContents();
     label.append(tr("Show Product"));
 }
 void ShowProductView::fillContents(){
-    table->clear();
+    table->clearContents();
     table->setRowCount(getSize());
-    table->setColumnCount(col);
     int i=0;
     for(const auto& product : getProducts()){
         table->setItem(i,0,ceateTableItem(product.getId(), product.getName().c_str()));
@@ -57,6 +61,8 @@ void ShowProductView::fillContents(){
         table->setItem(i,3,ceateTableItem(product.getId(), date.toString()));
         i++;
     }
+    table->resizeColumnsToContents();
+    table->resizeRowsToContents();
 }
 
 void ShowProductView::update(){
@@ -77,9 +83,10 @@ ShowOrderView::ShowOrderView(Manager& mgr) : OView{mgr} {
     ui.setupUi(this);
     orderTable=ui.orderTable;
     oderInfoTable=ui.oderInfoTable;
-    orderTable->setHorizontalHeaderLabels({tr("Order ID"),tr("Client"),tr("Price"),tr("Date")});
+    orderTable->setColumnCount(5);
+    orderTable->setHorizontalHeaderLabels({tr(""),tr("Order ID"),tr("Client"),tr("Price"),tr("Date")});
     fillContents();
-    label.append(tr("Show Client"));
+    label.append(tr("Show Order"));
 
     connect(orderTable,SIGNAL(itemSelectionChanged()),this,SLOT(cleintItemSelectionChanged_()));
 }
@@ -88,8 +95,6 @@ void ShowOrderView::fillContents() {
 
     orderTable->clearContents();
     orderTable->setRowCount(getSize());
-    orderTable->setColumnCount(col);
-
 
     int i=0;
     for(const auto& order : getOrders()){
@@ -106,7 +111,10 @@ void ShowOrderView::fillContents() {
         auto tm = order.getDate();
         QDate date {tm.tm_year+1900,tm.tm_mon,tm.tm_mday};
         orderTable->setItem(i,4,new QTableWidgetItem(date.toString()));
+        i++;
     }
+    orderTable->resizeColumnsToContents();
+    orderTable->resizeRowsToContents();
 }
 
 void ShowOrderView::cleintItemSelectionChanged_(){
@@ -118,10 +126,7 @@ ShowOrderView::~ShowOrderView(){}
 void ShowOrderView::update(){
     if(!is_update){
         qDebug()<<"show order updated";
-        orderTable->selectedItems();
-
         fillContents();
-        //fillProductTab();
     }
     else{
         qDebug()<<"show order is_update : TRUE!";

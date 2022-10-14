@@ -117,6 +117,7 @@ std::vector<CM::CID> AddOrderView::itemSelectionChanged_(QTableWidget& table){
 void AddOrderView::fillClientInfoTab(std::vector<CM::CID> clients_ids){
     infoTab->clear();
     infoTab->setRowCount(clients_ids.size());
+    infoTab->setHorizontalHeaderLabels({tr("Name"),tr("Phone Number"),tr("Address")});
     infoTab->setColumnCount(3);
     int i=0;
     for(const auto& client_id : clients_ids){

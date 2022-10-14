@@ -15,7 +15,7 @@ QT_END_NAMESPACE
 class MainWindow;
 class View;
 class Tree;
-
+class QStackedWidget;
 class Manager {
 public:
     Manager(MainWindow& mw) : mw{mw} {}
@@ -64,6 +64,7 @@ private:
     Manager mgrs{*this};
     Tree tree{this};
     TabWidget tw{this};
+    QStackedWidget* sw;
 
 
 
