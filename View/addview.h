@@ -66,7 +66,6 @@ private:
     void fillClientInfoTab(std::vector<CM::CID>);
     std::vector<CM::CID> getCheckedIDs(QTableWidget* table);
 
-    std::vector<CM::CID> itemSelectionChanged_(QTableWidget& table);
 };
 
 

@@ -1,7 +1,7 @@
 #include "showview.h"
 #include <QDate>
+#include <cassert>
 
-enum Role {id = Qt::UserRole};
 
 ShowClientView::ShowClientView(Manager& mgr) : CView{mgr} {
     ui.setupUi(this);
@@ -43,8 +43,9 @@ ShowClientView::~ShowClientView(){
 ShowProductView::ShowProductView(Manager& mgr) : PView{mgr} {
     ui.setupUi(this);
     table=ui.tableWidget;
-    table->setColumnCount(col);
-    table->setHorizontalHeaderLabels({tr("Name"),tr("Price"),tr("Quantity")});
+    QList<QString> labels{tr("Name"),tr("Price"),tr("Quantity"),tr("Date")};
+    table->setColumnCount(labels.size());
+    table->setHorizontalHeaderLabels(labels);
     fillContents();
     label.append(tr("Show Product"));
 }
@@ -82,13 +83,21 @@ ShowProductView::~ShowProductView(){}
 ShowOrderView::ShowOrderView(Manager& mgr) : OView{mgr} {
     ui.setupUi(this);
     orderTable=ui.orderTable;
-    oderInfoTable=ui.oderInfoTable;
-    orderTable->setColumnCount(5);
-    orderTable->setHorizontalHeaderLabels({tr(""),tr("Order ID"),tr("Client"),tr("Price"),tr("Date")});
+    orderInfoTable=ui.orderInfoTable;
+    QList<QString> ls {tr("Order ID"),tr("Client"),tr("Price"),tr("Date")};
+    orderTable->setColumnCount(ls.size());
+    orderTable->setHorizontalHeaderLabels(ls);
     fillContents();
     label.append(tr("Show Order"));
 
-    connect(orderTable,SIGNAL(itemSelectionChanged()),this,SLOT(cleintItemSelectionChanged_()));
+    connect(orderTable,SIGNAL(itemSelectionChanged()),this,SLOT(orderItemSelectionChanged_()));
+
+
+
+    QList<QString> pr_cell_names {tr("Product Name"),tr("Unit Price"),tr("Quantity"),tr("Total Price")};
+    orderInfoTable->setColumnCount(pr_cell_names.size());
+    orderInfoTable->setHorizontalHeaderLabels(pr_cell_names);
+
 }
 
 void ShowOrderView::fillContents() {
@@ -98,26 +107,63 @@ void ShowOrderView::fillContents() {
 
     int i=0;
     for(const auto& order : getOrders()){
-        orderTable->setCellWidget(i,0, getCheckBoxWidget());
-        orderTable->setItem(i,1,ceateTableItem(order.getID(), QString::number(order.getID())));
+        qDebug()<<"filling order"<<i <<" ";
+        int j=0;
+        orderTable->setItem(i,j++,ceateTableItem(order.getID(), QString::number(order.getID())));
         auto client = mgr.getCM().findClient(order.getCID());
-        orderTable->setItem(i,2, new QTableWidgetItem(client.getName().c_str()));
+        orderTable->setItem(i,j++, new QTableWidgetItem(client.getName().c_str()));
         unsigned int price=0;
-        for(auto ordered_product : order.getProducts()){
+        for(auto ordered_product : order.getProductData()){
             auto product = mgr.getPM().findProduct(ordered_product.id);
             price += product.getPrice()*ordered_product.qty;
         }
-        orderTable->setItem(i,3, new QTableWidgetItem(QString::number(price)));
+        orderTable->setItem(i,j++, new QTableWidgetItem(QString::number(price)));
         auto tm = order.getDate();
         QDate date {tm.tm_year+1900,tm.tm_mon,tm.tm_mday};
-        orderTable->setItem(i,4,new QTableWidgetItem(date.toString()));
+        orderTable->setItem(i,j++,new QTableWidgetItem(date.toString()));
         i++;
     }
     orderTable->resizeColumnsToContents();
     orderTable->resizeRowsToContents();
 }
 
-void ShowOrderView::cleintItemSelectionChanged_(){
+
+
+void ShowOrderView::orderItemSelectionChanged_(){
+    orderInfoTable->clearContents();
+    auto ranges = orderTable->selectedRanges();
+    if(ranges.empty()){
+        orderInfoTable->setRowCount(0);
+        return;
+    }
+
+    auto curr_row = orderTable->currentRow();
+    auto item = orderTable->item(curr_row,0);
+    OM::Order_ID order_id = item->data(Role::id).value<OM::Order_ID>();
+    auto order = findOrder(order_id);
+    assert(order!=OM::no_order);
+    unsigned int total_price=0;
+    auto product_data = order.getProductData();
+    orderInfoTable->setRowCount(product_data.size());
+    int i=0;
+    for(auto pd : product_data){
+        int j=0;
+        auto product = mgr.getPM().findProduct(pd.id);
+        orderInfoTable->setItem(i, j++, new QTableWidgetItem(product.getName().c_str()));
+        unsigned int price = product.getPrice();
+        orderInfoTable->setItem(i, j++, new QTableWidgetItem(QString::number(price)));
+        unsigned int qty = pd.qty;
+        orderInfoTable->setItem(i, j++, new QTableWidgetItem(QString::number(qty)));
+        unsigned int local_price = price*qty;
+        orderInfoTable->setItem(i, j++, new QTableWidgetItem(QString::number(local_price)));
+        total_price+=local_price;
+        i++;
+    }
+
+
+
+
+
 
 }
 

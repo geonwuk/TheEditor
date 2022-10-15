@@ -4,15 +4,14 @@
 #include <string>
 #include <iosfwd>
 #include <vector>
-
 namespace CM {
 	using std::map;
     using std::string;
     using CID = unsigned int;
 	class Client {
 	public:
-		Client(unsigned int id, string name, string phone_number = "NONE", string address = "NONE") :
-			id{ id }, name{ name }, phone_number{ phone_number }, address{ address } {}
+        Client(unsigned int id, string name, string phone_number = "NONE", string address = "NONE") :
+            id{ id }, name{ name }, phone_number{ phone_number }, address{ address } {}
         const CID getId() const { return id; }
 		string getName() const { return name; }                  
 		string getPhoneNumber() const { return phone_number; }   

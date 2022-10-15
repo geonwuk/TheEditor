@@ -116,7 +116,7 @@ static std::ofstream& operator<<(std::ofstream& out, const OrderManager::Order& 
 {
     out << o.getID() << ',' << o.getCID() << ',';
     out << o.getDate();
-    for (auto product : o.getProducts()) {
+    for (auto product : o.getProductData()) {
         out << ',' << product.id;
 	}
 	return out;

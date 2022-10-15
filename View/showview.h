@@ -33,7 +33,6 @@ private:
     using UI_PRODUCT = Ui::showClient;
     UI_PRODUCT ui {};
     QTableWidget* table;
-    const int col =4;
     void fillContents();
 };
 
@@ -45,12 +44,12 @@ public:
     ~ShowOrderView();
     void update();
 public slots:
-    void cleintItemSelectionChanged_();
+    void orderItemSelectionChanged_();
+
 private:
     Ui::showOrder ui {};
     QTableWidget *orderTable;
-    QTableWidget *oderInfoTable;
-    const int col =4;
+    QTableWidget *orderInfoTable;
     void fillContents();
 };
 

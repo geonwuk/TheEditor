@@ -41,7 +41,7 @@ namespace OM {
             const Order_ID getID() const {return order_id;}
             const Client_ID getCID() const {return client_id;}
             const std::tm getDate() const {return date;}
-            const vector<ProductData> getProducts() const{return products;}
+            const vector<ProductData> getProductData() const{return products;}
         };
 
 
@@ -66,6 +66,9 @@ namespace OM {
 	};
 	struct NoOrder : public OrderManager::Order { };
     const NoOrder no_order{};
+    inline bool operator== (const OrderManager::Order& o, const NoOrder&){ return (&o == &no_order ? true : false); }
+    inline bool operator!= (const OrderManager::Order& o, const NoOrder&){ return (&o != &no_order ? true : false); }
+
 	using Itr_type = OrderManager::OM_itr;
 
 	class OrderIterator { 

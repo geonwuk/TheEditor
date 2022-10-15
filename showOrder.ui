@@ -30,7 +30,7 @@
        <bool>false</bool>
       </attribute>
      </widget>
-     <widget class="QTableWidget" name="oderInfoTable">
+     <widget class="QTableWidget" name="orderInfoTable">
       <property name="cornerButtonEnabled">
        <bool>true</bool>
       </property>

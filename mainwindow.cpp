@@ -3,7 +3,7 @@
 #include <QLabel>
 #include <QList>
 #include "ui_mainwindow.h"
-#include "Network/network.h"
+#include "Network/server.h"
 #include "tree.h"
 #include "View/view.h"
 #include <QSplitter>
@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     sw->addWidget(new QWidget);
     sw->addWidget(splitter);
-    QWidget* net = new NetWork;
+    QWidget* net = new Server;
     sw->addWidget(net);
     connect(ui->ManagementButton, &QToolButton::pressed,[=]{ sw->setCurrentIndex(1);
     qDebug()<<"1번 누름";});

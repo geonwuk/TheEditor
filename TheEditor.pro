@@ -12,7 +12,6 @@ SOURCES += \
     Manager/ClientManager.cpp \
     Manager/OrderManager.cpp \
     Manager/ProductManager.cpp \
-    Network/network.cpp \
     Network/server.cpp \
     View/addview.cpp \
     View/showview.cpp \
@@ -27,7 +26,6 @@ HEADERS += \
     Manager/ClientManager.h \
     Manager/OrderManager.h \
     Manager/ProductManager.h \
-    Network/network.h \
     Network/server.h \
     View/addview.h \
     View/showview.h \
@@ -38,7 +36,7 @@ HEADERS += \
     ttest.h
 
 FORMS += \
-    Network/network.ui \
+    Network/server.ui \
     addClient.ui \
     addOrder.ui \
     addProduct.ui \

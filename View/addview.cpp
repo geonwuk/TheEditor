@@ -44,13 +44,15 @@ AddProductView::~AddProductView(){
 }
 
 
-//Order
+//Order================================================================================
 AddOrderView::AddOrderView(Manager& mgr) : OView{mgr} {
     ui.setupUi(this);
     CPTab=ui.CPTab;
     infoTab=ui.infoTable;
     orderTree=ui.orderTree;
-    orderTree->setColumnCount(3);
+    QList<QString> oderTable_labels {tr("Client"),tr("Product Name"),tr("Qty")};
+    orderTree->setColumnCount(oderTable_labels.size());
+    orderTree->setHeaderLabels(oderTable_labels);
     auto shortcut = new QShortcut(Qt::Key_Delete, orderTree, orderTree, [this](){
         qDebug()<<"delete tree item";
         delete orderTree->currentItem();
@@ -61,6 +63,8 @@ AddOrderView::AddOrderView(Manager& mgr) : OView{mgr} {
     fillProductTab();
     CPTab->insertTab(0,&clientTab,tr("Client"));
     CPTab->insertTab(1,&productTab,tr("Product"));
+    clientTab.setCornerButtonEnabled(true);
+    clientTab.setStyleSheet("QTableCornerButton::section{border-width: 1px; border-color: #BABABA; border-style:solid;}");
 
     connect(ui.commitOrderButton,SIGNAL(pressed()),this,SLOT(commitOrder()));
     connect(ui.addOrderButton,SIGNAL(pressed()),this,SLOT(addOrder()));
@@ -76,7 +80,7 @@ void AddOrderView::fillClientTab(){
     clientTab.clear();
     clientTab.setRowCount(mgr.getCM().getSize());
     clientTab.setColumnCount(4);
-    clientTab.setHorizontalHeaderLabels({tr(""),tr("Name"),tr("Phone Number"),tr("Address")});
+    clientTab.setHorizontalHeaderLabels({tr(" "),tr("Name"),tr("Phone Number"),tr("Address")});
 
     int i=0;
     for(const auto& client : mgr.getCM().getCleints()){
@@ -102,17 +106,6 @@ void AddOrderView::cleintItemSelectionChanged_(){
     fillClientInfoTab(std::move(clients_ids));
 }
 
-std::vector<CM::CID> AddOrderView::itemSelectionChanged_(QTableWidget& table){
-    std::vector<CM::CID> ids;
-    auto ranges = table.selectedRanges();
-    for(auto range : ranges){
-        for(int top = range.topRow(); top<= range.bottomRow(); top++){
-            auto item = table.item(top,1);
-            ids.emplace_back(item->data(Role::id).value<CM::CID>());
-        }
-    }
-    return ids;
-}
 
 void AddOrderView::fillClientInfoTab(std::vector<CM::CID> clients_ids){
     infoTab->clear();
@@ -219,7 +212,7 @@ void AddOrderView::addOrder(){
         OView::addOrder(client_id,std::move(products));
 
         OM::OrderManager::Order order = OView::findOrder(0);
-        //qDebug()<<order.order_id<<order.client_id<<order.date.tm_mday<<order.products[0].qty;
+        qDebug()<<"ORDER"<<order.getID()<<order.getCID()<<order.getProductData()[0].qty<<mgr.getOM().getSize();
     }
     orderTree->clear();
 }

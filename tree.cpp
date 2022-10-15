@@ -6,6 +6,7 @@
 
 Tree::Tree(MainWindow* mw) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}
 {
+    setHeaderHidden(true);
     QList<ViewFactory*> add_views { new ViewMaker<AddClientView>{mgr},new ViewMaker<AddProductView>{mgr},new ViewMaker<AddOrderView>{mgr}};
     QList<ViewFactory*> show_views { new ViewMaker<ShowClientView>{mgr},new ViewMaker<ShowProductView>{mgr},new ViewMaker<ShowOrderView>{mgr}};
 
