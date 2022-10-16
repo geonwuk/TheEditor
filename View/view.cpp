@@ -55,15 +55,20 @@ bool PView::addProduct(const QString name, const QString price, const QString qt
     notify<OView>();
     return result;
 }
-
-bool PView::eraseProduct(const PM::PID id){
-     bool result = mgr.getPM().eraseProduct(id);
+bool PView::modifyProduct(const QString id, const QList<QString> ls){
+    bool re = mgr.getPM().modifyProduct(id.toStdString(), PM::Product{ls[0].toStdString(),ls[1].toUInt(),ls[2].toUInt()});
+    notify<PView>();
+    notify<OView>();
+    return re;
+}
+bool PView::eraseProduct(const QString id){
+     bool result = mgr.getPM().eraseProduct(id.toStdString());
      notify<PView>();
      notify<OView>();
      return result;
 }
-const PM::Product& PView::findProduct(const PM::PID id) const{
-    return mgr.getPM().findProduct(id);
+const PM::Product& PView::findProduct(const QString id) const{
+    return mgr.getPM().findProduct(id.toStdString());
 }
 PM::ProductManager::const_iterator PView::getProducts() const{
     return mgr.getPM().getProducts();

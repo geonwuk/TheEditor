@@ -22,5 +22,33 @@ private:
     QList<QTcpSocket*> clientList;
 };
 
+#include <vector>
+#include "Manager/ClientManager.h"
+
+using CM::Client;
+class ChatRoom;
+
+class CommandMessage{
+public:
+    enum class type {Invitation,Drop};
+
+};
+
+class NetClient{
+    std::shared_ptr<Client> self;
+    std::vector<std::shared_ptr<ChatRoom>> attending_rooms;
+    bool is_online;
+    std::vector<CommandMessage> pending_messages;
+};
+
+class ChatRoom{
+    std::vector<std::shared_ptr<Client>> participants;
+};
+
+class ServerManager{
+    std::vector<std::shared_ptr<NetClient>> net_clients;
+    std::vector<std::shared_ptr<NetClient>> online_clients;
+
+};
 
 #endif // SERVER_H

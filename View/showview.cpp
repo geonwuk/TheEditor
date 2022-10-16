@@ -17,12 +17,13 @@ ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const
     fillContents();
     connect(ui.checkBox,&QCheckBox::stateChanged, [=](int status){
        is_edit_mode=status;
-       is_edit_mode ? table->setEditTriggers(QAbstractItemView::AllEditTriggers) : table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+       using ET = QAbstractItemView::EditTrigger;
+       is_edit_mode ? table->setEditTriggers(ET(ET::AllEditTriggers & ~ET::SelectedClicked &~ET::CurrentChanged)) : table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     });
     connect(table,SIGNAL(cellChanged(int,int)),SLOT(cellChanged(int,int)));
     connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed()));
     auto shortcut = new QShortcut(Qt::Key_Delete, table, table, [this](){
-            if(!is_edit_mode) return;
+        if(!is_edit_mode) return;
         eraseClient(table->currentRow());
     });
 }
@@ -112,13 +113,28 @@ ShowClientView::~ShowClientView(){
 ShowProductView::ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : PView{mgr, tabs,icon,label} {
     ui.setupUi(this);
     table=ui.tableWidget;
+    editBox=ui.checkBox;
+    searchLineEdit=ui.lineEdit;
+    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     QList<QString> labels{tr("ID"),tr("Name"),tr("Price"),tr("Quantity"),tr("Date")};
     table->setColumnCount(labels.size());
     table->setHorizontalHeaderLabels(labels);
     fillContents();
-    //label.append(tr("Show Product"));
+    connect(ui.checkBox,&QCheckBox::stateChanged, [=](int status){
+       is_edit_mode=status;
+       using ET = QAbstractItemView::EditTrigger;
+       is_edit_mode ? table->setEditTriggers(ET(ET::AllEditTriggers & ~ET::SelectedClicked &~ET::CurrentChanged)) : table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    });
+    connect(table,SIGNAL(cellChanged(int,int)),SLOT(cellChanged(int,int)));
+    connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed()));
+    auto shortcut = new QShortcut(Qt::Key_Delete, table, table, [this](){
+        if(!is_edit_mode) return;
+        eraseProduct(table->currentRow());
+    });
+
 }
 void ShowProductView::fillContents(){
+    table->blockSignals(true);
     table->clearContents();
     table->setRowCount(getSize());
     int i=0;
@@ -129,12 +145,16 @@ void ShowProductView::fillContents(){
         table->setItem(i,j++,new QTableWidgetItem(QString::number(product.getPrice())));
         table->setItem(i,j++,new QTableWidgetItem(QString::number(product.getQty())));
         auto tm = product.getDate();
+
         QDate date {tm.tm_year+1900,tm.tm_mon,tm.tm_mday};
-        table->setItem(i,j++,new QTableWidgetItem(date.toString()));
+        QTime time {tm.tm_hour,tm.tm_min,tm.tm_sec};
+        QDateTime dateTime {date,time};
+        table->setItem(i,j++,new QTableWidgetItem(dateTime.toString()));
         i++;
     }
     table->resizeColumnsToContents();
     table->resizeRowsToContents();
+    table->blockSignals(false);
 }
 
 void ShowProductView::update(){
@@ -145,6 +165,56 @@ void ShowProductView::update(){
     else{
         qDebug()<<"prodcut is_update : TRUE!";
     }
+}
+void ShowProductView::returnPressed(){
+    qDebug()<<"return pressed;";
+    fillContents();
+    QString str = searchLineEdit->text();
+    QList<int> rows_to_delete;
+    for(int row=0; row<table->rowCount(); row++){
+        QStringList ls;
+        for(int col=0; col<table->columnCount(); col++){
+            ls<<table->item(row,col)->text();
+        }
+        for(const auto &e : ls){
+            if(e.contains(str)) goto end;
+        }
+        rows_to_delete<<row;
+        end:;
+    }
+    int compensation=0;
+    for(auto row:rows_to_delete){
+        table->removeRow(row-compensation);
+        compensation++;
+    }
+}
+void ShowProductView::cellChanged(int row, int col){
+    if(is_edit_mode){
+        auto id_item = table->item(row,0);
+        QString id = id_item->data(Role::id).value<QString>();
+
+        QList<QString> ls;
+        for(int i=1; i<4; i++){
+            qDebug()<<"i: "<<i<<row<<col;
+            ls<<table->item(row, i)->text();
+        }
+        //CM::Client client {0,ls[0],ls[1],ls[3]};
+        table->blockSignals(true);
+        modifyProduct(id,ls);
+        table->blockSignals(false);
+    }
+    qDebug()<<"end222";
+}
+
+bool ShowProductView::eraseProduct(int row){
+    auto item = table->item(row,id_col);
+    QString id = item->data(Role::id).value<QString>();
+    bool result = PView::eraseProduct(id);
+     qDebug()<<"delete product item"<<result;
+    if(!result) return false;
+    table->removeRow(row);
+    table->update();
+    return result;
 }
 
 ShowProductView::~ShowProductView(){}

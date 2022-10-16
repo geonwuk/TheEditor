@@ -48,7 +48,6 @@ public:
         notify<OView>();
     }
     bool eraseClient(const QString id);
-
     bool modifyClient(const QString id, const QList<QString> client_info);
 
     const CM::Client& findClient(const CM::CID id) const{
@@ -66,8 +65,9 @@ class PView : public View{
 public:
     PView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString()) : View{mgr, tabs, icon,label} {}
     bool addProduct(const QString name, const QString price, const QString qty);
-    bool eraseProduct(const PM::PID id);
-    const PM::Product& findProduct(const PM::PID id) const;
+    bool modifyProduct(const QString id, const QList<QString> ls);
+    bool eraseProduct(const QString id);
+    const PM::Product& findProduct(const QString id) const;
     PM::ProductManager::const_iterator getProducts() const;
     const unsigned int getSize() const;
 };

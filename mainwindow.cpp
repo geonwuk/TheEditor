@@ -13,6 +13,9 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     sw=ui->stackedWidget;
+    ui->actionSave->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogSaveButton));
+    ui->actionOpen->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogOpenButton));
+
 
     QSplitter* splitter = new QSplitter;
     splitter->setChildrenCollapsible(false);

@@ -23,7 +23,7 @@ private:
     QCheckBox* editBox;
     QLineEdit* searchLineEdit;
     bool eraseClient(int row);
-    int id_col=0;
+    const int id_col=0;
 
 private slots:
     void cellChanged(int,int);
@@ -43,7 +43,14 @@ private:
     UI_PRODUCT ui {};
     QTableWidget* table;
     QCheckBox* editBox;
+    bool is_edit_mode =false;
+    QLineEdit* searchLineEdit;
+    bool eraseProduct(int row);
     void fillContents();
+    const int id_col=0;
+private slots:
+    void cellChanged(int,int);
+    void returnPressed();
 };
 
 class ShowOrderView : public OView

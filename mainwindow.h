@@ -56,6 +56,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     Manager* getMgr(){return &mgrs;}
+
 public slots:
     void treeToTab(QWidget *page, const QIcon &icon, const QString &label);
     void setTabFocus(QWidget* page);

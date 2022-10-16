@@ -55,6 +55,14 @@ bool ProductManager::addProduct(const string name, const unsigned int price, con
 	return success;
 }
 
+bool ProductManager::modifyProduct(const PID id, const Product new_product){
+    auto it = products.find(id);
+    if (it == products.end()) return false;
+    Product& the_product = *it->second.get();
+    the_product = new_product;
+    return true;
+}
+
 bool ProductManager::eraseProduct(const PID id){
 	using int_type = decltype(products)::size_type;
 	int_type success = products.erase(id);
@@ -135,7 +143,7 @@ std::pair<std::ifstream&, std::vector<Product>> PM::ProductManager::loadProducts
 		tm time;
 		istringstream ss{ time_string };
 		ss >> std::get_time(&time, "%a %m/%d/%y %H:%M:%S");	
-		product_vector.emplace_back(id, name, price, qty, time);
+        product_vector.emplace_back(id, name, price, qty, time);
 	}
 	return  { in, move(product_vector) };
 }

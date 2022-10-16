@@ -22,14 +22,10 @@ Tree::Tree(MainWindow* mw) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}
         auto title = elem->text(0).split(" ");
 
         QTreeWidgetItem* add = new ToTabItem(add_views[i],*this, {tr("%1 Add").arg(title[0])} );
-        //setChildData(add, add_views[i]);
         elem->addChild(add);
 
 
-        elem->addChild(new TreeItem{*this, {tr("%1 Erase").arg(title[0])} });
-
         QTreeWidgetItem* show = new ToTabItem(show_views[i], *this, {tr("%1 Show / Find / Erase").arg(title[0])} );
-        //setChildData(show, show_views[i]);
         elem->addChild(show);
 
         i++;

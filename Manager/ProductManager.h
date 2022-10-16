@@ -14,12 +14,13 @@ namespace PM {
 	using std::ofstream;
 	using std::ifstream;
     using PID = string;
-
+    class ProductManager;
 	class Product{
 	public:
+        Product(string name, unsigned int price, unsigned int qty) :
+            name{ name }, price{ price }, qty{ qty } {}
         Product(string id, string name, unsigned int price, unsigned int qty, std::tm date) :
-			id{ id }, name{ name }, price{ price }, qty{ qty }, registered_date{ date }{}
-
+            id{ id }, name{ name }, price{ price }, qty{ qty }, registered_date{ date }{}
         const string getId() const { return id; }
 		const string getName() const { return name; }
 		const unsigned int getPrice() const { return price; }
@@ -37,6 +38,12 @@ namespace PM {
         bool decreaseQty(const unsigned int desc){
             return qty<desc ? false : qty-=desc , true;
         }
+        Product& operator= (const Product& rhs){
+            name=rhs.name;
+            price=rhs.price;
+            qty=rhs.qty;
+            return *this;
+        }
 
 	};
 	ofstream& operator<<(ofstream& out, const Product& p);
@@ -51,6 +58,7 @@ namespace PM {
 	public:
         class const_iterator;
         bool addProduct(const string name, const unsigned int price, const unsigned int qty);
+        bool modifyProduct(const PID id, const Product new_product);
         bool eraseProduct(const PID id);
         Product& findProduct(const PID id);
         const Product& findProduct(const PID id) const;
