@@ -2,20 +2,35 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <sstream>
+#include <ctime>
+#include <random>
+#include <functional>
 using namespace std;
 using namespace CM;
 unsigned int ClientManager::client_id = 0; 
 
-bool ClientManager::addClient(const string name, const string phone_number, const string address) {
-	bool success;
-    tie(ignore, success) = clients.emplace( client_id, Client{ client_id, name, phone_number, address } );
+
+bool ClientManager::addClient(const string id, const string name, const string phone_number, const string address) {
+    bool success;
+    tie(ignore, success) = clients.emplace(id, make_shared<Client>(id, name, phone_number, address));
+
 	client_id++;
 	return success;
+}
+
+bool ClientManager::modifyClient(const CID id, const Client new_client){
+    auto it = clients.find(id);
+    if (it == clients.end()) return false;
+    Client& the_client = *it->second.get();
+    the_client = new_client;
+    return true;
 }
 
 bool ClientManager::eraseClient(const CID id){
 	using int_type = decltype(clients)::size_type;
 	int_type success = clients.erase(id);
+    //cout<<"use count of "<< clients[0].use_count();
 	if (success == 1)
 		return true;
 	else
@@ -23,16 +38,21 @@ bool ClientManager::eraseClient(const CID id){
 }
 
 const Client& ClientManager::findClient(const CID id) const{
-	auto it = clients.find(id);
-	if (it == clients.end()) {
-		return no_client;
-	}
-	else {
-		return it->second;
-	}
+    auto it = clients.find(id);
+    if (it == clients.end()) {
+        return no_client;
+    }
+    else {
+        return *it->second.get();
+    }
 }
 
-ofstream& operator<<(std::ofstream& out, const Client& c){
+std::shared_ptr<Client> ClientManager::copyClient(const CID id) const noexcept{
+    auto it = clients.find(id);
+    return it->second;
+}
+
+ofstream& CM::operator<<(std::ofstream& out, const Client& c){
 	out << c.getId() << ',' << c.getName() << ',' << c.getPhoneNumber() << ',' << c.getAddress();
 	return out;
 }
@@ -66,15 +86,15 @@ std::pair<std::ifstream&, std::vector<Client>> ClientManager::loadClients(std::i
 		string address = tmp[3];
 		string phone_number = tmp[2];
 		string name = tmp[1];
-		unsigned int id = stoul(tmp[0]);
+        string id = tmp[0];
 		client_vector.emplace_back(id, name, phone_number, address);
 	}
 	return {in, move(client_vector)}; 
 }
 
-const unsigned int ClientManager::getMaxIndex() const{
-    return clients.empty() ? 0 : (--clients.end())->first;
-}
+//const unsigned int ClientManager::getMaxIndex() const{
+//    return clients.empty() ? 0 : (--clients.end())->first;
+//}
 
 const unsigned int ClientManager::getSize() const{
     return clients.size();

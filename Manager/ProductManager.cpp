@@ -5,11 +5,24 @@
 #include <string>
 #include <iomanip>
 #include <ctime>
+#include <random>
+#include <functional>
 using namespace std;
 using namespace PM;
 
 unsigned int ProductManager::product_id=0;
-NoProduct no_product {};
+
+string ProductManager::generateRandID(tm time){
+    static int inc=0;
+    mt19937 engine;                    // MT19937 난수 엔진
+    uniform_int_distribution<int> distribution(0, 10);
+    auto generator = bind(distribution, engine);
+
+    stringstream result;
+    result <<char(65 + (generator()+product_id)%25)<<time.tm_hour<< time.tm_min <<time.tm_sec+inc++;
+    return result.str();
+}
+
 std::ofstream& operator<< (std::ofstream& out, tm p) {
 	out << std::put_time(&p, "%A %c");
 	return out;
@@ -35,13 +48,14 @@ bool ProductManager::addProduct(const string name, const unsigned int price, con
     time_t base_time = time(nullptr);
     tm local_time;
     localtime_s(&local_time, &base_time);
-	bool success;
-	tie(ignore, success) = products.emplace(product_id, Product{ product_id, name, price, qty, local_time });
+    string ID = generateRandID(local_time);
+    bool success;
+    tie(ignore, success) = products.emplace(ID, make_shared<Product>(ID, name, price, qty, local_time));
 	product_id++;
 	return success;
 }
 
-bool ProductManager::eraseProduct(const unsigned int id){
+bool ProductManager::eraseProduct(const PID id){
 	using int_type = decltype(products)::size_type;
 	int_type success = products.erase(id);
 	if (success == 1)
@@ -50,38 +64,44 @@ bool ProductManager::eraseProduct(const unsigned int id){
 		return false;
 }
 
-Product &ProductManager::findProduct(const unsigned int id) {
-    auto it = products.find(static_cast<unsigned int>(id));
-	if (it == products.end()) {
-		return no_product;
+bool ProductManager::buyProduct(const PID id, const unsigned int qty) {
+    auto it = products.find(id);
+    Product& product= *it->second.get();
+    if (it == products.end()||product.getQty()<qty) {
+        return false;
 	}
 	else {
-		return it->second;
+        return product.decreaseQty(qty);
 	}
 }
 
-const Product& ProductManager::findProduct(const unsigned int id) const{
-    auto it = products.find(static_cast<unsigned int>(id));
+const Product& ProductManager::findProduct(const PID id) const{
+    auto it = products.find(id);
     if (it == products.end()) {
         return no_product;
     }
     else {
-        return it->second;
+        return *it->second.get();
     }
+}
+
+Product& ProductManager::findProduct(const PID id){
+    auto it = products.find(id);
+    if (it == products.end()) {
+        return const_cast<NoProduct&>(no_product);
+    }
+    else {
+        return *it->second.get();
+    }
+}
+
+std::shared_ptr<Product> ProductManager::copyProduct(const PID id) const noexcept{
+    auto it = products.find(id);
+    return it->second;
 }
 
 ProductManager::const_iterator ProductManager::getProducts() const{
 	return products;
-}
-
-const Product& PM::ProductManager::getProduct(const unsigned int id) const{
-	auto p = products.find(id);
-	if (p == products.end()) {
-		return no_product;
-	}
-	else {
-		return p->second;
-	}
 }
 
 ofstream& PM::ProductManager::saveProducts(ofstream& out) const{
@@ -110,7 +130,7 @@ std::pair<std::ifstream&, std::vector<Product>> PM::ProductManager::loadProducts
 		unsigned int qty = stoul(tmp[3]);
 		unsigned int price = stoul(tmp[2]);
 		string name = tmp[1];
-		unsigned int id = stoul(tmp[0]);
+        string id = tmp[0];
 
 		tm time;
 		istringstream ss{ time_string };
@@ -120,9 +140,9 @@ std::pair<std::ifstream&, std::vector<Product>> PM::ProductManager::loadProducts
 	return  { in, move(product_vector) };
 }
 
-const unsigned int PM::ProductManager::getMaxIndex() const {
-    return products.empty() ? 0 : (--products.end())->first;
-}
+//const unsigned int PM::ProductManager::getMaxIndex() const {
+//    return products.empty() ? 0 : (--products.end())->first;
+//}
 
 const unsigned int ProductManager::getSize() const{
     return products.size();

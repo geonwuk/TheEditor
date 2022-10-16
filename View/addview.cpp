@@ -4,18 +4,18 @@
 #include <QCheckBox>
 #include <QShortCut>
 #include <QSpinBox>
-AddClientView::AddClientView(Manager& mgr) : CView{mgr} {
+AddClientView::AddClientView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : CView{mgr,tabs,icon,label} {
     ui.setupUi(this);
     connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addClient()));
-    label.append(tr("Add Client"));
 }
 
 void AddClientView::addClient(){
     qDebug()<<"add client";
+    QString ID = ui.IDLineEdit->text();
     QString name = ui.NameEdit->text();
     QString phone_number = ui.PhoneNumberEdit->text();
     QString address = ui.AddressEdit->text();
-    CView::addClient(name,phone_number,address);
+    CView::addClient(ID,name,phone_number,address);
 }
 
 
@@ -24,10 +24,9 @@ AddClientView::~AddClientView(){
 }
 
 //Product
-AddProductView::AddProductView(Manager& mgr) : PView{mgr}  {
+AddProductView::AddProductView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : PView{mgr,tabs,icon,label}  {
     ui.setupUi(this);
     connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addProduct()));
-    label.append(tr("Add Product"));
 }
 
 void AddProductView::addProduct(){
@@ -45,7 +44,7 @@ AddProductView::~AddProductView(){
 
 
 //Order================================================================================
-AddOrderView::AddOrderView(Manager& mgr) : OView{mgr} {
+AddOrderView::AddOrderView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : OView{mgr,tabs,icon,label} {
     ui.setupUi(this);
     CPTab=ui.CPTab;
     infoTab=ui.infoTable;
@@ -61,6 +60,7 @@ AddOrderView::AddOrderView(Manager& mgr) : OView{mgr} {
 
     fillClientTab();
     fillProductTab();
+    cleintItemSelectionChanged_();
     CPTab->insertTab(0,&clientTab,tr("Client"));
     CPTab->insertTab(1,&productTab,tr("Product"));
     clientTab.setCornerButtonEnabled(true);
@@ -72,7 +72,7 @@ AddOrderView::AddOrderView(Manager& mgr) : OView{mgr} {
 //    connect(&productTab, &QTableWidget::itemSelectionChanged, [this](){
 //        itemSelectionChanged_(productTab);
 //    });
-    label.append(tr("Add Order"));
+    //label.append(tr("Add Order"));
 }
 
 
@@ -85,9 +85,9 @@ void AddOrderView::fillClientTab(){
     int i=0;
     for(const auto& client : mgr.getCM().getCleints()){
         clientTab.setCellWidget(i,0, getCheckBoxWidget());
-        clientTab.setItem(i,1,ceateTableItem(client.getId(), client.getName().c_str()));
-        clientTab.setItem(i,2,ceateTableItem(client.getId(), client.getPhoneNumber().c_str()));
-        clientTab.setItem(i,3,ceateTableItem(client.getId(), client.getAddress().c_str()));
+        clientTab.setItem(i,1,ceateTableItem(client.getId().c_str(), client.getName().c_str()));
+        clientTab.setItem(i,2,new QTableWidgetItem(client.getPhoneNumber().c_str()));
+        clientTab.setItem(i,3,new QTableWidgetItem(client.getAddress().c_str()));
         i++;
     }
     clientTab.resizeColumnsToContents();
@@ -95,31 +95,41 @@ void AddOrderView::fillClientTab(){
 }
 
 void AddOrderView::cleintItemSelectionChanged_(){
-    std::vector<CM::CID> clients_ids;
+    QList<QString> clients_ids;
     auto ranges = clientTab.selectedRanges();
+    if(ranges.empty()){
+        infoTab->clear();
+        infoTab->setColumnCount(1);
+        infoTab->setRowCount(0);
+        infoTab->setHorizontalHeaderLabels({tr("No client or product item selected")});
+        infoTab->resizeColumnsToContents();
+        return;
+    }
     for(auto range : ranges){
         for(int top = range.topRow(); top<= range.bottomRow(); top++){
             auto item = clientTab.item(top,1);
-            clients_ids.emplace_back(item->data(Role::id).value<CM::CID>());
+            clients_ids.emplace_back(item->data(Role::id).value<QString>());
         }
     }
     fillClientInfoTab(std::move(clients_ids));
 }
 
 
-void AddOrderView::fillClientInfoTab(std::vector<CM::CID> clients_ids){
+void AddOrderView::fillClientInfoTab(QList<QString> clients_ids){
     infoTab->clear();
     infoTab->setRowCount(clients_ids.size());
-    infoTab->setHorizontalHeaderLabels({tr("Name"),tr("Phone Number"),tr("Address")});
     infoTab->setColumnCount(3);
+    infoTab->setHorizontalHeaderLabels({tr("Name"),tr("Phone Number"),tr("Address")});
     int i=0;
     for(const auto& client_id : clients_ids){
-        const auto client = mgr.getCM().findClient(client_id);
+        const auto client = mgr.getCM().findClient(client_id.toStdString());
         infoTab->setItem(i,0, new QTableWidgetItem(client.getName().c_str()));
         infoTab->setItem(i,1, new QTableWidgetItem(client.getPhoneNumber().c_str()));
         infoTab->setItem(i,2, new QTableWidgetItem(client.getAddress().c_str()));
         i++;
     }
+    infoTab->resizeColumnsToContents();
+    infoTab->resizeRowsToContents();
 }
 
 void AddOrderView::fillProductTab(){
@@ -130,12 +140,12 @@ void AddOrderView::fillProductTab(){
     int i=0;
     for(const auto& product : mgr.getPM().getProducts()){
         productTab.setCellWidget(i,0, getCheckBoxWidget());
-        productTab.setItem(i,1,ceateTableItem(product.getId(), product.getName().c_str()));
-        productTab.setItem(i,2,ceateTableItem(product.getId(), QString::number(product.getPrice())));
-        productTab.setItem(i,3,ceateTableItem(product.getId(), QString::number(product.getQty())));
+        productTab.setItem(i,1,ceateTableItem(product.getId().c_str(), product.getName().c_str()));
+        productTab.setItem(i,2,new QTableWidgetItem(QString::number(product.getPrice())));
+        productTab.setItem(i,3,new QTableWidgetItem(QString::number(product.getQty())));
         auto tm = product.getDate();
         QDate date {tm.tm_year+1900,tm.tm_mon,tm.tm_mday};
-        productTab.setItem(i,4,ceateTableItem(product.getId(), date.toString()));
+        productTab.setItem(i,4,new QTableWidgetItem(date.toString()));
         i++;
     }
     productTab.resizeColumnsToContents();
@@ -143,8 +153,8 @@ void AddOrderView::fillProductTab(){
 }
 
 //insertTab
-std::vector<CM::CID> AddOrderView::getCheckedIDs(QTableWidget* table){
-    std::vector<CM::CID> ids;
+std::vector<QString> AddOrderView::getCheckedIDs(QTableWidget* table){
+    std::vector<QString> ids;
     for(int row=0; row<table->rowCount(); row++){
         auto wg = static_cast<QWidget*>(table->cellWidget(row,0));
         QVariant v = wg->property("CB");
@@ -152,19 +162,19 @@ std::vector<CM::CID> AddOrderView::getCheckedIDs(QTableWidget* table){
         auto state = check_box->checkState();
         if(state==Qt::Checked){
             auto item = table->item(row,1);
-            ids.emplace_back(item->data(Role::id).value<CM::CID>());
+            ids.emplace_back(item->data(Role::id).value<QString>());
         }
     }
     return ids;
 }
 
 void AddOrderView::commitOrder(){
-    std::vector<CM::CID> client_ids = getCheckedIDs(&clientTab);
-    std::vector<PM::PID> product_ids = getCheckedIDs(&productTab);
+    std::vector<QString> client_ids = getCheckedIDs(&clientTab);
+    std::vector<QString> product_ids = getCheckedIDs(&productTab);
 
     std::vector<QTreeWidgetItem*> buyers;
-    for(auto c : client_ids){
-        QStringList name {mgr.getCM().findClient(c).getName().c_str()};
+    for(const auto& c : client_ids){
+        QStringList name {mgr.getCM().findClient(c.toStdString()).getName().c_str()};
         auto buyer = new QTreeWidgetItem(orderTree,name);
         buyer->setData(0, Role::id, c);
         buyers.emplace_back(buyer);
@@ -172,13 +182,13 @@ void AddOrderView::commitOrder(){
         orderTree->expandItem(buyer);
     }
 
-    for(auto p : product_ids){
+    for(const auto& p : product_ids){
         for(int row = 0; row < buyers.size(); row++){
             qDebug()<<"tree count"<<orderTree->topLevelItemCount();
             auto elem = buyers[row];
             auto product = new QTreeWidgetItem(elem);
             product->setData(0, Role::id, p);
-            product->setText(1,mgr.getPM().findProduct(p).getName().c_str());
+            product->setText(1,mgr.getPM().findProduct(p.toStdString()).getName().c_str());
             QSpinBox* spin_box = new QSpinBox;
             spin_box->setValue(1);
             orderTree->setItemWidget(product,2,spin_box);
@@ -200,19 +210,20 @@ void AddOrderView::update(){
 void AddOrderView::addOrder(){
     for(int i=0; i<orderTree->topLevelItemCount(); i++){
         auto client = orderTree->topLevelItem(i);
-        CM::CID client_id = client->data(0, Role::id).value<CM::CID>();
-        std::vector<OM::OrderManager::ProductData> products;
+        QString client_id = client->data(0, Role::id).value<QString>();
+        std::vector<OM::OrderManager::bill> products;
         for(int j=0; j<client->childCount(); j++){
             auto product = client->child(j);
             auto qty_box = static_cast<QSpinBox*>(orderTree->itemWidget(product,2));
-            products.emplace_back(product->data(0, Role::id).value<PM::PID>(), qty_box->value());
+            QString pid = product->data(0, Role::id).value<QString>();
+            products.emplace_back(pid.toStdString(), qty_box->value());
         }
         if(products.empty())
             continue;
         OView::addOrder(client_id,std::move(products));
 
-        OM::OrderManager::Order order = OView::findOrder(0);
-        qDebug()<<"ORDER"<<order.getID()<<order.getCID()<<order.getProductData()[0].qty<<mgr.getOM().getSize();
+        //OM::OrderManager::Order order = OView::findOrder(0);
+        //qDebug()<<"ORDER"<<order.getID()<<order.getClient().getId()<<order.getProductData()[0].qty<<mgr.getOM().getSize();
     }
     orderTree->clear();
 }

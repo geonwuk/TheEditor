@@ -6,40 +6,43 @@
 #include <utility>
 #include <fstream>
 #include <vector>
+#include <memory>
+#include <unordered_map>
 namespace PM {
 	using std::map;
 	using std::string;
 	using std::ofstream;
 	using std::ifstream;
-    using PID = unsigned int;
+    using PID = string;
 
 	class Product{
 	public:
-        Product(unsigned int id, string name, unsigned int price, unsigned int qty, std::tm date) :
+        Product(string id, string name, unsigned int price, unsigned int qty, std::tm date) :
 			id{ id }, name{ name }, price{ price }, qty{ qty }, registered_date{ date }{}
 
-		const unsigned int getId() const { return id; }
+        const string getId() const { return id; }
 		const string getName() const { return name; }
 		const unsigned int getPrice() const { return price; }
 		const unsigned int getQty() const { return qty; }
 		const std::tm getDate() const { return registered_date; }
-        bool decreaseQty(const unsigned int desc){
-            return qty<desc ? false : qty-=desc , true;
-        }
 	protected:
 		Product() = default;
 	private:
-		unsigned int id;		
+        friend class ProductManager;
+        string id;
 		string name;			
 		unsigned int price;		
 		unsigned int qty;		
-		tm registered_date;		
+        tm registered_date;
+        bool decreaseQty(const unsigned int desc){
+            return qty<desc ? false : qty-=desc , true;
+        }
 
 	};
 	ofstream& operator<<(ofstream& out, const Product& p);
 
     struct NoProduct : public Product { NoProduct(){} };
-    static NoProduct no_product;
+    const NoProduct no_product;
 	bool operator== (const Product& p, const NoProduct&);		
 	
 
@@ -48,25 +51,27 @@ namespace PM {
 	public:
         class const_iterator;
         bool addProduct(const string name, const unsigned int price, const unsigned int qty);
-		bool eraseProduct(const unsigned int id);
-        Product& findProduct(const unsigned int id);
-        const Product& findProduct(const unsigned int id) const;
+        bool eraseProduct(const PID id);
+        Product& findProduct(const PID id);
+        const Product& findProduct(const PID id) const;
+        std::shared_ptr<Product> copyProduct(const PID) const noexcept;
         const_iterator getProducts() const;
-		const Product& getProduct(const unsigned int) const;
+        bool buyProduct(const PID id, const unsigned int qty);
 		ofstream& saveProducts(ofstream&) const;
 		std::pair<ifstream&, std::vector<Product>> loadProducts(ifstream&);
-		const unsigned int getMaxIndex() const;
+//		const unsigned int getMaxIndex() const;
         const unsigned int getSize() const;
     private:
         static unsigned int product_id;
-        map < unsigned int, Product > products;
+        map < std::string, std::shared_ptr<Product> > products;
+        string generateRandID(tm time);
     public:
         class const_iterator{
             using Itr_type = decltype(products)::const_iterator;
             struct Itr {
                 Itr(Itr_type p) :ptr{ p } {}
                 const Product& operator*() const {
-                    return ptr->second;
+                    return *ptr->second.get();
                 }
                 Itr_type operator++() {
                     return ++ptr;

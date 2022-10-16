@@ -10,7 +10,7 @@ class AddClientView : public CView
 {
     Q_OBJECT
 public: 
-    explicit AddClientView(Manager& mgr);
+    explicit AddClientView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString());
     ~AddClientView();
     void update() {}
 
@@ -26,7 +26,7 @@ class AddProductView : public PView
 {
     Q_OBJECT
 public:
-    explicit AddProductView(Manager& mgr);
+    explicit AddProductView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
     ~AddProductView();
     void update() {}
 
@@ -42,7 +42,7 @@ class AddOrderView : public OView
 {
     Q_OBJECT
 public:
-    explicit AddOrderView(Manager& mgr);
+    explicit AddOrderView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
     ~AddOrderView();
     void update();
 
@@ -63,8 +63,8 @@ private:
     QTreeWidget* orderTree;
     void fillClientTab();
     void fillProductTab();
-    void fillClientInfoTab(std::vector<CM::CID>);
-    std::vector<CM::CID> getCheckedIDs(QTableWidget* table);
+    void fillClientInfoTab(QList<QString>);
+    std::vector<QString> getCheckedIDs(QTableWidget* table);
 
 };
 

@@ -3,7 +3,17 @@
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QTableWidgetItem>
+
 //View::View() {}
+View::View(Manager& mgr, Tree& tree, const QIcon icon, const QString label) : icon{icon}, label{label}, mgr{mgr},tree{tree} {
+    tab = new FocusTabItem{this,tree,label};
+    tree.getTabs().addChild(tab);
+}
+View::~View() {
+    mgr.detachObserver(this);
+    tree.getTabs().removeChild(tab);
+    delete tab;
+}
 
 QWidget* View::getCheckBoxWidget() {
     QWidget* checkBoxWidget = new QWidget();
@@ -16,10 +26,25 @@ QWidget* View::getCheckBoxWidget() {
     return checkBoxWidget;
 }
 
-QTableWidgetItem* View::ceateTableItem(const CM::CID id, QString title){
+QTableWidgetItem* View::ceateTableItem(const QString id, QString title){
     auto item = new QTableWidgetItem(title);
     item->setData(Role::id, id);
+    qDebug()<<"ceate Item "<<id;
     return item;
+}
+
+bool CView::modifyClient(const QString id, const QList<QString> ls){
+    bool re = mgr.getCM().modifyClient(id.toStdString(), CM::Client{ls[0].toStdString(),ls[1].toStdString(),ls[2].toStdString()});
+    notify<CView>();
+    notify<OView>();
+    return re;
+}
+bool CView::eraseClient(const QString id)
+{
+    bool result =  mgr.getCM().eraseClient(id.toStdString());
+    notify<CView>();
+    notify<OView>();
+    return result;
 }
 
 bool PView::addProduct(const QString name, const QString price, const QString qty){
@@ -43,9 +68,6 @@ const PM::Product& PView::findProduct(const PM::PID id) const{
 PM::ProductManager::const_iterator PView::getProducts() const{
     return mgr.getPM().getProducts();
 }
-const PM::Product& PView::getProduct(const PM::PID pid) const{
-    return mgr.getPM().getProduct(pid);
-}
 
 const unsigned int PView::getSize() const{
     return mgr.getPM().getSize();
@@ -56,14 +78,14 @@ bool OView::is_order_moified {false};
 const OM::OrderManager::Order& OView::findOrder(const OM::Order_ID order_id) const{
     return mgr.getOM().findOrder(order_id);
 }
-std::pair<const unsigned int, bool> OView::addOrder(const OM::Client_ID client_id, std::vector<OM::OrderManager::ProductData> products){
-    auto result = mgr.getOM().addOrder(client_id,products);
+std::pair<const unsigned int, bool> OView::addOrder(const QString client_id, std::vector<OM::OrderManager::bill> products){
+    auto result = mgr.getOM().addOrder(client_id.toStdString(),products);
     notify<OView>();
     return result;
 }
 OM::OrderIterator OView::getOrders() const{
     return mgr.getOM().getOrders();
 }
-const unsigned int OView::getSize() const{
+const size_t OView::getSize() const{
     return mgr.getOM().getSize();
 }

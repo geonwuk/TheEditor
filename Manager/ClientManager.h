@@ -4,46 +4,63 @@
 #include <string>
 #include <iosfwd>
 #include <vector>
+#include <memory>
+#include <iostream>
 namespace CM {
 	using std::map;
     using std::string;
-    using CID = unsigned int;
+    using CID = string;
 	class Client {
+        friend class ClientManager;
 	public:
-        Client(unsigned int id, string name, string phone_number = "NONE", string address = "NONE") :
+
+        Client(string name, string phone_number, string address) :
+            name{ name }, phone_number{ phone_number }, address{ address } {}
+
+        Client(string id, string name, string phone_number , string address ) :
             id{ id }, name{ name }, phone_number{ phone_number }, address{ address } {}
-        const CID getId() const { return id; }
+        const string getId() const { return id; }
 		string getName() const { return name; }                  
 		string getPhoneNumber() const { return phone_number; }   
         string getAddress() const { return address; }
-	private:
-        CID id;
+        Client()=default;
+    private:
+
+
+        const string id;
 		string name;           
 		string phone_number;   
-		string address;        
+        string address;
+        Client& operator= (const Client& rhs){
+            name=rhs.name;
+            phone_number=rhs.phone_number;
+            address=rhs.address;
+            return *this;
+        }
 	protected:
-        Client()=default;
-	};
 
+	};
+    std::ofstream& operator<<(std::ofstream& out, const Client& c);
     struct NoClient : public Client { NoClient(){} };
     const NoClient no_client;
 	bool operator== (const Client& c, const NoClient&);   
 
-
 	class ClientManager{
 	public:
         class const_iterator;
-		bool addClient(const string name, const string phone_number = "NONE", const string address = "NONE");
+        bool addClient(const CID id, const string name, const string phone_number = "NONE", const string address = "NONE");
+        bool modifyClient(const CID id, const Client client);
         bool eraseClient(const CID id);
         const Client& findClient(const CID id) const;
+        std::shared_ptr<Client> copyClient(const CID) const noexcept;
 		std::ofstream& saveClients(std::ofstream& out) const;								                 
 		std::pair<std::ifstream&, std::vector<Client>> loadClients(std::ifstream& in) const ;                
         const_iterator getCleints() const;
-		const unsigned int getMaxIndex() const;
+//		const unsigned int getMaxIndex() const;
         const unsigned int getSize() const;
 	private:
 		static unsigned int client_id;
-		map< unsigned int, Client > clients;
+        map< CID, std::shared_ptr<Client> > clients;
     public:
         class const_iterator{
             using Itr_type = decltype(clients)::const_iterator;
@@ -51,7 +68,7 @@ namespace CM {
                 Itr_type ptr;
                 Itr(Itr_type p) :ptr{ p } {}
                 const Client& operator*() const {
-                    return ptr->second;
+                    return *ptr->second.get();
                 }
                 Itr_type operator++() {
                     return ++ptr;

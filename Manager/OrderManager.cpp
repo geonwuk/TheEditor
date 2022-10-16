@@ -8,17 +8,8 @@
 using namespace std;
 using namespace OM;
 using namespace PM;
-const Product& OM::OrderManager::getPurchasedProducts(const Product_ID pid) const{
-	auto it = purchased_products.find(pid);	
-	if (it == purchased_products.end()) {
-		return no_product;
-	}
-	else {
-		return it->second;
-	}
-}
 
-std::pair<const unsigned int, bool> OrderManager::addOrder(const Client_ID client_id, vector<ProductData> products){
+std::pair<const Order_ID, bool> OrderManager::addOrder(const Client_ID client_id, vector<bill> products){
     if(products.empty()){
         return {0, false};
     }
@@ -29,69 +20,62 @@ std::pair<const unsigned int, bool> OrderManager::addOrder(const Client_ID clien
 	localtime_s(&local_time, &base_time);
 	order.date = local_time;
 
-    vector<Product*> found_products;
-    for (auto product : products) {
+    for (const auto &product : products) {
         Product& found = pm.findProduct(product.id);
 		if (found == no_product)
-            return { product.id, false };
+            return { stoi(product.id), false };
         if (found.getQty()<product.qty)
-            return { product.id, false };
-        found_products.emplace_back(&found);
+            return { stoi(product.id), false };
     }
     int i=0;
     for (auto product : products) {
-        auto itr = purchased_products.find(product.id);
-		if (itr == purchased_products.end()) {			
-            purchased_products.emplace(product.id, Product{ *found_products[i] });
-            order.products.emplace_back(product.id, product.qty);
-		}
-		else {
-            order.products.emplace_back(product.id, product.qty);
-		}
-        assert(found_products[i]->decreaseQty(product.qty));
+        order.products.emplace_back(pm.copyProduct(product.id), product.qty);
+        assert(pm.buyProduct(product.id, product.qty));
         i++;
 	}
 	order.order_id = order_id;
-	order.client_id = client_id;
-	auto inserted_order = orders.emplace(order_id, std::move(order));
+    assert(!(cm.findClient(client_id)==no_client));
+    order.client = cm.copyClient(client_id);
+    std::cout<<"THIS IS SHARED "<<order.client.use_count()<<endl;
+    auto inserted_order = orders.emplace(order_id, std::move(order));
 	orders_CID.emplace(client_id, &inserted_order.first->second);
 
 	return {order_id++, true};
 }
 
 void OrderManager::addOrder(const Order& order_to_add) {
-	Order order;
+//	Order order;
 
-	auto order_found = orders.find(order_to_add.order_id);
-	if (order_found != orders.end())
-		throw OM::Already_In_Order{ order_to_add.order_id};	
-	order.order_id = order_to_add.order_id;
+//	auto order_found = orders.find(order_to_add.order_id);
+//	if (order_found != orders.end())
+//		throw OM::Already_In_Order{ order_to_add.order_id};
+//	order.order_id = order_to_add.order_id;
 
-	const Client& c = cm.findClient(order_to_add.client_id);
-	if (c == no_client)
-		throw OM::No_Matching_Client{ order_to_add.client_id};
-	order.client_id = order_to_add.client_id;
+//	const Client& c = cm.findClient(order_to_add.client_id);
+//	if (c == no_client)
+//		throw OM::No_Matching_Client{ order_to_add.client_id};
+//	order.client_id = order_to_add.client_id;
 
-    for (auto product : order_to_add.products) {
-        const Product& found = pm.findProduct(product.id);
-		if (found == no_product)
-            throw OM::No_Matching_Product{product.id};
+//    for (auto product : order_to_add.products) {
+//        const Product& found = pm.findProduct(product.id);
+//		if (found == no_product)
+//            throw OM::No_Matching_Product{product.id};
 		
-        auto itr = purchased_products.find(product.id);
-		if (itr == purchased_products.end()) {			
-            auto inserted = purchased_products.emplace(product.id, Product{ found });
-            order.products.emplace_back(product.id, product.qty);
-		}
-		else {
-            order.products.emplace_back(product.id, product.qty);
-		}
-	}
+//        auto itr = purchased_products.find(product.id);
+//		if (itr == purchased_products.end()) {
+//            auto inserted = purchased_products.emplace(product.id, Product{ found });
+//            order.products.emplace_back(product.id, product.qty);
+//		}
+//		else {
+//            order.products.emplace_back(product.id, product.qty);
+//		}
+//	}
 
-	order.date = order_to_add.date;													
-	auto inserted_order = orders.emplace(order_to_add.order_id, std::move(order));	
-	order_id = order_to_add.order_id;
-	order_id++;
-	orders_CID.emplace(order_to_add.client_id, &inserted_order.first->second);
+//	order.date = order_to_add.date;
+//	auto inserted_order = orders.emplace(order_to_add.order_id, std::move(order));
+//	order_id = order_to_add.order_id;
+//	order_id++;
+//	orders_CID.emplace(order_to_add.client_id, &inserted_order.first->second);
 }
 
 OrderIterator OrderManager::getOrders() const
@@ -101,23 +85,29 @@ OrderIterator OrderManager::getOrders() const
 
 const OrderManager::Order& OrderManager::findOrder(const Order_ID order_id) const {
 	auto o = orders.find(order_id);
+
 	if (o == orders.end()) {
 		return no_order;
 	}
 	else {
 		return o->second;
-	}
+    }
+
+
 }
 static std::ofstream& operator<< (std::ofstream& out, tm p) {
 	out << std::put_time(&p, "%A %c");
 	return out;
 }
+
+
 static std::ofstream& operator<<(std::ofstream& out, const OrderManager::Order& o)
 {
-    out << o.getID() << ',' << o.getCID() << ',';
+    out << o.getID() << ',';
+    out << o.getClient() << ',';
     out << o.getDate();
-    for (auto product : o.getProductData()) {
-        out << ',' << product.id;
+    for (auto product : o.getProducts()) {
+        out << ',' << product.product->getId();
 	}
 	return out;
 }
@@ -148,12 +138,12 @@ std::pair<std::ifstream&, std::vector<OrderManager::Order>> OM::OrderManager::lo
 			begIdx = str.find_first_not_of(',', endIdx);
 		}
         string time_string = tmp[2];
-        Client_ID cid = stoul(tmp[1]);
+        Client_ID cid = (tmp[1]);
         Order_ID oid = stoul(tmp[0]);
 		
 		unsigned int idx = 3;
 		while (idx<tmp.size()) {
-			products_ids.emplace_back(stoul(tmp[idx++]));
+            products_ids.emplace_back((tmp[idx++]));
 		}
 
 		std::tm time;
@@ -163,4 +153,13 @@ std::pair<std::ifstream&, std::vector<OrderManager::Order>> OM::OrderManager::lo
 //		order_vector.emplace_back(od);
 	}
 	return  { in, (order_vector) };
+}
+
+
+const vector<OrderManager::OrderedProduct > OrderManager::Order::getProducts() const{
+    vector<OrderedProduct> v;
+    for(auto e : products){
+        v.emplace_back(e.first.get(), e.second);
+    }
+    return v;
 }
