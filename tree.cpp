@@ -113,5 +113,7 @@ NetworkTree::NetworkTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw}{
 
         i++;
     }
+    addTopLevelItem(tabs);
+    expandItem(tabs);
 
 }

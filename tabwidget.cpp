@@ -4,7 +4,7 @@
 void TabWidget::tabClosed(int index){
     QWidget* wg = widget(index);
     removeTab(index);
-    delete wg;
+    //delete wg;
     qDebug()<<"tab "<<index<<" deleted";
 
 }

@@ -12,13 +12,11 @@ static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){
     QSplitter* splitter = new QSplitter;
     splitter->setChildrenCollapsible(false);
 
-    tree.sizePolicy().setHorizontalStretch(0);
     QSizePolicy tree_policy(QSizePolicy::Maximum, QSizePolicy::Expanding);
     tree_policy.setHorizontalStretch(0);
     tree.setSizePolicy(tree_policy);
     tree.setMaximumSize(1920,1920);
     splitter->addWidget(&tree);
-
 
     tw.setTabsClosable(true);
     QSizePolicy tab_policy(QSizePolicy::Expanding, QSizePolicy::Expanding);

@@ -78,6 +78,8 @@ public:
 private:
     Ui::addParticipantView ui;
     void fillContents();
+
+    QList<QString> headers {tr("ID"),tr("Name")};
 private slots:
     void addParticipant();
     void dropParticipant();

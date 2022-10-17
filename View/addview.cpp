@@ -241,22 +241,43 @@ AddParticipantView::AddParticipantView(Manager& mgr, Tree &tabs, const QIcon ico
     : NView{mgr, tabs, icon,label} {
     ui.setupUi(this);
     ui.addButton->setIcon(ui.addButton->style()->standardIcon(QStyle::SP_ArrowRight));
-    ui.addButton->setIconSize(QSize{64,64});
+    ui.addButton->setIconSize(QSize{32,32});
     ui.dropButton->setIcon(ui.dropButton->style()->standardIcon(QStyle::SP_ArrowLeft));
-    ui.dropButton->setIconSize(QSize{64,64});
+    ui.dropButton->setIconSize(QSize{32,32});
 
-    ui.verticalLayout_2->SetFixedSize();
+    //ui.verticalLayout_2->SetFixedSize();
+    QSplitter* splitter = new QSplitter(this);
 
-    ui.splitter->setCollapsible(1,false);
-    ui.splitter->setStretchFactor(0,1);
-    ui.splitter->setStretchFactor(1,0);
-    ui.splitter->setStretchFactor(2,1);
+    auto left = new QWidget(this);
+    left->setLayout(ui.clientLayout);
+    left->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+    auto middle = new QWidget(this);
+    middle->setLayout(ui.buttonLayout);
+    middle->setSizePolicy(QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Expanding));
+    auto right = new QWidget(this);
+    right->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+    right->setLayout(ui.participantsLayout);
 
-    ui.splitter->setSizes({1,0,1});
+    splitter->addWidget(left);
+    splitter->addWidget(middle);
+    splitter->addWidget(right);
+
+    auto center_layout = new QHBoxLayout;
+    center_layout->addWidget(splitter);
+    setLayout(center_layout);
 
 
-    ui.clientList->setColumnCount(3);
-    ui.clientList->setHeaderLabels({tr("ID"),tr("Name"),tr("Status")});
+
+    splitter->setCollapsible(1,false);
+    splitter->setStretchFactor(0,1);
+    splitter->setStretchFactor(1,0);
+    splitter->setStretchFactor(2,1);
+    splitter->setHandleWidth(1);
+    //splitter->setSizes({1,0,1});
+
+    ui.clientList->setColumnCount(headers.size());
+    ui.clientList->setHorizontalHeaderLabels(headers);
+
     fillContents();
 
     connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addParticipant()));
@@ -264,19 +285,42 @@ AddParticipantView::AddParticipantView(Manager& mgr, Tree &tabs, const QIcon ico
 }
 
 void AddParticipantView::addParticipant(){
+    auto ranges = ui.clientList->selectedRanges();
 
+    for(auto range : ranges){
+        for(int top = range.topRow(); top<= range.bottomRow(); top++){
+            auto id_item = ui.clientList->item(top,0);
+            QString id = id_item->data(Role::id).value<QString>();
+
+        }
+    }
+
+
+    //    for(const auto& nclient : mgr.getSM().net_clients){
+    //        QList<QString> ls;
+    //        ls<<nclient.self->getId().c_str()<<nclient.self->getName().c_str()<<nclient.is_online;
+    //        auto item = new QTreeWidgetItem(ls);
+    //        ui.clientList->addTopLevelItem(item);
+    //    }
 }
 void AddParticipantView::dropParticipant(){
 
 }
 void AddParticipantView::fillContents(){
-    ui.clientList->clear();
-    for(const auto& nclient : mgr.getSM().net_clients){
-        QList<QString> ls;
-        ls<<nclient.self->getId().c_str()<<nclient.self->getName().c_str()<<nclient.is_online;
-        auto item = new QTreeWidgetItem(ls);
-        ui.clientList->addTopLevelItem(item);
+    ui.clientList->clearContents();
+    ui.clientList->setRowCount(mgr.getCM().getSize());
+    int i=0;
+    for(const auto& client : mgr.getCM().getCleints()){
+        int j=0;
+        ui.clientList->setItem(i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()) );
+        ui.clientList->setItem(i,j++,new QTableWidgetItem(client.getName().c_str()));
+        i++;
+        qDebug()<<"ADDING";
     }
+    ui.clientList->resizeColumnsToContents();
+    ui.clientList->resizeRowsToContents();
+
+
 }
 
 AddParticipantView::~AddParticipantView(){}

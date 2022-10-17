@@ -12,7 +12,6 @@ View::View(Manager& mgr, Tree& tree, const QIcon icon, const QString label) : ic
 View::~View() {
     mgr.detachObserver(this);
     tree.getTabs().removeChild(tab);
-    delete tab;
 }
 
 QWidget* View::getCheckBoxWidget() {
