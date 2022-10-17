@@ -24,7 +24,7 @@ namespace CM {
 		string getPhoneNumber() const { return phone_number; }   
         string getAddress() const { return address; }
         Client()=default;
-        ~Client(){std::cout<<"CLIENT DESTRUCTOR ID: "<<id<<std::endl;}
+        ~Client(){}
     private:
 
 

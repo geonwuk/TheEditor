@@ -4,6 +4,8 @@
 #include <QLocale>
 #include <QTranslator>
 
+#include "Network/chattingclient.h"
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -20,5 +22,9 @@ int main(int argc, char *argv[])
     }
     MainWindow w;
     w.show();
+
+    ChattingClient c;
+    c.show();
+
     return a.exec();
 }

@@ -12,6 +12,7 @@ SOURCES += \
     Manager/ClientManager.cpp \
     Manager/OrderManager.cpp \
     Manager/ProductManager.cpp \
+    Network/chattingclient.cpp \
     Network/server.cpp \
     View/addview.cpp \
     View/showview.cpp \
@@ -26,6 +27,7 @@ HEADERS += \
     Manager/ClientManager.h \
     Manager/OrderManager.h \
     Manager/ProductManager.h \
+    Network/chattingclient.h \
     Network/server.h \
     View/addview.h \
     View/showview.h \
@@ -36,7 +38,8 @@ HEADERS += \
     ttest.h
 
 FORMS += \
-    Network/server.ui \
+    Network/addParticipantView.ui \
+    server.ui \
     addClient.ui \
     addOrder.ui \
     addProduct.ui \
@@ -54,3 +57,6 @@ CONFIG += embed_translations
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resources.qrc

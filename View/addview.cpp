@@ -233,3 +233,56 @@ void AddOrderView::addOrder(){
 AddOrderView::~AddOrderView(){
 
 }
+
+
+
+
+AddParticipantView::AddParticipantView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label)
+    : NView{mgr, tabs, icon,label} {
+    ui.setupUi(this);
+    ui.addButton->setIcon(ui.addButton->style()->standardIcon(QStyle::SP_ArrowRight));
+    ui.addButton->setIconSize(QSize{64,64});
+    ui.dropButton->setIcon(ui.dropButton->style()->standardIcon(QStyle::SP_ArrowLeft));
+    ui.dropButton->setIconSize(QSize{64,64});
+
+    ui.verticalLayout_2->SetFixedSize();
+
+    ui.splitter->setCollapsible(1,false);
+    ui.splitter->setStretchFactor(0,1);
+    ui.splitter->setStretchFactor(1,0);
+    ui.splitter->setStretchFactor(2,1);
+
+    ui.splitter->setSizes({1,0,1});
+
+
+    ui.clientList->setColumnCount(3);
+    ui.clientList->setHeaderLabels({tr("ID"),tr("Name"),tr("Status")});
+    fillContents();
+
+    connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addParticipant()));
+    connect(ui.dropButton,SIGNAL(pressed()),this,SLOT(dropParticipant()));
+}
+
+void AddParticipantView::addParticipant(){
+
+}
+void AddParticipantView::dropParticipant(){
+
+}
+void AddParticipantView::fillContents(){
+    ui.clientList->clear();
+    for(const auto& nclient : mgr.getSM().net_clients){
+        QList<QString> ls;
+        ls<<nclient.self->getId().c_str()<<nclient.self->getName().c_str()<<nclient.is_online;
+        auto item = new QTreeWidgetItem(ls);
+        ui.clientList->addTopLevelItem(item);
+    }
+}
+
+AddParticipantView::~AddParticipantView(){}
+
+
+void AddParticipantView::update(){
+    qDebug()<<"NVIew update";
+    fillContents();
+}

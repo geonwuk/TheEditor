@@ -8,6 +8,8 @@
 #include "tabwidget.h"
 #include "tree.h"
 #include <list>
+#include "Network/server.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -36,6 +38,10 @@ public:
     OM::OrderManager& getOM(){
         return om;
     }
+    ServerManager& getSM(){
+        return sm;
+    }
+
     void attachObserver(View* o);
     void detachObserver(View* o){
         qDebug()<<"detach";
@@ -47,6 +53,7 @@ private:
     CM::ClientManager cm;
     PM::ProductManager pm;
     OM::OrderManager om{cm,pm};
+    ServerManager sm{*this};
 };
 
 class MainWindow : public QMainWindow
@@ -63,8 +70,13 @@ public slots:
 private:
     Ui::MainWindow *ui;
     Manager mgrs{*this};
-    Tree tree{this};
-    TabWidget tw{this};
+
+    TabWidget management_tw{this};
+    ManagementTree management_tree{this,&management_tw};
+
+    TabWidget network_tw{this};
+    NetworkTree network_tree{this,&network_tw};
+
     QStackedWidget* sw;
 
 

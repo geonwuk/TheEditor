@@ -68,6 +68,20 @@ private:
 
 };
 
+#include "ui_addParticipantView.h"
+class AddParticipantView : public NView{
+    Q_OBJECT
+public:
+    explicit AddParticipantView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    ~AddParticipantView();
+    void update();
+private:
+    Ui::addParticipantView ui;
+    void fillContents();
+private slots:
+    void addParticipant();
+    void dropParticipant();
 
+};
 
 #endif // ADDVIEW_H

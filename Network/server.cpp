@@ -2,6 +2,19 @@
 #include<QtGui>
 #include<QtWidgets>
 #include<QtNetwork>
+#include "mainwindow.h"
+
+ServerManager::ServerManager(Manager& mgr): mgr{mgr} {
+    for(const auto& client : mgr.getCM().getCleints()){
+        auto s_client = mgr.getCM().copyClient(client.getId());
+        net_clients.emplace_back(s_client);
+    }
+}
+
+
+
+
+
 
 #define BLOCK_SIZE 1024
 Server::Server(QWidget *parent)

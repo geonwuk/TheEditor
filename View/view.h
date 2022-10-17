@@ -9,6 +9,7 @@
 class OView;
 class QTableWidgetItem;
 class FocusTabItem;
+class NView;
 class View : public QWidget{
 public:
     virtual ~View();
@@ -46,6 +47,7 @@ public:
         qDebug()<<c.getName().c_str()<<c.getPhoneNumber().c_str()<<c.getAddress().c_str();
         notify<CView>();
         notify<OView>();
+        notify<NView>();
     }
     bool eraseClient(const QString id);
     bool modifyClient(const QString id, const QList<QString> client_info);
@@ -81,6 +83,11 @@ public:
     const size_t getSize() const;
 protected:
     static bool is_order_moified;
+};
+
+class NView : public View {
+public:
+    NView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString()) : View{mgr, tabs, icon,label} {}
 };
 
 #endif // VIEW_H

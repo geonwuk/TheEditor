@@ -11,39 +11,44 @@ class MainWindow;
 class View;
 class Manager;
 class Tree;
-
+class TabWidget;
 class ViewFactory {
+protected:
+     const QString title;
 public:
+     ViewFactory(const QString title) : title{title} {}
     virtual View* make(Tree* tree)=0;
+    const QString getTitle(){
+        return title;
+    }
 };
 template<typename T>
 class ViewMaker : public ViewFactory{
     Manager& mgr;
-    QString title;
 public:
-    ViewMaker(Manager& mgr,QString title) : mgr{mgr}, title{title} {}
+    ViewMaker(Manager& mgr,QString title) : mgr{mgr}, ViewFactory{title} {}
     View* make(Tree* tree){
         return new T{mgr,*tree,QPixmap(),title};
     }
+
 };
 
 class Tree : public QTreeWidget {
     Q_OBJECT
 
-
 public:
-    Tree(MainWindow*);
+    Tree(MainWindow* , TabWidget* tw);
     QTreeWidgetItem& getTabs(){return *tabs;}
     View* makeView(ViewFactory* factory);
 
-private:
+protected:
     MainWindow* mw;
+
     Manager& mgr;
     QTreeWidgetItem* tabs;
 
-
-
-
+public:
+    TabWidget* tw;
 
 signals:
     void treeToTab(QWidget*, const QIcon&, const QString&);
@@ -52,14 +57,16 @@ signals:
 public slots:
     void _itemDoubleClicked(QTreeWidgetItem*, int);
 
-
-
 };
 
-
-template<typename T>
-void setChildData(QTreeWidgetItem*, T* view);
-
+class ManagementTree : public Tree{
+public:
+    ManagementTree(MainWindow*, TabWidget* tw);
+};
+class NetworkTree : public Tree{
+public:
+    NetworkTree(MainWindow*, TabWidget* tw);
+};
 
 
 class TreeItem : public QTreeWidgetItem{
@@ -85,26 +92,6 @@ public:
     void doubleClicked();
     ~FocusTabItem(){}
 };
-
-//using FP = decltype(std::mem_fn<void(),Tree>(nullptr));
-//using PP = void (Tree::*)();
-
-//class CallMW
-//{
-//public:
-//    virtual void call()=0;
-//};
-//struct Con : public CallMW{
-//    Tree* tree;
-//    FP f;
-
-//    Con(Tree* tree, PP f):tree{tree},f{f} {}
-//    void call(){
-//        emit f(tree);
-//    }
-
-//};
-
 
 
 #endif // TREE_H
