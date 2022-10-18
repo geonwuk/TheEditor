@@ -279,6 +279,7 @@ AddParticipantView::AddParticipantView(Manager& mgr, Tree &tabs, const QIcon ico
     ui.clientList->setHorizontalHeaderLabels(headers);
 
     fillContents();
+    initParticipantView();
 
     connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addParticipant()));
     connect(ui.dropButton,SIGNAL(pressed()),this,SLOT(dropParticipant()));
@@ -287,21 +288,37 @@ AddParticipantView::AddParticipantView(Manager& mgr, Tree &tabs, const QIcon ico
 void AddParticipantView::addParticipant(){
     auto ranges = ui.clientList->selectedRanges();
 
+    QList<int> rows_delete;
+
+    int initial_row_count = ui.clientList->rowCount();
+    int pi = ui.participantList->rowCount();
     for(auto range : ranges){
         for(int top = range.topRow(); top<= range.bottomRow(); top++){
             auto id_item = ui.clientList->item(top,0);
             QString id = id_item->data(Role::id).value<QString>();
+            auto client = mgr.getCM().copyClient(id.toStdString());
+            mgr.getSM().addClient(client);
+            rows_delete<<top;
+            ui.participantList->setRowCount(pi+1);
+            ui.participantList->setItem(pi,0,new QTableWidgetItem(client->getId().c_str()));
+            ui.participantList->setItem(pi,1,new QTableWidgetItem(client->getName().c_str()));
 
+            pi++;
         }
     }
 
+    for( auto row : rows_delete){
+        ui.clientList->removeRow(row);
+    }
 
-    //    for(const auto& nclient : mgr.getSM().net_clients){
-    //        QList<QString> ls;
-    //        ls<<nclient.self->getId().c_str()<<nclient.self->getName().c_str()<<nclient.is_online;
-    //        auto item = new QTreeWidgetItem(ls);
-    //        ui.clientList->addTopLevelItem(item);
-    //    }
+
+
+//        for(const auto& nclient : mgr.getSM().net_clients){
+//            QList<QString> ls;
+//            ls<<nclient.self->getId().c_str()<<nclient.self->getName().c_str()<<nclient.is_online;
+//            auto item = new QTreeWidgetItem(ls);
+//            ui.clientList->addTopLevelItem(item);
+//        }
 }
 void AddParticipantView::dropParticipant(){
 
@@ -319,11 +336,15 @@ void AddParticipantView::fillContents(){
     }
     ui.clientList->resizeColumnsToContents();
     ui.clientList->resizeRowsToContents();
-
-
 }
 
 AddParticipantView::~AddParticipantView(){}
+
+void AddParticipantView::initParticipantView(){
+    QList<QString> headers {tr("ID"),tr("Name")};
+    ui.participantList->setColumnCount(headers.size());
+    ui.participantList->setHorizontalHeaderLabels(headers);
+}
 
 
 void AddParticipantView::update(){

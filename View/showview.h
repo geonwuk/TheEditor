@@ -69,5 +69,13 @@ private:
     QTableWidget *orderInfoTable;
     void fillContents();
 };
+#include "ui_chatRoom.h"
+class ShowChatView : public View
+{
+public:
+    ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    Ui::chatRoom ui;
+    void update(){}
+};
 
 #endif // SHOWVIEW_H

@@ -99,7 +99,7 @@ ManagementTree::ManagementTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw} {
 
 NetworkTree::NetworkTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw}{
     QList<ViewFactory*> add_views { new ViewMaker<AddParticipantView>{mgr,tr("Add Paticipants")}};
-    tabs = new TreeItem(*this, {tr("Tabs")});
+    QList<ViewFactory*> show_views {new ViewMaker<ShowChatView>{mgr,tr("Show Chat")}};
     QStringList top_ls = {tr("Network Management")};
 
     int i=0;
@@ -111,9 +111,17 @@ NetworkTree::NetworkTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw}{
         QTreeWidgetItem* add = new ToTabItem(add_views[i],*this, add_views[i]->getTitle() );
         elem->addChild(add);
 
+        QTreeWidgetItem* show = new ToTabItem(show_views[i], *this, show_views[i]->getTitle() );
+        elem->addChild(show);
+
         i++;
     }
+    tabs = new TreeItem(*this, {tr("Tabs")});
     addTopLevelItem(tabs);
     expandItem(tabs);
+
+}
+
+Tree::~Tree(){
 
 }

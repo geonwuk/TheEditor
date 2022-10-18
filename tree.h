@@ -37,6 +37,7 @@ class Tree : public QTreeWidget {
     Q_OBJECT
 
 public:
+    ~Tree();
     Tree(MainWindow* , TabWidget* tw);
     QTreeWidgetItem& getTabs(){return *tabs;}
     View* makeView(ViewFactory* factory);
@@ -73,6 +74,7 @@ class TreeItem : public QTreeWidgetItem{
 protected:
     Tree& tree;
     QString title;
+
 public:
     TreeItem(Tree& tree, QString title):QTreeWidgetItem{(QTreeWidget*)nullptr,{title}},tree{tree}{}
     virtual void doubleClicked(){qDebug()<<"default double";};

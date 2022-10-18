@@ -318,3 +318,15 @@ void ShowOrderView::update(){
         qDebug()<<"show order is_update : TRUE!";
     }
 }
+
+
+//---------------------------------------------------
+
+
+ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label)
+    : View{mgr, tabs,icon,label} {
+    ui.setupUi(this);
+
+
+
+}

@@ -7,7 +7,7 @@
 #include "tree.h"
 #include "View/view.h"
 #include <QSplitter>
-
+#include "Network/server.h"
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){
     QSplitter* splitter = new QSplitter;
     splitter->setChildrenCollapsible(false);
@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug()<<"1번 누름";});
     connect(ui->ChatButton, &QToolButton::pressed,[=]{ sw->setCurrentIndex(2); qDebug()<<"2번 누름"; });
 
+    Server* s = new Server{mgrs.getSM()};
     //connect(&tree,SIGNAL(setTabFocus(QWidget*)),SLOT(setTabFocus(QWidget*)));
 }
 

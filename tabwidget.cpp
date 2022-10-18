@@ -4,7 +4,7 @@
 void TabWidget::tabClosed(int index){
     QWidget* wg = widget(index);
     removeTab(index);
-    //delete wg;
+    delete wg;
     qDebug()<<"tab "<<index<<" deleted";
 
 }
@@ -23,3 +23,6 @@ TabWidget::TabWidget(MainWindow* parent) : parent(parent) {
     connect(this, SIGNAL(currentChanged(int)), this, SLOT(tabCurrentChanged(int)));
 }
 
+TabWidget::~TabWidget(){
+
+}

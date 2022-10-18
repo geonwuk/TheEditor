@@ -36,6 +36,7 @@ protected:
 private:
     Tree& tree;
     FocusTabItem* tab=nullptr;
+
 };
 
 class CView : public View {

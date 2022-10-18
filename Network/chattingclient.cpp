@@ -2,8 +2,9 @@
 #include <QtGui>
 #include <QtWidgets>
 #include <QtNetwork>
-
+#include "server.h"
 #define BLOCK_SIZE 1024
+
 
 ChattingClient::ChattingClient(QWidget *parent)
     : QWidget{parent}
@@ -40,12 +41,12 @@ ChattingClient::ChattingClient(QWidget *parent)
     inputLayout->addWidget(inputLine);
     inputLayout->addWidget(sentButton);
 
-    QPushButton* quitButton = new QPushButton("Quit",this);
-    connect(quitButton,SIGNAL(clicked()),qApp,SLOT(quit()));
+    QPushButton* loginButton = new QPushButton("login",this);
+
 
     QHBoxLayout* buttonLayout = new QHBoxLayout;
     buttonLayout->addStretch(1);
-    buttonLayout->addWidget(quitButton);
+    buttonLayout->addWidget(loginButton);
 
     QVBoxLayout* mainLayout = new QVBoxLayout;
     mainLayout->addLayout(serverLayout);
@@ -59,6 +60,16 @@ ChattingClient::ChattingClient(QWidget *parent)
     connect(clientSocket,&QAbstractSocket::errorOccurred,
             [=]{qDebug()<<clientSocket->errorString();});
     connect(clientSocket, SIGNAL(readyRead()), SLOT(echoData()));
+    connect(loginButton,&QPushButton::pressed, [this](){
+        chatProtocolType data;
+        data.type=Chat_Status::Chat_Login;
+        data.data[0]='a';
+        data.data[1]='a';
+
+        QByteArray s;
+        s.append(data.data).append(data.data);
+        clientSocket->write(s);
+    });
     setWindowTitle(tr("Echo Client"));
 
 }
@@ -76,6 +87,18 @@ void ChattingClient::sendData(){
     if(str.length()){
         QByteArray bytearray;
         bytearray=str.toUtf8();
-        clientSocket->write(bytearray);
+
+        chatProtocolType data;
+        data.type=Chat_Status::Chat_Talk;
+
+        for(int i=0; i<str.size(); i++){
+            data.data[i]= *(const char*)(bytearray);
+        }
+
+
+        QByteArray data_to_send;
+        data_to_send.setRawData(reinterpret_cast<char*>(&data), 1024);
+
+        clientSocket->write(data_to_send);
     }
 }
