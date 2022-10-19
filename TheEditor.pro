@@ -13,6 +13,7 @@ SOURCES += \
     Manager/OrderManager.cpp \
     Manager/ProductManager.cpp \
     Network/chattingclient.cpp \
+    Network/message.cpp \
     Network/server.cpp \
     View/addview.cpp \
     View/showview.cpp \
@@ -28,6 +29,7 @@ HEADERS += \
     Manager/OrderManager.h \
     Manager/ProductManager.h \
     Network/chattingclient.h \
+    Network/message.h \
     Network/server.h \
     View/addview.h \
     View/showview.h \

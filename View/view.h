@@ -17,6 +17,7 @@ public:
     virtual void update()=0;
     QIcon icon;
     QString label;
+    void removeFromTree();
 protected:
     View(Manager& mgr, Tree& tree, const QIcon icon=QPixmap(), const QString label=QString());
     bool is_update=false;

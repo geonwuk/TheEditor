@@ -11,13 +11,10 @@ View::View(Manager& mgr, Tree& tree, const QIcon icon, const QString label) : ic
 }
 View::~View() {
     mgr.detachObserver(this);
-    qDebug()<<"~VIEW: "<<label;
-
-
-   // tree.getTabs().removeChild(tab);
-
 }
-
+void View::removeFromTree(){
+     tree.getTabs().removeChild(tab);
+}
 
 
 

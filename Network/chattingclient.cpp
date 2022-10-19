@@ -2,7 +2,7 @@
 #include <QtGui>
 #include <QtWidgets>
 #include <QtNetwork>
-#include "server.h"
+#include "Network/message.h"
 #define BLOCK_SIZE 1024
 
 
@@ -18,6 +18,9 @@ ChattingClient::ChattingClient(QWidget *parent)
     QLineEdit* serverPort = new QLineEdit(this);
     serverPort->setInputMask("00000;_");
 
+    QLineEdit* idEdit = new QLineEdit(this);
+    idEdit->setPlaceholderText("ID");
+
     QPushButton* connectButton = new QPushButton("cnnect",this);
     connect(connectButton,&QPushButton::clicked,[=](){
         clientSocket->connectToHost(serverAddress->text(),
@@ -28,6 +31,7 @@ ChattingClient::ChattingClient(QWidget *parent)
     serverLayout->addStretch(1);
     serverLayout->addWidget(serverAddress);
     serverLayout->addWidget(serverPort);
+    serverLayout->addWidget(idEdit);
     serverLayout->addWidget(connectButton);
 
     message=new QTextEdit(this);
@@ -59,16 +63,10 @@ ChattingClient::ChattingClient(QWidget *parent)
     clientSocket = new QTcpSocket(this);
     connect(clientSocket,&QAbstractSocket::errorOccurred,
             [=]{qDebug()<<clientSocket->errorString();});
-    connect(clientSocket, SIGNAL(readyRead()), SLOT(echoData()));
-    connect(loginButton,&QPushButton::pressed, [this](){
-        chatProtocolType data;
-        data.type=Chat_Status::Chat_Login;
-        data.data[0]='a';
-        data.data[1]='a';
-
-        QByteArray s;
-        s.append(data.data).append(data.data);
-        clientSocket->write(s);
+   // connect(clientSocket, SIGNAL(readyRead()), SLOT(echoData()));
+    connect(loginButton,&QPushButton::pressed, [=](){
+        Message msg{idEdit->text(), Chat_Login};
+        clientSocket->write(msg);
     });
     setWindowTitle(tr("Echo Client"));
 
@@ -77,28 +75,15 @@ ChattingClient::ChattingClient(QWidget *parent)
 
 void ChattingClient::echoData(){
     QTcpSocket* clientSocket = dynamic_cast<QTcpSocket*>(sender());
-    if(clientSocket->bytesAvailable()>BLOCK_SIZE) return;
-    QByteArray bytearray = clientSocket->read(BLOCK_SIZE);
-    message->append(QString(bytearray));
+//    if(clientSocket->bytesAvailable()>BLOCK_SIZE) return;
+//    QByteArray bytearray = clientSocket->read(BLOCK_SIZE);
+//    message->append(QString(bytearray));
 }
 
 void ChattingClient::sendData(){
     QString str = inputLine->text();
     if(str.length()){
-        QByteArray bytearray;
-        bytearray=str.toUtf8();
-
-        chatProtocolType data;
-        data.type=Chat_Status::Chat_Talk;
-
-        for(int i=0; i<str.size(); i++){
-            data.data[i]= *(const char*)(bytearray);
-        }
-
-
-        QByteArray data_to_send;
-        data_to_send.setRawData(reinterpret_cast<char*>(&data), 1024);
-
-        clientSocket->write(data_to_send);
+        Message msg{str,Chat_Talk};
+        clientSocket->write(msg);
     }
 }

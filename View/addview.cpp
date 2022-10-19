@@ -306,9 +306,10 @@ void AddParticipantView::addParticipant(){
             pi++;
         }
     }
-
+    int compensation=0;
     for( auto row : rows_delete){
-        ui.clientList->removeRow(row);
+        ui.clientList->removeRow(row-compensation);
+        compensation++;
     }
 
 

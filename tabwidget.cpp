@@ -1,9 +1,10 @@
 #include "tabwidget.h"
-
+#include "View/view.h"
 
 void TabWidget::tabClosed(int index){
-    QWidget* wg = widget(index);
+    View* wg = static_cast<View*>(widget(index));
     removeTab(index);
+    wg->removeFromTree();
     delete wg;
     qDebug()<<"tab "<<index<<" deleted";
 

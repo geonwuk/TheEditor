@@ -6,25 +6,20 @@
 #include <vector>
 #include "Manager/ClientManager.h"
 #include <QHash>
+#include "Network/message.h"
+#include <QTcpSocket>
 using CM::Client;
 class ChatRoom;
 class QTcpServer;
-class QTcpSocket;
+
 class QLabel;
 class Manager;
 
-class CommandMessage{
-public:
-    enum class type {Invitation,Drop};
-
-};
-
 struct NetClient{
-    NetClient(){}
     NetClient(std::shared_ptr<Client> self):self{self}{}
     std::shared_ptr<Client> self;
-    QString is_online {"offline"};
-    std::vector<CommandMessage> pending_messages;
+    bool is_online=false;
+    std::vector<Message> pending_messages;
     QTcpSocket* socket;
 };
 
@@ -40,38 +35,19 @@ public:
         net_clients.emplace_back(c);
     }
 
-    const std::vector<NetClient>& getNetClients(){
-        return net_clients;
-    }
-
 public:
     Manager& mgr;
     std::vector<NetClient> net_clients;
     ChatRoom chat_room;
+
+public:
+    decltype(net_clients)::iterator findNetClient(QString id){
+        return find_if(net_clients.begin(),net_clients.end(), [=](NetClient& nc){
+            qDebug()<<"ID "<<nc.self->getId().c_str();
+            return (id == (nc.self->getId().c_str())) ? true : false;
+        });
+    }
 };
-
-typedef struct {
-    char type;
-    char data[1023];
-} chatProtocolType;
-
-typedef enum {
-    Chat_Login,
-    Chat_In,
-    Chat_Talk,
-    Chat_Close,
-    Chat_LogOut,
-    Chat_Invite,
-    Chat_KickOut,
-    Chat_FileTransform
-} Chat_Status;
-
-enum RESPOND{
-    NO_ID,
-    SUCCESS
-
-};
-
 
 class Server : public QWidget
 {
@@ -85,11 +61,20 @@ private slots:
     void readData();
 private:
     QTcpServer* tcpServer;
-    QList<QTcpSocket*> clientList;
-    QHash<QString, NetClient*> ipToClient ;
+  //  QList<QTcpSocket*> clientList;
+
+    struct Data {
+        bool is_ready=false;
+        QByteArray data;
+        quint64 target_size=0;
+    };
+
+    QHash<QTcpSocket*, Data> socke_data;
+    QHash<QTcpSocket*, NetClient*> ip_to_nclient;
 //    Manager& mgr;
     ServerManager& mgr;
 };
+
 
 
 #endif // SERVER_H
