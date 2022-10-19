@@ -5,6 +5,7 @@
 #include "mainwindow.h"
 #include <algorithm>
 #include <cassert>
+#include "View/showview.h"
 using namespace std;
 
 ServerManager::ServerManager(Manager& mgr): mgr{mgr} {
@@ -46,7 +47,7 @@ void Server::readData(){
             qDebug()<<"bytes avail"<<socket->bytesAvailable();
             return;
         }
-QDataStream x{socket};
+        QDataStream x{socket};
 
         x>>recv_data.target_size ;
         qDebug()<<"size set"<<recv_data.target_size;
@@ -81,7 +82,7 @@ QDataStream x{socket};
         QString id{x};
         qDebug()<<"ID!!"<<id;
         auto it = mgr.findNetClient(id);
-        if(it==mgr.net_clients.end()){
+        if(it==mgr.end()){
             qDebug()<<"NO ID";
             Message msg {"",NO_ID};
             socket->write(msg);
@@ -118,4 +119,15 @@ QDataStream x{socket};
 
 Server::~Server()
 {
+}
+
+template<typename F>
+void ServerManager::updateView(F f){
+    mgr.notify([](View* v){
+        ShowChatView* view =dynamic_cast<ShowChatView*>(v);
+        if(nullptr!=view){
+            qDebug()<<v->label <<"network notify";
+        }
+
+    });
 }

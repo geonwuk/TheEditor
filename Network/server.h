@@ -8,13 +8,14 @@
 #include <QHash>
 #include "Network/message.h"
 #include <QTcpSocket>
+
 using CM::Client;
 class ChatRoom;
 class QTcpServer;
 
 class QLabel;
 class Manager;
-
+class ShowChatView;
 struct NetClient{
     NetClient(std::shared_ptr<Client> self):self{self}{}
     std::shared_ptr<Client> self;
@@ -35,11 +36,10 @@ public:
         net_clients.emplace_back(c);
     }
 
-public:
+private:
     Manager& mgr;
     std::vector<NetClient> net_clients;
     ChatRoom chat_room;
-
 public:
     decltype(net_clients)::iterator findNetClient(QString id){
         return find_if(net_clients.begin(),net_clients.end(), [=](NetClient& nc){
@@ -47,6 +47,12 @@ public:
             return (id == (nc.self->getId().c_str())) ? true : false;
         });
     }
+    decltype(net_clients)::iterator end(){
+        return net_clients.end();
+    }
+
+    template<typename F>
+    void updateView(F);
 };
 
 class Server : public QWidget
