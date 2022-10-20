@@ -9,7 +9,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    //a.setStyle("Fusion");
+    a.setStyle("Fusion");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
 
     ChattingClient c;
     c.show();
+    ChattingClient c2;
+    c2.show();
 
     return a.exec();
 }

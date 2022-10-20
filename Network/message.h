@@ -1,6 +1,7 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 #include <QString>
+
 enum REQUEST{
     Chat_Login,
     Chat_In,
@@ -19,13 +20,24 @@ enum RESPOND{
 
 class Message {
 public:
-    Message(QString, REQUEST);
     Message(QString, RESPOND);
-
+    Message(QString, REQUEST);
     operator const QByteArray() const;
+
 private:
     char type;
     QByteArray data;
+};
+
+class ReadMessage{
+public:
+    ReadMessage(QByteArray&);
+    operator const char() const;
+    const QString toQString() const;
+private:
+    QByteArray& data;
+    char type;
+
 };
 
 

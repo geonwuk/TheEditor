@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QList>
 #include <vector>
+#include <map>
 #include "Manager/ClientManager.h"
 #include <QHash>
 #include "Network/message.h"
@@ -21,39 +22,58 @@ struct NetClient{
     std::shared_ptr<Client> self;
     bool is_online=false;
     std::vector<Message> pending_messages;
-    QTcpSocket* socket;
+    QTcpSocket* socket=nullptr;
 };
 
-class ChatRoom{
-public:
-    std::vector<std::shared_ptr<Client>> participants;
-};
 
 class ServerManager{
 public:
     ServerManager(Manager&);
     void addClient(const std::shared_ptr<Client>& c){
-        net_clients.emplace_back(c);
+        qDebug()<<"ADDING NEW NC";
+        auto client = std::make_shared<NetClient>(c);
+        net_clients.emplace(c->getId(), client);
     }
+    void addLog(QTcpSocket* socket, QString data);
+
+    struct ChatMessage{
+        QString ip;
+        QString port;
+        QString id;
+        QString name;
+        QString message;
+        QString time;
+    };
 
 private:
     Manager& mgr;
-    std::vector<NetClient> net_clients;
-    ChatRoom chat_room;
+    std::vector<ChatMessage> logs;
+    std::map<std::string, std::shared_ptr<NetClient>> net_clients;
+    std::vector<ShowChatView*> chat_views;
+    QHash<QTcpSocket*, NetClient*> ip_to_nclient;
+
+
 public:
     decltype(net_clients)::iterator findNetClient(QString id){
-        return find_if(net_clients.begin(),net_clients.end(), [=](NetClient& nc){
-            qDebug()<<"ID "<<nc.self->getId().c_str();
-            return (id == (nc.self->getId().c_str())) ? true : false;
-        });
+        return net_clients.find(id.toStdString());
     }
-    decltype(net_clients)::iterator end(){
+    decltype(net_clients)::iterator noClient(){
         return net_clients.end();
     }
-
-    template<typename F>
-    void updateView(F);
+    void login(QTcpSocket* socket, decltype(net_clients)::iterator itr);
+    NetClient* socketToNetClient(QTcpSocket* socket){
+        auto it = ip_to_nclient.find(socket);
+        return it==ip_to_nclient.end() ? nullptr : *it;
+    }
+    void registerChatView(ShowChatView* view){
+        chat_views.emplace_back(view);
+    }
+    void unregisterChatView(ShowChatView* view);
+    decltype(net_clients)::iterator beginClients(){
+        return net_clients.begin();
+    }
 };
+
 
 class Server : public QWidget
 {
@@ -68,15 +88,13 @@ private slots:
 private:
     QTcpServer* tcpServer;
   //  QList<QTcpSocket*> clientList;
-
     struct Data {
         bool is_ready=false;
         QByteArray data;
         quint64 target_size=0;
     };
-
     QHash<QTcpSocket*, Data> socke_data;
-    QHash<QTcpSocket*, NetClient*> ip_to_nclient;
+
 //    Manager& mgr;
     ServerManager& mgr;
 };

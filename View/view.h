@@ -45,8 +45,6 @@ public:
     CView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString()) : View{mgr, tabs, icon,label} {}
     void addClient(const QString ID, const QString name, const QString phone_number = "NONE", const QString address = "NONE") {
         mgr.getCM().addClient(ID.toStdString(), name.toStdString(),phone_number.toStdString(),address.toStdString());
-        auto c = *mgr.getCM().getCleints().begin();
-        qDebug()<<c.getName().c_str()<<c.getPhoneNumber().c_str()<<c.getAddress().c_str();
         notify<CView>();
         notify<OView>();
         notify<NView>();

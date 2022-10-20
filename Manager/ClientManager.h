@@ -66,7 +66,6 @@ namespace CM {
         class const_iterator{
             using Itr_type = decltype(clients)::const_iterator;
             struct Itr {
-                Itr_type ptr;
                 Itr(Itr_type p) :ptr{ p } {}
                 const Client& operator*() const {
                     return *ptr->second.get();
@@ -77,6 +76,12 @@ namespace CM {
                 bool operator!=(Itr b) {
                     return ptr != b.ptr ? true : false;
                 }
+                Itr_type::value_type::second_type operator->(){
+                    return (ptr->second);
+                }
+
+            private:
+                Itr_type ptr;
             };
             Itr st, ed;
         public:

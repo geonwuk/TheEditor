@@ -69,13 +69,24 @@ private:
     QTableWidget *orderInfoTable;
     void fillContents();
 };
+
+
+class QMenu;
+class QProgressDialog;
 #include "ui_chatRoom.h"
 class ShowChatView : public View
 {
+    QProgressDialog* progressDialog;
+    QMenu* menu;
+//    std::vector<std::shared_ptr<NetClient>> participants;
 public:
     ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    ~ShowChatView();
     Ui::chatRoom ui;
     void update(){}
+    void clientLogin();
+
+    void addLog(NetClient* , QString );
 };
 
 #endif // SHOWVIEW_H

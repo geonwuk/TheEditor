@@ -2,8 +2,8 @@
 #include <QDate>
 #include <cassert>
 #include <QShortcut>
-
-
+#include<QMenu>
+#include <QProgressDialog>
 ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : CView{mgr, tabs,icon,label}
 {
     ui.setupUi(this);
@@ -299,12 +299,6 @@ void ShowOrderView::orderItemSelectionChanged_(){
         total_price+=local_price;
         i++;
     }
-
-
-
-
-
-
 }
 
 
@@ -323,10 +317,44 @@ void ShowOrderView::update(){
 //---------------------------------------------------
 
 
-ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label)
-    : View{mgr, tabs,icon,label} {
+ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : View{mgr, tabs,icon,label} {
     ui.setupUi(this);
+    mgr.getSM().registerChatView(this);
+    ui.splitter->setSizes({120,500});
+
+    QAction* inviteAction = new QAction(tr("&Invite"));
+//    inviteAction->setObjectName("Invite");
+//    connect(inviteAction, SIGNAL(triggered()), SLOT(inviteClient()));
+
+    QAction* removeAction = new QAction(tr("&Kick out"));
+//    connect(removeAction, SIGNAL(triggered()), SLOT(kickOut()));
+
+    menu = new QMenu;
+    menu->addAction(inviteAction);
+    menu->addAction(removeAction);
+    ui.clientTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    progressDialog = new QProgressDialog(0);
+    progressDialog->setAutoClose(true);
+    progressDialog->reset();
+
+}
+
+ShowChatView::~ShowChatView(){
+    mgr.getSM().unregisterChatView(this);
+}
+
+void ShowChatView::clientLogin(){
 
 
+}
 
+void ShowChatView::addLog(NetClient* nc, QString str){
+    QTreeWidgetItem* item = new QTreeWidgetItem(ui.messageTreeWidget);
+    item->setText(0, nc->socket->peerAddress().toString());
+    item->setText(1, QString::number(nc->socket->peerPort()));
+    item->setText(2, nc->self->getId().c_str());
+    item->setText(3, nc->self->getName().c_str());
+    item->setText(4, str);
+    item->setText(5, QDateTime::currentDateTime().toString());
 }

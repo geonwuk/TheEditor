@@ -6,6 +6,7 @@
 #include <ctime>
 #include <random>
 #include <functional>
+
 using namespace std;
 using namespace CM;
 unsigned int ClientManager::client_id = 0; 
