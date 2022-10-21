@@ -24,7 +24,7 @@ string ProductManager::generateRandID(tm time){
 }
 
 std::ofstream& operator<< (std::ofstream& out, tm p) {
-	out << std::put_time(&p, "%A %c");
+    out << std::put_time(&p, "%D %T");
 	return out;
 }
 
@@ -114,7 +114,7 @@ ProductManager::const_iterator ProductManager::getProducts() const{
 
 ofstream& PM::ProductManager::saveProducts(ofstream& out) const{
 	for (const auto& p : products) {
-		out << p.second << endl;
+        out << *p.second.get() << endl;
 	}
 	return out;
 }
@@ -142,7 +142,7 @@ std::pair<std::ifstream&, std::vector<Product>> PM::ProductManager::loadProducts
 
 		tm time;
 		istringstream ss{ time_string };
-		ss >> std::get_time(&time, "%a %m/%d/%y %H:%M:%S");	
+        ss >> std::get_time(&time, "%D %T");
         product_vector.emplace_back(id, name, price, qty, time);
 	}
 	return  { in, move(product_vector) };

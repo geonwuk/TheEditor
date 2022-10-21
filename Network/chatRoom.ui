@@ -49,6 +49,11 @@
          </column>
          <column>
           <property name="text">
+           <string>Id</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
            <string>Name</string>
           </property>
          </column>

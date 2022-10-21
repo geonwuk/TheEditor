@@ -76,6 +76,9 @@ namespace CM {
                 bool operator!=(Itr b) {
                     return ptr != b.ptr ? true : false;
                 }
+                bool operator==(Itr b) {
+                    return ptr == b.ptr ? true : false;
+                }
                 Itr_type::value_type::second_type operator->(){
                     return (ptr->second);
                 }

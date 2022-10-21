@@ -19,9 +19,7 @@ namespace OM {
     using Client_ID = CM::CID;
 	using Order_ID = unsigned int;
 	
-	struct No_Matching_Product { Product_ID pid; }; 
-	struct No_Matching_Client { Client_ID cid; };	
-	struct Already_In_Order { Order_ID oid; };		
+    struct ERROR_WHILE_LOADING { unsigned int line; };
 
 	class OrderManager{
 	public:
@@ -52,8 +50,7 @@ namespace OM {
         ProductManager& pm;
         const Order& findOrder(const Order_ID order_id) const;
 		std::ofstream & saveOrders(std::ofstream&) const;												
-		std::pair<std::ifstream&, vector<Order>> loadOrders(std::ifstream&);															
-        void addOrder(const Order&);
+        std::ifstream& loadOrders(std::ifstream&, unsigned int lines);
         struct bill{
             PM::PID id;
             unsigned int qty;

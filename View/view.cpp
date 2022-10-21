@@ -18,6 +18,7 @@ void View::removeFromTree(){
 
 
 
+
 QWidget* View::getCheckBoxWidget() {
     QWidget* checkBoxWidget = new QWidget();
     auto check_box = new QCheckBox;

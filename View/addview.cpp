@@ -293,62 +293,66 @@ void AddParticipantView::initUI(){
 
 void AddParticipantView::addParticipant(){
     auto ranges = ui.clientList->selectedRanges();
-    QList<int> rows_delete;
-    int pi = ui.participantList->rowCount();
+    if(ranges.empty()) return;
     for(auto range : ranges){
         for(int top = range.topRow(); top<= range.bottomRow(); top++){
             auto id_item = ui.clientList->item(top,0);
             QString id = id_item->data(Role::id).value<QString>();
             auto client = mgr.getCM().copyClient(id.toStdString());
             mgr.getSM().addClient(client);
-            rows_delete<<top;
-            ui.participantList->setRowCount(pi+1);
-            ui.participantList->setItem(pi,0,new QTableWidgetItem(client->getId().c_str()));
-            ui.participantList->setItem(pi,1,new QTableWidgetItem(client->getName().c_str()));
-            pi++;
         }
     }
-    for(auto rb = rows_delete.rbegin(); rb!=rows_delete.rend(); rb++){
-        ui.clientList->removeRow(*rb);
-    }
-
-
-
-//        for(const auto& nclient : mgr.getSM().net_clients){
-//            QList<QString> ls;
-//            ls<<nclient.self->getId().c_str()<<nclient.self->getName().c_str()<<nclient.is_online;
-//            auto item = new QTreeWidgetItem(ls);
-//            ui.clientList->addTopLevelItem(item);
-//        }
+    notify<NView>();
 }
 void AddParticipantView::dropParticipant(){
-
+    auto ranges = ui.participantList->selectedRanges();
+    if(ranges.empty()) return;
+    for(auto range : ranges){
+        for(int top = range.topRow(); top<= range.bottomRow(); top++) {
+            auto id_item = ui.participantList->item(top,0);
+            QString id = id_item->data(Role::id).value<QString>();
+            mgr.getSM().dropClient(id);
+        }
+    }
+    notify<NView>();
 }
 void AddParticipantView::fillContents(){
     ui.clientList->clearContents();
     ui.clientList->setRowCount(mgr.getCM().getSize());
     int i=0;
-    auto participants = mgr.getSM().beginClients();
+    auto participants = mgr.getSM().begin();
     for(auto client = mgr.getCM().getCleints().begin(); client!=mgr.getCM().getCleints().end(); ++client){
         int j=0;
-        while(client->getId()==participants->second->self->getId()&&participants!=mgr.){
+        while(participants!=mgr.getSM().end() && client!=mgr.getCM().getCleints().end() && (client->getId()==participants->second->self->getId())){
             ++client;
             ++participants;
             continue;
         }
+        if(client == mgr.getCM().getCleints().end())
+            break;
         ui.clientList->setItem(i,j++,ceateTableItem(client->getId().c_str(), client->getId().c_str()) );
         ui.clientList->setItem(i,j++,new QTableWidgetItem(client->getName().c_str()));
         i++;
     }
+    ui.clientList->setRowCount(i);
     ui.clientList->resizeColumnsToContents();
     ui.clientList->resizeRowsToContents();
+
+    ui.participantList->setRowCount(mgr.getSM().getSize());
+    int p_i=0;
+    for(auto& participant : mgr.getSM()){
+        int j=0;
+        auto& client = participant.second->self;
+        ui.participantList->setItem(p_i,j++,ceateTableItem(client->getId().c_str(), client->getId().c_str()) );
+        ui.participantList->setItem(p_i,j++,new QTableWidgetItem(client->getName().c_str()));
+        p_i++;
+    }
+    ui.participantList->resizeColumnsToContents();
+    ui.participantList->resizeRowsToContents();
 }
 
 AddParticipantView::~AddParticipantView(){}
 
-void AddParticipantView::initParticipantView(){
-
-}
 
 
 void AddParticipantView::update(){

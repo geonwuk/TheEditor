@@ -78,7 +78,6 @@ public:
 private:
     Ui::addParticipantView ui;
     void fillContents();
-    void initParticipantView();
     void initUI();
 
 private slots:

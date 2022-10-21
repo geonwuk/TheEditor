@@ -301,8 +301,6 @@ void ShowOrderView::orderItemSelectionChanged_(){
     }
 }
 
-
-ShowOrderView::~ShowOrderView(){}
 void ShowOrderView::update(){
     if(!is_update){
         qDebug()<<"show order updated";
@@ -313,30 +311,34 @@ void ShowOrderView::update(){
     }
 }
 
-
+ShowOrderView::~ShowOrderView(){}
 //---------------------------------------------------
 
 
-ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : View{mgr, tabs,icon,label} {
+ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : NView{mgr, tabs,icon,label}, smgr{mgr.getSM()} {
     ui.setupUi(this);
-    mgr.getSM().registerChatView(this);
+    smgr.registerChatView(this);
     ui.splitter->setSizes({120,500});
-
-    QAction* inviteAction = new QAction(tr("&Invite"));
-//    inviteAction->setObjectName("Invite");
-//    connect(inviteAction, SIGNAL(triggered()), SLOT(inviteClient()));
-
+//ui.clientTreeWidget->selectionMode()
     QAction* removeAction = new QAction(tr("&Kick out"));
+    connect(removeAction, &QAction::triggered, [&]{
+        for(auto& item : ui.clientTreeWidget->selectedItems()){
+            QString id = item->text(1);
+            mgr.getSM().dropClient(id);
+        }
+    });
+
 //    connect(removeAction, SIGNAL(triggered()), SLOT(kickOut()));
 
     menu = new QMenu;
-    menu->addAction(inviteAction);
     menu->addAction(removeAction);
     ui.clientTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
     progressDialog = new QProgressDialog(0);
     progressDialog->setAutoClose(true);
     progressDialog->reset();
+
+    fillclientTree();
 
 }
 
@@ -357,4 +359,36 @@ void ShowChatView::addLog(NetClient* nc, QString str){
     item->setText(3, nc->self->getName().c_str());
     item->setText(4, str);
     item->setText(5, QDateTime::currentDateTime().toString());
+}
+
+void ShowChatView::fillclientTree(){
+    int row=0;
+    ui.clientTreeWidget->clear();
+    for(auto& participant : smgr){
+        int j=0;
+        auto& client = participant.second->self;
+        auto icon = participant.second->is_online ? QStyle::SP_DialogYesButton : QStyle::SP_DialogNoButton;
+        auto online_string = participant.second->is_online ? "online" : "offline";
+        auto item = new QTreeWidgetItem{ui.clientTreeWidget,{online_string,client->getId().c_str(),client->getName().c_str()}};
+        item->setIcon(0,qApp->style()->standardIcon(icon));
+
+    }
+
+    for(int i=0; i<ui.clientTreeWidget->columnCount(); i++){
+        ui.clientTreeWidget->resizeColumnToContents(i);
+    }
+}
+
+void ShowChatView::on_clientTreeWidget_customContextMenuRequested(const QPoint &pos){
+    auto items = ui.clientTreeWidget->selectedItems();
+
+
+    QPoint globalPos = ui.clientTreeWidget->mapToGlobal(pos);
+    QAction* ac = menu->exec(globalPos);
+
+    qDebug()<<"Context";
+}
+
+void ShowChatView::update(){
+    fillclientTree();
 }

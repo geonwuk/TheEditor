@@ -65,7 +65,7 @@ ClientManager::const_iterator ClientManager::getCleints() const{
 
 ofstream& ClientManager::saveClients(ofstream& out) const{
 	for (const auto& c : clients) {
-		out << c.second << endl;
+        out << *c.second.get() << endl;
 	}
 	return out;
 }

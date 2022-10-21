@@ -64,13 +64,15 @@ public:
     ~MainWindow();
     Manager* getMgr(){return &mgrs;}
 
-public slots:
+private slots:
     void treeToTab(QWidget *page, const QIcon &icon, const QString &label);
     void setTabFocus(QWidget* page);
+    void save();
+    void load();
+
 private:
     Ui::MainWindow *ui;
     Manager mgrs{*this};
-
     TabWidget management_tw{this};
     ManagementTree management_tree{this,&management_tw};
 

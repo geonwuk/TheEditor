@@ -73,9 +73,11 @@ private:
 
 class QMenu;
 class QProgressDialog;
+class ServerManager;
 #include "ui_chatRoom.h"
-class ShowChatView : public View
+class ShowChatView : public NView
 {
+    Q_OBJECT
     QProgressDialog* progressDialog;
     QMenu* menu;
 //    std::vector<std::shared_ptr<NetClient>> participants;
@@ -83,10 +85,16 @@ public:
     ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
     ~ShowChatView();
     Ui::chatRoom ui;
-    void update(){}
+    void update();
     void clientLogin();
-
     void addLog(NetClient* , QString );
+
+private:
+    void fillclientTree();
+    ServerManager& smgr;
+
+private slots:
+    void on_clientTreeWidget_customContextMenuRequested(const QPoint &pos);
 };
 
 #endif // SHOWVIEW_H

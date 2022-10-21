@@ -8,6 +8,8 @@
 #include "View/view.h"
 #include <QSplitter>
 #include "Network/server.h"
+#include <QFileDialog>
+#include <fstream>
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){
     QSplitter* splitter = new QSplitter;
     splitter->setChildrenCollapsible(false);
@@ -35,9 +37,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->actionSave->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogSaveButton));
     ui->actionOpen->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogOpenButton));
 
-
-
-
     QSplitter* splitter = initTreeAndTab(management_tree,management_tw);
     //management_tree.setBaseSize(width(),height());
 
@@ -51,8 +50,10 @@ MainWindow::MainWindow(QWidget *parent)
     qDebug()<<"1번 누름";});
     connect(ui->ChatButton, &QToolButton::pressed,[=]{ sw->setCurrentIndex(2); qDebug()<<"2번 누름"; });
 
-    Server* s = new Server{mgrs.getSM()};
+    mgrs.getSM().setServer(new Server{mgrs.getSM()});
     //connect(&tree,SIGNAL(setTabFocus(QWidget*)),SLOT(setTabFocus(QWidget*)));
+
+    setWindowTitle(tr("Program"));
 }
 
 void MainWindow::treeToTab(QWidget *page, const QIcon &icon, const QString &label){
@@ -63,6 +64,19 @@ void MainWindow::setTabFocus(QWidget* page){
 //    tw.setCurrentWidget(page);
 }
 
+void MainWindow::save(){
+    QString filename = QFileDialog::getOpenFileName(this);
+    std::ofstream out(filename.toStdString());
+    out<<"[Clients],"<<mgrs.getCM().getSize()<<std::endl;
+    mgrs.getCM().saveClients(out);
+    out<<"[Products],"<<mgrs.getPM().getSize()<<std::endl;
+    mgrs.getPM().saveProducts(out);
+    out<<"[Orders],"<<mgrs.getOM().getSize()<<std::endl;
+    mgrs.getOM().saveOrders(out);
+}
+void MainWindow::load(){
+
+}
 
 MainWindow::~MainWindow()
 {
@@ -73,5 +87,7 @@ void Manager::attachObserver(View* o){
     qDebug()<<"attach observer";
     observers.emplace_back(o);
 }
+
+
 
 

@@ -12,18 +12,46 @@ using namespace std;
 
 void ServerManager::login(QTcpSocket* socket, decltype(net_clients)::iterator itr){
     ip_to_nclient.insert(socket, &(*(itr->second)));
-    (itr->second)->is_online=true;
-    (itr->second)->socket=socket;
+    itr->second->is_online=true;
+    itr->second->socket=socket;
     qDebug()<<"login complete";
     auto client = socketToNetClient(socket);
     if(client==nullptr){
         qDebug()<<"EXEPT";
     }
     assert(nullptr!=client);
-    qDebug()<<"client"<<client->self->getId().c_str()<<    client->socket->peerAddress().toString();
     for(auto v : chat_views){
-        ;
+        v->update();
     }
+}
+
+
+bool ServerManager::isLogIn(QTcpSocket* socket){
+    auto it = ip_to_nclient.find(socket);
+    if(it==ip_to_nclient.end()){
+        return false;
+    }
+    return it.value()->is_online ? true : false;
+}
+
+void ServerManager::logOut(QTcpSocket* socket){
+    NetClient* nc = ip_to_nclient.find(socket).value();
+    auto it = net_clients.find(nc->self->getId().c_str());
+    it->second->is_online=false;
+    it->second->socket=nullptr;
+    qDebug()<<"good bye" <<nc->self->getId().c_str()<<nc->self->getName().c_str();
+    socket->write(Message("Chat_KickOut",Chat_KickOut));
+    socket->close();
+    ip_to_nclient.remove(socket);
+    net_clients.erase(it);
+    for(auto v : chat_views){
+        v->update();
+    }
+}
+void ServerManager::dropClient(QString id){
+    auto it = net_clients.find(id.toStdString());
+    auto socket = it->second->socket;
+    //logOut(socket);
 }
 
 void ServerManager::addLog(QTcpSocket* socket, QString data){
@@ -33,14 +61,10 @@ void ServerManager::addLog(QTcpSocket* socket, QString data){
     for(auto v: chat_views){
         v->addLog(client, data);
     }
+
 }
 
-ServerManager::ServerManager(Manager& mgr): mgr{mgr} {
-//    for(const auto& client : mgr.getCM().getCleints()){
-//        auto s_client = mgr.getCM().copyClient(client.getId());
-//        net_clients.emplace_back(s_client);
-//    }
-}
+ServerManager::ServerManager(Manager& mgr): mgr{mgr} {}
 
 
 void ServerManager::unregisterChatView(ShowChatView* view){
@@ -64,19 +88,24 @@ Server::Server(ServerManager& mgr, QWidget *parent)
         return;
     }
     qDebug()<<QString("The server is running on port %1").arg(tcpServer->serverPort());
-    setWindowTitle(tr("Echo Server"));
+
 }
 void Server::clientConnect(){
     qDebug()<<"connect attempt";
     QTcpSocket* clientConnection = tcpServer->nextPendingConnection();
-    connect(clientConnection, SIGNAL(disconnected()), clientConnection, SLOT(deleteLater()));
+    connect(clientConnection, SIGNAL(disconnected()), SLOT(clientDisconnected()));
     connect(clientConnection,SIGNAL(readyRead()),SLOT(readData()));
     qDebug()<<QString("new connection is established");
+}
+void Server::clientDisconnected(){
+    QTcpSocket* socket = static_cast<QTcpSocket*>(sender());
+    assert(socket!=nullptr);
+//    mgr.logOut(socket);
 }
 
 void Server::readData(){    
     QTcpSocket* socket = (QTcpSocket*)(sender());
-    Data& recv_data = socke_data[socket];
+    Data& recv_data = socket_data[socket];
     qDebug()<<"ready?"<<recv_data.is_ready;
     if(!recv_data.is_ready){
         if(socket->bytesAvailable()<sizeof(quint64)){
@@ -105,7 +134,7 @@ void Server::readData(){
         assert(!id.isEmpty());
         qDebug()<<"ID!!"<<id;
         auto it = mgr.findNetClient(id);
-        if(it==mgr.noClient()){
+        if(it==mgr.end()){
             qDebug()<<"NO ID";
             Message msg {"NO_ID",NO_ID};
             socket->write(msg);
@@ -119,24 +148,17 @@ void Server::readData(){
         break;
     }
     case Chat_Talk:{
-        auto client = mgr.socketToNetClient(socket);
-        if(client==nullptr){
+        if(!mgr.isLogIn(socket)){
             socket->write(Message {"BAD_REQUEST",BAD_REQUEST});
             break;
         }
-        qDebug()<<client->self->getId().c_str()<<client->self->getName().c_str();
         qDebug()<<read_msg.toQString();
-        QString ip = socket->peerAddress().toString();
-
         mgr.addLog(socket, read_msg.toQString());
-
         break;
     }
 
     }
-
-
-    assert(socke_data.remove(socket));
+    assert(socket_data.remove(socket));
 }
 
 Server::~Server()
