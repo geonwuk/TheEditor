@@ -15,6 +15,7 @@ SOURCES += \
     Network/chattingclient.cpp \
     Network/message.cpp \
     Network/server.cpp \
+    Network/servermanager.cpp \
     View/addview.cpp \
     View/showview.cpp \
     View/view.cpp \
@@ -31,6 +32,7 @@ HEADERS += \
     Network/chattingclient.h \
     Network/message.h \
     Network/server.h \
+    Network/servermanager.h \
     View/addview.h \
     View/showview.h \
     View/view.h \

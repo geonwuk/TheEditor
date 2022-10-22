@@ -1,10 +1,12 @@
 #ifndef CHATTINGCLIENT_H
 #define CHATTINGCLIENT_H
 
+#include "Network/message.h"
 #include <QWidget>
 #include <QTextEdit>
 #include <QLineEdit>
 #include <QTcpSocket>
+class QPushButton;
 
 
 class ChattingClient : public QWidget
@@ -14,13 +16,28 @@ public:
     explicit ChattingClient(QWidget *parent = nullptr);
 
 private slots:
-    void echoData();
-    void sendData();
+    void sendMessage();
+    void receiveData();
+    void disconnect();
+    void logOut();
 private:
+    void initUI();
     QTextEdit* message;
     QLineEdit* inputLine;
     QTcpSocket* clientSocket;
-
+    QLineEdit* idEdit;
+    QPushButton* fileButton;
+    QPushButton* sentButton;
+    QPushButton* loginButton;
+    QPushButton* logOutButton;
+    void closeEvent(QCloseEvent*) override;
+    struct Data {
+        bool is_ready=false;
+        QByteArray data;
+        quint64 target_size=0;
+    };
+    QHash<QTcpSocket*, Data> socket_data;
+    void processMessage(ReadMessage );
 signals:
 
 };

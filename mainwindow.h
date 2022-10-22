@@ -8,7 +8,7 @@
 #include "tabwidget.h"
 #include "tree.h"
 #include <list>
-#include "Network/server.h"
+#include "Network/servermanager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

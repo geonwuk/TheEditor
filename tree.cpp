@@ -7,32 +7,6 @@
 Tree::Tree(MainWindow* mw, TabWidget *tw) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}, tw{tw}
 {
     setHeaderHidden(true);
-//    QList<ViewFactory*> add_views { new ViewMaker<AddClientView>{mgr,tr("Add Client")},new ViewMaker<AddProductView>{mgr,tr("Add Product")},new ViewMaker<AddOrderView>{mgr,tr("Add Order")}};
-//    QList<ViewFactory*> show_views { new ViewMaker<ShowClientView>{mgr,tr("Show Client")},new ViewMaker<ShowProductView>{mgr,tr("Show Product")},new ViewMaker<ShowOrderView>{mgr,tr("Show Order")}};
-
-//    tabs = new TreeItem(*this, {tr("Tabs")});
-
-//    QStringList top_ls = {tr("Client Management"), tr("Product Management"), tr("Order Management")};
-
-//    int i=0;
-//    for(auto& e : top_ls) {
-//        addTopLevelItem(new TreeItem(*this,{e}));
-//        auto elem = topLevelItem(i);
-//        expandItem(elem);
-//        auto title = elem->text(0).split(" ");
-
-//        QTreeWidgetItem* add = new ToTabItem(add_views[i],*this, {tr("%1 Add").arg(title[0])} );
-//        elem->addChild(add);
-
-
-//        QTreeWidgetItem* show = new ToTabItem(show_views[i], *this, {tr("%1 Show / Find / Erase").arg(title[0])} );
-//        elem->addChild(show);
-
-//        i++;
-//    }
-//    addTopLevelItem(tabs);
-//    expandItem(tabs);
-//    connect(this, SIGNAL(treeToTab(QWidget*, const QIcon&, const QString&)), mw, SLOT(treeToTab(QWidget*, const QIcon&, const QString&)));
     connect(this, SIGNAL(itemDoubleClicked(QTreeWidgetItem*, int)), this, SLOT(_itemDoubleClicked(QTreeWidgetItem*, int)));
 }
 

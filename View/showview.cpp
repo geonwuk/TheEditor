@@ -318,18 +318,17 @@ ShowOrderView::~ShowOrderView(){}
 ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : NView{mgr, tabs,icon,label}, smgr{mgr.getSM()} {
     ui.setupUi(this);
     smgr.registerChatView(this);
-    ui.splitter->setSizes({120,500});
-//ui.clientTreeWidget->selectionMode()
+    //ui.splitter->setSizes({120,500});
+    //ui.clientTreeWidget->selectionMode()
+
     QAction* removeAction = new QAction(tr("&Kick out"));
     connect(removeAction, &QAction::triggered, [&]{
-        for(auto& item : ui.clientTreeWidget->selectedItems()){
+        for(auto& item : ui.clientTreeWidget->selectedItems()) {
             QString id = item->text(1);
             mgr.getSM().dropClient(id);
         }
+        notify<NView>();
     });
-
-//    connect(removeAction, SIGNAL(triggered()), SLOT(kickOut()));
-
     menu = new QMenu;
     menu->addAction(removeAction);
     ui.clientTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -351,29 +350,31 @@ void ShowChatView::clientLogin(){
 
 }
 
-void ShowChatView::addLog(NetClient* nc, QString str){
+void ShowChatView::addLog(const ServerManager::ChatMessage& msg ){
     QTreeWidgetItem* item = new QTreeWidgetItem(ui.messageTreeWidget);
-    item->setText(0, nc->socket->peerAddress().toString());
-    item->setText(1, QString::number(nc->socket->peerPort()));
-    item->setText(2, nc->self->getId().c_str());
-    item->setText(3, nc->self->getName().c_str());
-    item->setText(4, str);
-    item->setText(5, QDateTime::currentDateTime().toString());
+    item->setText(0, msg.ip);
+    item->setText(1, msg.port);
+    item->setText(2, msg.id);
+    item->setText(3, msg.name);
+    item->setText(4, msg.message);
+    item->setText(5, msg.time);
+    for(int i=0; i<ui.messageTreeWidget->columnCount(); i++){
+        ui.messageTreeWidget->resizeColumnToContents(i);
+    }
 }
 
 void ShowChatView::fillclientTree(){
     int row=0;
     ui.clientTreeWidget->clear();
-    for(auto& participant : smgr){
+    for(auto participant : smgr){
         int j=0;
-        auto& client = participant.second->self;
-        auto icon = participant.second->is_online ? QStyle::SP_DialogYesButton : QStyle::SP_DialogNoButton;
-        auto online_string = participant.second->is_online ? "online" : "offline";
-        auto item = new QTreeWidgetItem{ui.clientTreeWidget,{online_string,client->getId().c_str(),client->getName().c_str()}};
+        auto client = participant.second->getClient();
+        auto icon = participant.second->isOnline() ? QStyle::SP_DialogYesButton : QStyle::SP_DialogNoButton;
+        auto online_string = participant.second->isOnline() ? "online" : "offline";
+        auto item = new QTreeWidgetItem{ui.clientTreeWidget,{online_string,client.getId().c_str(),client.getName().c_str()}};
         item->setIcon(0,qApp->style()->standardIcon(icon));
 
     }
-
     for(int i=0; i<ui.clientTreeWidget->columnCount(); i++){
         ui.clientTreeWidget->resizeColumnToContents(i);
     }
@@ -381,11 +382,8 @@ void ShowChatView::fillclientTree(){
 
 void ShowChatView::on_clientTreeWidget_customContextMenuRequested(const QPoint &pos){
     auto items = ui.clientTreeWidget->selectedItems();
-
-
     QPoint globalPos = ui.clientTreeWidget->mapToGlobal(pos);
     QAction* ac = menu->exec(globalPos);
-
     qDebug()<<"Context";
 }
 

@@ -12,15 +12,9 @@ enum REQUEST{
     Chat_KickOut,
     Chat_FileTransform
 };
-enum RESPOND{
-    NO_ID,
-    SUCCESS,
-    BAD_REQUEST
-};
 
 class Message {
 public:
-    Message(QString, RESPOND);
     Message(QString, REQUEST);
     operator const QByteArray() const;
 
@@ -34,6 +28,9 @@ public:
     ReadMessage(QByteArray&);
     operator const char() const;
     const QString toQString() const;
+    const char getType() const{
+        return type;
+    }
 private:
     QByteArray& data;
     char type;

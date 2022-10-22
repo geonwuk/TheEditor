@@ -323,7 +323,7 @@ void AddParticipantView::fillContents(){
     auto participants = mgr.getSM().begin();
     for(auto client = mgr.getCM().getCleints().begin(); client!=mgr.getCM().getCleints().end(); ++client){
         int j=0;
-        while(participants!=mgr.getSM().end() && client!=mgr.getCM().getCleints().end() && (client->getId()==participants->second->self->getId())){
+        while(participants!=mgr.getSM().end() && client!=mgr.getCM().getCleints().end() && (client->getId()==participants->second->getClient().getId())){
             ++client;
             ++participants;
             continue;
@@ -342,9 +342,9 @@ void AddParticipantView::fillContents(){
     int p_i=0;
     for(auto& participant : mgr.getSM()){
         int j=0;
-        auto& client = participant.second->self;
-        ui.participantList->setItem(p_i,j++,ceateTableItem(client->getId().c_str(), client->getId().c_str()) );
-        ui.participantList->setItem(p_i,j++,new QTableWidgetItem(client->getName().c_str()));
+        auto& client = participant.second->getClient();
+        ui.participantList->setItem(p_i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()) );
+        ui.participantList->setItem(p_i,j++,new QTableWidgetItem(client.getName().c_str()));
         p_i++;
     }
     ui.participantList->resizeColumnsToContents();

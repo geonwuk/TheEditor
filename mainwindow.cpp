@@ -3,7 +3,6 @@
 #include <QLabel>
 #include <QList>
 #include "ui_mainwindow.h"
-#include "Network/server.h"
 #include "tree.h"
 #include "View/view.h"
 #include <QSplitter>

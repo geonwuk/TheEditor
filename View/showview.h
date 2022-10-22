@@ -87,7 +87,7 @@ public:
     Ui::chatRoom ui;
     void update();
     void clientLogin();
-    void addLog(NetClient* , QString );
+    void addLog(const ServerManager::ChatMessage& );
 
 private:
     void fillclientTree();
