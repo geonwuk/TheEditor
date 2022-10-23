@@ -10,6 +10,7 @@ namespace CM {
 	using std::map;
     using std::string;
     using CID = string;
+    struct ERROR_WHILE_LOADING {unsigned int line;};
 	class Client {
         friend class ClientManager;
 	public:
@@ -55,7 +56,7 @@ namespace CM {
         const Client& findClient(const CID id) const;
         std::shared_ptr<Client> copyClient(const CID) const noexcept;
 		std::ofstream& saveClients(std::ofstream& out) const;								                 
-		std::pair<std::ifstream&, std::vector<Client>> loadClients(std::ifstream& in) const ;                
+        std::ifstream& loadClients(std::ifstream& in, const unsigned int lines);
         const_iterator getCleints() const;
 //		const unsigned int getMaxIndex() const;
         const unsigned int getSize() const;

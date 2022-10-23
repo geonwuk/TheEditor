@@ -46,8 +46,7 @@ namespace OM {
         };
 
 
-        const ClientManager& cm;
-        ProductManager& pm;
+
         const Order& findOrder(const Order_ID order_id) const;
 		std::ofstream & saveOrders(std::ofstream&) const;												
         std::ifstream& loadOrders(std::ifstream&, unsigned int lines);
@@ -57,12 +56,14 @@ namespace OM {
             bill(PM::PID id,unsigned int qty):id{id},qty{qty}{}
         };
         std::pair<const Order_ID, bool> addOrder(const Client_ID client_id, vector<bill>);
+        std::pair<const Order_ID, bool> addOrder(const Order_ID oid, const Client_ID client_id, vector<bill>, tm time);
         OrderIterator getOrders() const;
         const size_t getSize() const {return orders.size();}
 	private:
 		unsigned int order_id = 0;								
-		std::map<Order_ID, Order> orders;						
-		std::multimap<Client_ID, Order*> orders_CID;				
+        std::map<Order_ID, Order> orders;
+        const ClientManager& cm;
+        ProductManager& pm;
 		
 	public:
 		using OM_itr = decltype(OrderManager::orders)::const_iterator;

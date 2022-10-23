@@ -70,27 +70,33 @@ ofstream& ClientManager::saveClients(ofstream& out) const{
 	return out;
 }
 
-std::pair<std::ifstream&, std::vector<Client>> ClientManager::loadClients(std::ifstream& in) const {
-	vector<Client> client_vector;
-	std::string str;
-	while (std::getline(in, str)) {
-		vector<string> tmp;
-		auto beg = str.find_first_not_of(',');
-		while (beg != string::npos) {
-			auto endIdx = str.find_first_of(',', beg);
-			if (endIdx == string::npos) {
-				endIdx = str.length();
-			}
-			tmp.emplace_back(str.substr(beg, endIdx - beg));
-			beg = str.find_first_not_of(',', endIdx);
-		}
-		string address = tmp[3];
-		string phone_number = tmp[2];
-		string name = tmp[1];
-        string id = tmp[0];
-		client_vector.emplace_back(id, name, phone_number, address);
-	}
-	return {in, move(client_vector)}; 
+std::ifstream& ClientManager::loadClients(std::ifstream& in, const unsigned int lines) {
+    unsigned int line =0;
+    try{
+        string str;
+        while (line++<lines && getline(in, str)) {
+            vector<string> tmp;
+            auto beg = str.find_first_not_of(',');
+            while (beg != string::npos) {
+                auto endIdx = str.find_first_of(',', beg);
+                if (endIdx == string::npos) {
+                    endIdx = str.length();
+                }
+                tmp.emplace_back(str.substr(beg, endIdx - beg));
+                beg = str.find_first_not_of(',', endIdx);
+            }
+            string address = tmp.at(3);
+            string phone_number = tmp.at(2);
+            string name = tmp.at(1);
+            string id = tmp.at(0);
+            addClient(id, name, phone_number, address);
+        }
+        return in;
+    }
+    catch(...){
+        throw ERROR_WHILE_LOADING{line};
+    }
+
 }
 
 //const unsigned int ClientManager::getMaxIndex() const{

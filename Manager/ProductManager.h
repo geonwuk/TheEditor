@@ -58,6 +58,7 @@ namespace PM {
 	public:
         class const_iterator;
         bool addProduct(const string name, const unsigned int price, const unsigned int qty);
+        bool addProduct(const string id, const string name, const unsigned int price, const unsigned int qty);
         bool modifyProduct(const PID id, const Product new_product);
         bool eraseProduct(const PID id);
         Product& findProduct(const PID id);
