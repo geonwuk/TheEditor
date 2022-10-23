@@ -3,12 +3,11 @@
 #include <QIODevice>
 #include <iostream>
 #include <QDataStream>
-
+#include <QFile>
+#include <QProgressDialog>
 Message::Message(QString str, REQUEST req): type(req) {
    data.append(str.toUtf8());
 }
-
-
 
 Message::operator const QByteArray() const{
    QByteArray re;
@@ -19,7 +18,6 @@ Message::operator const QByteArray() const{
    for(auto e : data){
        stream<<e;
    }
-
 //   stream<<data;
    qDebug()<<"send"<<re<<","<<re.size();
    return re;
@@ -42,4 +40,30 @@ const QString ReadMessage::toQString() const {
     return result;
 }
 
+
+FileMessage::FileMessage(QFile* file, QProgressDialog* progress_dialog):file{file},progress_dialog{progress_dialog}{
+    qint64 bytes_read=0;
+    file_size = file->size();
+    if(file_size==0)
+        throw -1;
+
+    QDataStream stream (&data, QIODevice::WriteOnly);
+    quint64 data_size = sizeof(char)+file_size;
+    stream<<data_size;
+    stream<<static_cast<char>(Chat_FileTransmission);
+    while(bytes_read<file_size){
+        auto data_read = file->read(file_size);
+        data.append(data_read);
+        if(data_read.size()==0){
+            throw -1;
+        }
+        bytes_read += data_read.size();
+        progress_dialog->setValue(bytes_read);
+    }
+}
+
+FileMessage::operator const QByteArray() const{
+   qDebug()<<"sending data to network of which size is"<<data.size();
+   return data;
+}
 

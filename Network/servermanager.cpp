@@ -4,6 +4,7 @@
 #include <QTcpSocket>
 #include "Network/server.h"
 #include <QDateTime>
+#include <QFile>
 ServerManager::ServerManager(Manager& mgr): mgr{mgr} {}
 
 void ServerManager::addClient(const std::shared_ptr<Client>& c)
@@ -14,8 +15,7 @@ void ServerManager::addClient(const std::shared_ptr<Client>& c)
     assert(result.second);
 }
 
-void ServerManager::login(const QTcpSocket* const socket, const ReadMessage& rmsg){
-    const QString id{rmsg.toQString()};
+void ServerManager::login(const QTcpSocket* const socket, const QString& id){
     auto nc_itr = net_clients.find(id.toStdString());
     if(nc_itr==net_clients.end()){
         server->sendMessage(socket,Message{"NO_ID",Chat_Login});
@@ -59,7 +59,7 @@ void ServerManager::dropClient(QString id){
     notify();
 }
 
-void ServerManager::chatTalk(const QTcpSocket * const socket, const ReadMessage& rmsg){
+void ServerManager::chatTalk(const QTcpSocket * const socket, const QString& contetnt){
     auto itr = socket_to_nclient.find(socket);
     if(itr==socket_to_nclient.end()){
         server->sendMessage(socket, Message{"BAD_REQUEST",Chat_Talk});
@@ -71,7 +71,7 @@ void ServerManager::chatTalk(const QTcpSocket * const socket, const ReadMessage&
     QString port = QString::number(socket->peerPort());
     QString id = nc->self->getId().c_str();
     QString name = nc->self->getName().c_str();
-    QString chat = rmsg.toQString();
+    QString chat = contetnt;
     QString time = QDateTime::currentDateTime().toString();
     const ChatMessage msg{ip,port,id,name,chat,time};
     for(auto itr : net_clients){
@@ -102,19 +102,36 @@ void ServerManager::unregisterChatView(ShowChatView* view){
 
 
 
-void ServerManager::processMessage(const QTcpSocket* const socket, const ReadMessage rmsg){
-    switch(rmsg){
-    case Chat_Login:
-        login(socket, rmsg);
+void ServerManager::processMessage(const QTcpSocket* const socket, QByteArray data){
+    QDataStream in{ &data, QIODevice::ReadOnly};
+    char type;
+    in.readRawData(&type,1);
+    data.remove(0,1);
+
+    switch(type){
+    case Chat_Login:{
+        QString rmsg {data};
+        login(socket, rmsg);}
         break;
     case Chat_LogOut:
         logOut(socket);
         break;
-    case Chat_Talk:
-        chatTalk(socket,rmsg);
+    case Chat_Talk:{
+        QString rmsg {data};
+        chatTalk(socket,rmsg);}
+        break;
+    case Chat_FileTransmission:
+        fileTransmission(socket,data);
         break;
     }
 
+}
+
+void ServerManager::fileTransmission(const QTcpSocket* const socket, const QByteArray& data){
+    qDebug()<<"File transmission to server writing";
+    QFile x{"server_file"};
+    x.open(QIODeviceBase::WriteOnly);
+    x.write(data);
 }
 
 void ServerManager::notify(){

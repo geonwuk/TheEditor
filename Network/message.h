@@ -10,7 +10,7 @@ enum REQUEST{
     Chat_LogOut,
     Chat_Invite,
     Chat_KickOut,
-    Chat_FileTransform
+    Chat_FileTransmission
 };
 
 class Message {
@@ -37,6 +37,19 @@ private:
 
 };
 
+class QProgressDialog;
+class QFile;
+class FileMessage{
+public:
+    FileMessage(QFile*, QProgressDialog* progress_dialog);
+    operator const QByteArray() const;
+
+private:
+    QByteArray data;
+    qint64 file_size;
+    QFile* file;
+    QProgressDialog* progress_dialog;
+};
 
 
 

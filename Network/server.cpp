@@ -51,13 +51,14 @@ void Server::readData(){
 
     recv_data.data.append(socket->read(recv_data.target_size));
     if(recv_data.data.size()<recv_data.target_size){
+        qDebug()<<QString("downlading(%1/%2)").arg(recv_data.data.size()).arg(recv_data.target_size);
         return;
     }
-    ReadMessage read_msg {recv_data.data};
+//    ReadMessage read_msg {recv_data.data};
 
     qDebug()<<"read datasssss";
 
-    mgr.processMessage(socket,read_msg);
+    mgr.processMessage(socket,recv_data.data);
 
     assert(socket_data.remove(socket));
 }

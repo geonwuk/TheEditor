@@ -6,8 +6,10 @@
 #include <QTextEdit>
 #include <QLineEdit>
 #include <QTcpSocket>
+#include <thread>
 class QPushButton;
-
+class QFile;
+class QProgressDialog;
 
 class ChattingClient : public QWidget
 {
@@ -20,6 +22,8 @@ private slots:
     void receiveData();
     void disconnect();
     void logOut();
+    void prepareToSendFile();
+    void writeFileSlot(FileMessage);
 private:
     void initUI();
     QTextEdit* message;
@@ -38,8 +42,9 @@ private:
     };
     QHash<QTcpSocket*, Data> socket_data;
     void processMessage(ReadMessage );
+    void sendFile(QFile* file, QProgressDialog* progressDialog);
 signals:
-
+    void writeFileSignal(FileMessage);
 };
 
 #endif // CHATTINGCLIENT_H

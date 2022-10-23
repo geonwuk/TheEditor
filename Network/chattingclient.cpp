@@ -3,7 +3,8 @@
 #include <QtWidgets>
 #include <QtNetwork>
 #include "Network/message.h"
-
+#include <QFileInfo>
+using namespace std;
 void ChattingClient::initUI(){
     QLineEdit* serverAddress = new QLineEdit(this);
     serverAddress->setText("127.0.0.1");
@@ -50,7 +51,7 @@ void ChattingClient::initUI(){
     inputLayout->addWidget(sentButton);
 
     fileButton = new QPushButton("File Transfer", this);
-    connect(fileButton, SIGNAL(clicked( )), SLOT(sendFile( )));
+    connect(fileButton, SIGNAL(clicked()), SLOT(prepareToSendFile()));
     fileButton->setDisabled(true);
 
     logOutButton = new QPushButton("Log Out", this);
@@ -73,6 +74,8 @@ void ChattingClient::initUI(){
     inputLine->setEnabled(false);
     idEdit->setReadOnly(false);
     sentButton->setEnabled(false);
+
+
 }
 
 ChattingClient::ChattingClient(QWidget *parent)
@@ -188,4 +191,34 @@ void ChattingClient::logOut(){
     logOutButton->setDisabled(true);
     loginButton->setEnabled(true);
     idEdit->setReadOnly(false);
+}
+
+void ChattingClient::sendFile(QFile* file, QProgressDialog* progressDialog){
+    try{
+        emit writeFileSignal(FileMessage {file, progressDialog});
+    }
+    catch(...){
+        QMessageBox::critical(this, tr("ERROR"), tr("Error while uploading file %1").arg(file->fileName()));
+        delete file;
+        delete progressDialog;
+    }
+}
+
+void ChattingClient::prepareToSendFile(){
+    QString filename = QFileDialog::getOpenFileName(this,tr("Upload file"));
+    if(filename.length()) {
+        QFile* file = new QFile(filename, this);
+        QProgressDialog* progressDialog = new QProgressDialog(QString(tr("Uploading file %1").arg(filename)),tr("&Cancel"),0,file->size()*2,this );
+        file = new QFile(filename);
+        file->open(QFile::ReadOnly);
+
+        qDebug() << QString("file %1 is opened").arg(filename);
+        std::thread t1{ &ChattingClient::sendFile, this, file, progressDialog};
+        connect(this,SIGNAL(writeFileSignal(FileMessage)),SLOT(writeFileSlot(FileMessage)));
+        t1.detach();
+    }
+}
+
+void ChattingClient::writeFileSlot(FileMessage file_msg){
+    clientSocket->write(file_msg);
 }
