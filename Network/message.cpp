@@ -5,6 +5,7 @@
 #include <QDataStream>
 #include <QFile>
 #include <QProgressDialog>
+#include <QFileInfo>
 Message::Message(QString str, REQUEST req): type(req) {
    data.append(str.toUtf8());
 }
@@ -48,9 +49,20 @@ FileMessage::FileMessage(QFile* file, QProgressDialog* progress_dialog):file{fil
         throw -1;
 
     QDataStream stream (&data, QIODevice::WriteOnly);
-    quint64 data_size = sizeof(char)+file_size;
+    QFileInfo file_info{file->fileName()};
+    QByteArray file_name = file_info.fileName().toUtf8();
+
+    quint64 data_size = sizeof(char)+file_size+file_name.size()+1;
     stream<<data_size;
     stream<<static_cast<char>(Chat_FileTransmission);
+    for(auto e : file_name){
+        stream<<e;
+    }
+    stream<<'\0';
+
+
+
+
     while(bytes_read<file_size){
         auto data_read = file->read(file_size);
         data.append(data_read);
@@ -66,4 +78,7 @@ FileMessage::operator const QByteArray() const{
    qDebug()<<"sending data to network of which size is"<<data.size();
    return data;
 }
-
+void FileMessage::updateProgress(qint64 bytes_written){
+    qDebug()<<"updateProgress";
+    progress_dialog->setValue(progress_dialog->value()+bytes_written);
+}

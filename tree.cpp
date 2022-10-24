@@ -27,13 +27,11 @@ View* Tree::makeView(ViewFactory* factory){
 }
 
 void FocusTabItem::doubleClicked(){
-    qDebug()<<"focus";
     //emit tree.setTabFocus(view);
     tree.tw->setCurrentWidget(view);
 }
 
 void ToTabItem::doubleClicked(){
-    qDebug()<<"Totab";
     View* view = tree.makeView(view_factory);
     //emit tree.treeToTab(view, view->icon, view->label);
     tree.tw->addTab(view, view->icon, view->label);

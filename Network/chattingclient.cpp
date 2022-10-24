@@ -202,6 +202,7 @@ void ChattingClient::sendFile(QFile* file, QProgressDialog* progressDialog){
         delete file;
         delete progressDialog;
     }
+    qDebug()<<"send complete!!!!!!!!!!";
 }
 
 void ChattingClient::prepareToSendFile(){
@@ -213,12 +214,15 @@ void ChattingClient::prepareToSendFile(){
         file->open(QFile::ReadOnly);
 
         qDebug() << QString("file %1 is opened").arg(filename);
-        std::thread t1{ &ChattingClient::sendFile, this, file, progressDialog};
-        connect(this,SIGNAL(writeFileSignal(FileMessage)),SLOT(writeFileSlot(FileMessage)));
-        t1.detach();
+        writeFileSlot(FileMessage {file, progressDialog});
+//        std::thread t1{ &ChattingClient::sendFile, this, file, progressDialog};
+//        connect(this,SIGNAL(writeFileSignal(FileMessage)),SLOT(writeFileSlot(FileMessage)));
+//        t1.detach();
     }
 }
 
 void ChattingClient::writeFileSlot(FileMessage file_msg){
-    clientSocket->write(file_msg);
+    qDebug()<<"writeFileSlot";
+    qint64 bytes_written = clientSocket->write(file_msg);
+    file_msg.updateProgress(bytes_written);
 }

@@ -108,10 +108,10 @@ void MainWindow::load(){
         string name = tmp[1];
         string id = tmp[0];
 
-        tm time;
-        istringstream ss{ time_string };
-        ss >> std::get_time(&time, "%D %T");
-        product_vector.emplace_back(id, name, price, qty, time);
+//        tm time;
+//        istringstream ss{ time_string };
+//        ss >> std::get_time(&time, "%D %T");
+//        product_vector.emplace_back(id, name, price, qty, time);
     }
 }
 

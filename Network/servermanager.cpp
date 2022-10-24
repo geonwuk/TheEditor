@@ -127,11 +127,28 @@ void ServerManager::processMessage(const QTcpSocket* const socket, QByteArray da
 
 }
 
-void ServerManager::fileTransmission(const QTcpSocket* const socket, const QByteArray& data){
+void ServerManager::fileTransmission(const QTcpSocket* const socket, QByteArray& data){
+    auto nc = socket_to_nclient[socket];
     qDebug()<<"File transmission to server writing";
-    QFile x{"server_file"};
+    int i=0;
+    QString str;
+    for(auto e:data){
+        if(e!='\0'){
+            str+=e;
+            ++i;
+        }
+        else{
+            break;
+        }
+    }
+    data.remove(0,i+1);
+    qDebug()<<"file_name_tmp"<<str;
+    QString name {QString("%1_%2").arg(nc->self->getId().c_str()).arg(str)};
+    QFile x{name};
     x.open(QIODeviceBase::WriteOnly);
+    qDebug()<<"filesize"<<data.size();
     x.write(data);
+
 }
 
 void ServerManager::notify(){

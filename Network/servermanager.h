@@ -83,7 +83,7 @@ private:
     void login(const QTcpSocket* const socket, const QString &rmsg);
     void logOut(const QTcpSocket* const socket);
     void chatTalk(const QTcpSocket* const socket , const QString& );
-    void fileTransmission(const QTcpSocket* const socket, const QByteArray&);
+    void fileTransmission(const QTcpSocket* const socket, QByteArray&);
     void notify();
 };
 

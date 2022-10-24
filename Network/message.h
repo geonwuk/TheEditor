@@ -43,6 +43,7 @@ class FileMessage{
 public:
     FileMessage(QFile*, QProgressDialog* progress_dialog);
     operator const QByteArray() const;
+    void updateProgress(qint64 bytes_written);
 
 private:
     QByteArray data;
