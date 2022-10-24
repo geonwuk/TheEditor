@@ -9,6 +9,9 @@
 #include "Network/server.h"
 #include <QFileDialog>
 #include <fstream>
+
+using namespace std;
+
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){
     QSplitter* splitter = new QSplitter;
     splitter->setChildrenCollapsible(false);
@@ -64,7 +67,7 @@ void MainWindow::setTabFocus(QWidget* page){
 }
 
 void MainWindow::save(){
-    QString filename = QFileDialog::getOpenFileName(this);
+    QString filename = QFileDialog::getSaveFileName(this);
     std::ofstream out(filename.toStdString());
     out<<"[Clients],"<<mgrs.getCM().getSize()<<std::endl;
     mgrs.getCM().saveClients(out);
@@ -74,7 +77,42 @@ void MainWindow::save(){
     mgrs.getOM().saveOrders(out);
 }
 void MainWindow::load(){
+    QString filename = QFileDialog::getOpenFileName(this);
+    std::ifstream in(filename.toStdString());
+    string str;
+    if(!getline(in, str)){
+        //eror
+    }
+    getline(in, str, ',');
+    if(str!="[Clients]"){
 
+    }
+    getline(in, str, ',');
+    unsigned int target_line = stoul(str);
+    unsigned int line=0;
+    while ((line++<target_line)&&(getline(in, str))){
+        vector<string> tmp;
+        auto begIdx = str.find_first_not_of(',');
+        while (begIdx != string::npos) {
+            auto endIdx = str.find_first_of(',', begIdx);
+            if (endIdx == string::npos) {
+                endIdx = str.length();
+            }
+            tmp.emplace_back(str.substr(begIdx, endIdx - begIdx));
+            begIdx = str.find_first_not_of(',', endIdx);
+        }
+
+        string time_string = tmp[4];
+        unsigned int qty = stoul(tmp[3]);
+        unsigned int price = stoul(tmp[2]);
+        string name = tmp[1];
+        string id = tmp[0];
+
+        tm time;
+        istringstream ss{ time_string };
+        ss >> std::get_time(&time, "%D %T");
+        product_vector.emplace_back(id, name, price, qty, time);
+    }
 }
 
 MainWindow::~MainWindow()

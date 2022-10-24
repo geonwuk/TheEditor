@@ -55,14 +55,10 @@ bool ProductManager::addProduct(const string name, const unsigned int price, con
 	return success;
 }
 
-bool ProductManager::addProduct(const string id, const string name, const unsigned int price, const unsigned int qty)
+bool ProductManager::addProduct(const string id, const string name, const unsigned int price, const unsigned int qty, tm time)
 {
-    time_t base_time = time(nullptr);
-    tm local_time;
-    localtime_s(&local_time, &base_time);
-
     bool success;
-    tie(ignore, success) = products.emplace(ID, make_shared<Product>(ID, name, price, qty, local_time));
+    tie(ignore, success) = products.emplace(id, make_shared<Product>(id, name, price, qty, time));
     product_id++;
     return success;
 }

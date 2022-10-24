@@ -21,9 +21,9 @@ namespace CM {
         Client(string id, string name, string phone_number , string address ) :
             id{ id }, name{ name }, phone_number{ phone_number }, address{ address } {}
         const string getId() const { return id; }
-		string getName() const { return name; }                  
-		string getPhoneNumber() const { return phone_number; }   
-        string getAddress() const { return address; }
+        const string getName() const { return name; }
+        const string getPhoneNumber() const { return phone_number; }
+        const string getAddress() const { return address; }
         Client()=default;
         ~Client(){}
     private:

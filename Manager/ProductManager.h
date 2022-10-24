@@ -58,7 +58,7 @@ namespace PM {
 	public:
         class const_iterator;
         bool addProduct(const string name, const unsigned int price, const unsigned int qty);
-        bool addProduct(const string id, const string name, const unsigned int price, const unsigned int qty);
+        bool addProduct(const string id, const string name, const unsigned int price, const unsigned int qty, std::tm);
         bool modifyProduct(const PID id, const Product new_product);
         bool eraseProduct(const PID id);
         Product& findProduct(const PID id);
@@ -68,7 +68,6 @@ namespace PM {
         bool buyProduct(const PID id, const unsigned int qty);
 		ofstream& saveProducts(ofstream&) const;
 		std::pair<ifstream&, std::vector<Product>> loadProducts(ifstream&);
-//		const unsigned int getMaxIndex() const;
         const unsigned int getSize() const;
     private:
         static unsigned int product_id;
