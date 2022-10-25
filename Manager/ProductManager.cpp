@@ -51,8 +51,8 @@ bool ProductManager::addProduct(const string name, const unsigned int price, con
     string ID = generateRandID(local_time);
     bool success;
     tie(ignore, success) = products.emplace(ID, make_shared<Product>(ID, name, price, qty, local_time));
-	product_id++;
-	return success;
+    product_id++;
+    return success;
 }
 
 bool ProductManager::addProduct(const string id, const string name, const unsigned int price, const unsigned int qty, tm time)
@@ -127,33 +127,43 @@ ofstream& PM::ProductManager::saveProducts(ofstream& out) const{
 	return out;
 }
 
-std::pair<std::ifstream&, std::vector<Product>> PM::ProductManager::loadProducts(ifstream& in){
-	vector<Product> product_vector;
-	std::string str;
-	while (getline(in, str)){
-		vector<string> tmp;
-		auto begIdx = str.find_first_not_of(',');
-		while (begIdx != string::npos) {
-			auto endIdx = str.find_first_of(',', begIdx);
-			if (endIdx == string::npos) {
-				endIdx = str.length();
-			}
-			tmp.emplace_back(str.substr(begIdx, endIdx - begIdx));
-			begIdx = str.find_first_not_of(',', endIdx);
-		}
+std::ifstream& PM::ProductManager::loadProducts(ifstream& in, const unsigned int lines){
+    unsigned int line=0;
+    try{
+        string str;
+        while (line++<lines && getline(in, str)){
+            vector<string> tmp;
+            auto begIdx = str.find_first_not_of(',');
+            while (begIdx != string::npos) {
+                auto endIdx = str.find_first_of(',', begIdx);
+                if (endIdx == string::npos) {
+                    endIdx = str.length();
+                }
+                tmp.emplace_back(str.substr(begIdx, endIdx - begIdx));
+                begIdx = str.find_first_not_of(',', endIdx);
+            }
 
-		string time_string = tmp[4];
-		unsigned int qty = stoul(tmp[3]);
-		unsigned int price = stoul(tmp[2]);
-		string name = tmp[1];
-        string id = tmp[0];
+            string time_string = tmp.at(4);
+            unsigned int qty = stoul(tmp.at(3));
+            unsigned int price = stoul(tmp.at(2));
+            string name = tmp.at(1);
+            string id = tmp.at(0);
 
-		tm time;
-		istringstream ss{ time_string };
-        ss >> std::get_time(&time, "%D %T");
-        product_vector.emplace_back(id, name, price, qty, time);
-	}
-	return  { in, move(product_vector) };
+            tm time;
+            istringstream ss{ time_string };
+            ss >> std::get_time(&time, "%D %T");
+
+            if(!addProduct(id,name,price,qty,time)){
+                throw -1;
+            }
+
+        }
+        return  in;
+    }
+    catch(...){
+        throw ERROR_WHILE_LOADING{line};
+    }
+
 }
 
 //const unsigned int PM::ProductManager::getMaxIndex() const {

@@ -15,10 +15,11 @@ namespace PM {
 	using std::ifstream;
     using PID = string;
     class ProductManager;
+    struct ERROR_WHILE_LOADING { const unsigned int line; };
 	class Product{
 	public:
-        Product(string name, unsigned int price, unsigned int qty) :
-            name{ name }, price{ price }, qty{ qty } {}
+        Product(string name, unsigned int price, unsigned int qty, std::tm date) :
+            name{ name }, price{ price }, qty{ qty }, registered_date{date} {}
         Product(string id, string name, unsigned int price, unsigned int qty, std::tm date) :
             id{ id }, name{ name }, price{ price }, qty{ qty }, registered_date{ date }{}
         const string getId() const { return id; }
@@ -26,6 +27,13 @@ namespace PM {
 		const unsigned int getPrice() const { return price; }
 		const unsigned int getQty() const { return qty; }
 		const std::tm getDate() const { return registered_date; }
+        Product& operator= (const Product& rhs){
+            name=rhs.name;
+            price=rhs.price;
+            qty=rhs.qty;
+            registered_date=rhs.registered_date;
+            return *this;
+        }
 	protected:
 		Product() = default;
 	private:
@@ -38,12 +46,7 @@ namespace PM {
         bool decreaseQty(const unsigned int desc){
             return qty<desc ? false : qty-=desc , true;
         }
-        Product& operator= (const Product& rhs){
-            name=rhs.name;
-            price=rhs.price;
-            qty=rhs.qty;
-            return *this;
-        }
+
 
 	};
 	ofstream& operator<<(ofstream& out, const Product& p);
@@ -67,7 +70,7 @@ namespace PM {
         const_iterator getProducts() const;
         bool buyProduct(const PID id, const unsigned int qty);
 		ofstream& saveProducts(ofstream&) const;
-		std::pair<ifstream&, std::vector<Product>> loadProducts(ifstream&);
+        ifstream& loadProducts(ifstream&, unsigned int);
         const unsigned int getSize() const;
     private:
         static unsigned int product_id;

@@ -3,7 +3,8 @@
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QTableWidgetItem>
-
+#include <iomanip>
+#include <sstream>
 //View::View() {}
 View::View(Manager& mgr, Tree& tree, const QIcon icon, const QString label) : icon{icon}, label{label}, mgr{mgr},tree{tree} {
     tab = new FocusTabItem{this,tree,label};
@@ -60,7 +61,10 @@ bool PView::addProduct(const QString name, const QString price, const QString qt
     return result;
 }
 bool PView::modifyProduct(const QString id, const QList<QString> ls){
-    bool re = mgr.getPM().modifyProduct(id.toStdString(), PM::Product{ls[0].toStdString(),ls[1].toUInt(),ls[2].toUInt()});
+    tm time;
+    std::istringstream ss( ls[4].toStdString() );
+    ss >> std::get_time(&time, "%D %T");
+    bool re = mgr.getPM().modifyProduct(id.toStdString(), PM::Product{ls[0].toStdString(),ls[1].toUInt(),ls[2].toUInt(),time});
     notify<PView>();
     notify<OView>();
     return re;

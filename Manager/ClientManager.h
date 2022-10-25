@@ -26,6 +26,12 @@ namespace CM {
         const string getAddress() const { return address; }
         Client()=default;
         ~Client(){}
+        Client& operator= (const Client& rhs){
+            name=rhs.name;
+            phone_number=rhs.phone_number;
+            address=rhs.address;
+            return *this;
+        }
     private:
 
 
@@ -33,12 +39,7 @@ namespace CM {
 		string name;           
 		string phone_number;   
         string address;
-        Client& operator= (const Client& rhs){
-            name=rhs.name;
-            phone_number=rhs.phone_number;
-            address=rhs.address;
-            return *this;
-        }
+
 	protected:
 
 	};

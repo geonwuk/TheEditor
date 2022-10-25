@@ -194,7 +194,7 @@ void ShowProductView::cellChanged(int row, int col){
         QString id = id_item->data(Role::id).value<QString>();
 
         QList<QString> ls;
-        for(int i=1; i<4; i++){
+        for(int i=1; i<5; i++){
             qDebug()<<"i: "<<i<<row<<col;
             ls<<table->item(row, i)->text();
         }
@@ -203,7 +203,6 @@ void ShowProductView::cellChanged(int row, int col){
         modifyProduct(id,ls);
         table->blockSignals(false);
     }
-    qDebug()<<"end222";
 }
 
 bool ShowProductView::eraseProduct(int row){
