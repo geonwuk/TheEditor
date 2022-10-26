@@ -71,6 +71,9 @@
     <property name="text">
      <string>New Item</string>
     </property>
+    <property name="icon">
+     <iconset theme="zoom-in"/>
+    </property>
    </item>
    <item>
     <property name="text">

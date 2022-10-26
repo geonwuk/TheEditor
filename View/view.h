@@ -19,7 +19,7 @@ public:
     QString label;
     void removeFromTree();
 protected:
-    View(Manager& mgr, Tree& tree, const QIcon icon=QPixmap(), const QString label=QString());
+    View(Manager& mgr, Tree& tree, const QIcon& icon=QPixmap(), const QString label=QString());
     bool is_update=false;
     Manager& mgr;
     template<typename T>

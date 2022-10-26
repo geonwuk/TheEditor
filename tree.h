@@ -16,41 +16,46 @@ class TabWidget;
 class ViewFactory {
 protected:
      const QString title;
+     const QIcon icon;
 public:
-     ViewFactory(const QString title) : title{title} {}
-    virtual View* make(Tree* tree)=0;
+     ViewFactory(const QIcon& icon, const QString title) : title{title}, icon{icon} {}
+    virtual View* make(Tree*)=0;
     const QString getTitle(){
         return title;
+    }
+    const QIcon& getIcon(){
+        return icon;
     }
 };
 template<typename T>
 class ViewMaker : public ViewFactory{
     Manager& mgr;
 public:
-    ViewMaker(Manager& mgr,QString title) : mgr{mgr}, ViewFactory{title} {}
+    ViewMaker(Manager& mgr,const QIcon& icon,QString title) : mgr{mgr}, ViewFactory{icon,title} {}
     View* make(Tree* tree){
-        return new T{mgr,*tree,QPixmap(),title};
+        return new T{mgr,*tree,icon,title};
     }
 
 };
 
 class Tree : public QTreeWidget {
     Q_OBJECT
-
+    friend class ToTabItem;
+    friend class FocusTabItem;
 public:
     ~Tree();
-    Tree(MainWindow* , TabWidget* tw);
+    Tree(MainWindow* , TabWidget* tw, int tabs_item_position);
     QTreeWidgetItem& getTabs(){return *tabs;}
     View* makeView(ViewFactory* factory);
 
 protected:
     MainWindow* mw;
-
+    void tabCurrnetChanged(int index, int top_level_item_position);
     Manager& mgr;
     QTreeWidgetItem* tabs;
-
-public:
     TabWidget* tw;
+    int prev_tabs_index=0;
+    int tabs_item_position;
 
 signals:
     void treeToTab(QWidget*, const QIcon&, const QString&);
@@ -58,6 +63,8 @@ signals:
 
 public slots:
     void _itemDoubleClicked(QTreeWidgetItem*, int);
+    void tabCurrnetChanged(int index);
+
 
 };
 
@@ -75,23 +82,25 @@ class TreeItem : public QTreeWidgetItem{
 protected:
     Tree& tree;
     QString title;
-
+    QIcon icon;
 public:
-    TreeItem(Tree& tree, QString title):QTreeWidgetItem{(QTreeWidget*)nullptr,{title}},tree{tree}{}
+    TreeItem(Tree& tree, const QIcon& icon, QString title):QTreeWidgetItem{(QTreeWidget*)nullptr,{title}},tree{tree}{
+        setIcon(0,icon);
+    }
     virtual void doubleClicked(){qDebug()<<"default double";};
 };
 
 class ToTabItem : public TreeItem{
     ViewFactory* view_factory;
 public:
-    ToTabItem(ViewFactory* view_factory, Tree& tree, QString title):TreeItem{tree,{title}},view_factory{view_factory}{}
+    ToTabItem(ViewFactory* view_factory, Tree& tree, const QIcon& icon, QString title):TreeItem{tree,icon,title},view_factory{view_factory}{}
     void doubleClicked();
 };
 
 class FocusTabItem : public TreeItem{
     View* view;
 public:
-    FocusTabItem(View* view, Tree& tree, QString title):TreeItem{tree,{title}},view{view}{}
+    FocusTabItem(View* view, Tree& tree, const QIcon& icon, QString title);
     void doubleClicked();
     ~FocusTabItem(){}
 };

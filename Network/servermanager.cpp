@@ -53,6 +53,7 @@ void ServerManager::dropClient(QString id){
     auto it = net_clients.find(id.toStdString());
     assert(it!=net_clients.end());
     auto socket = it->second->socket;
+    //todo 온라인이면 메시지 보내고 오프라인이면 pending message에 추가
     server->sendMessage(socket, Message{"",Chat_KickOut});
     socket_to_nclient.remove(socket);
     net_clients.erase(it);

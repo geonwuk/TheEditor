@@ -1,3 +1,10 @@
 <RCC>
-    <qresource prefix="/Icons"/>
+    <qresource prefix="/">
+        <file>Icons/chat.png</file>
+        <file>Icons/client.png</file>
+        <file>Icons/icon.png</file>
+        <file>Icons/order.png</file>
+        <file>Icons/product.png</file>
+        <file>Icons/quit.png</file>
+    </qresource>
 </RCC>

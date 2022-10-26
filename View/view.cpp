@@ -6,8 +6,8 @@
 #include <iomanip>
 #include <sstream>
 //View::View() {}
-View::View(Manager& mgr, Tree& tree, const QIcon icon, const QString label) : icon{icon}, label{label}, mgr{mgr},tree{tree} {
-    tab = new FocusTabItem{this,tree,label};
+View::View(Manager& mgr, Tree& tree, const QIcon &icon, const QString label) : icon{icon}, label{label}, mgr{mgr},tree{tree} {
+    tab = new FocusTabItem{this,tree,icon,label};
     tree.getTabs().addChild(tab);
 }
 View::~View() {

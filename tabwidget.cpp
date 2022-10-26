@@ -11,7 +11,8 @@ void TabWidget::tabClosed(int index){
 }
 
 void TabWidget::tabCurrentChanged(int index){
-    QWidget* widget_ = widget(index);
+//    QWidget* widget_ = widget(index);
+    emit tabCurrentChanged_(index);
 }
 
 

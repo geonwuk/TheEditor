@@ -19,6 +19,9 @@ private:
     MainWindow* parent;
     void tabInserted(int index);
 
+signals:
+    void tabCurrentChanged_(int index);
+
 };
 
 #endif // TABWIDGET_H

@@ -4,13 +4,30 @@
 #include <QLabel>
 
 
-Tree::Tree(MainWindow* mw, TabWidget *tw) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}, tw{tw}
+Tree::Tree(MainWindow* mw, TabWidget *tw, int tabs_item_position) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}, tw{tw}, tabs_item_position{tabs_item_position}
 {
     setHeaderHidden(true);
     connect(this, SIGNAL(itemDoubleClicked(QTreeWidgetItem*, int)), this, SLOT(_itemDoubleClicked(QTreeWidgetItem*, int)));
+    QObject::connect(tw,SIGNAL(tabCurrentChanged_(int)),SLOT(tabCurrnetChanged(int)));
 }
 
+void Tree::tabCurrnetChanged(int index){
+    if(index==-1)
+        return;
+    auto tabs = topLevelItem(tabs_item_position);
+    auto child = tabs->child(index);
+    auto prev_child = tabs->child(prev_tabs_index);
 
+    QFont un_bold(child->font(0));
+    un_bold.setBold(false);
+    prev_child->setFont(0,un_bold);
+
+    QFont bold(child->font(0));
+    bold.setBold(true);
+    child->setFont(0,bold);
+
+    prev_tabs_index=index;
+}
 
 void Tree::_itemDoubleClicked(QTreeWidgetItem* item, int){
     TreeItem* it = dynamic_cast<TreeItem*>(item);
@@ -26,10 +43,16 @@ View* Tree::makeView(ViewFactory* factory){
     return view;
 }
 
+FocusTabItem::FocusTabItem(View* view, Tree& tree, const QIcon& icon, QString title):TreeItem{tree,icon,title},view{view}{
+
+}
+
 void FocusTabItem::doubleClicked(){
     //emit tree.setTabFocus(view);
     tree.tw->setCurrentWidget(view);
 }
+
+
 
 void ToTabItem::doubleClicked(){
     View* view = tree.makeView(view_factory);
@@ -39,26 +62,26 @@ void ToTabItem::doubleClicked(){
 }
 
 
-ManagementTree::ManagementTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw} {
-    QList<ViewFactory*> add_views { new ViewMaker<AddClientView>{mgr,tr("Add Client")},new ViewMaker<AddProductView>{mgr,tr("Add Product")},new ViewMaker<AddOrderView>{mgr,tr("Add Order")}};
-    QList<ViewFactory*> show_views { new ViewMaker<ShowClientView>{mgr,tr("Show Client")},new ViewMaker<ShowProductView>{mgr,tr("Show Product")},new ViewMaker<ShowOrderView>{mgr,tr("Show Order")}};
+ManagementTree::ManagementTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,3} {
+    QList<ViewFactory*> add_views { new ViewMaker<AddClientView>{mgr,QIcon(":/Icons/client.png"),tr("Add Client")},new ViewMaker<AddProductView>{mgr,QIcon(":/Icons/product.png"),tr("Add Product")},new ViewMaker<AddOrderView>{mgr,QIcon(":/Icons/order.png"),tr("Add Order")}};
+    QList<ViewFactory*> show_views { new ViewMaker<ShowClientView>{mgr,QIcon(":/Icons/client.png"),tr("Show Client")},new ViewMaker<ShowProductView>{mgr,QIcon(":/Icons/product.png"),tr("Show Product")},new ViewMaker<ShowOrderView>{mgr,QIcon(":/Icons/order.png"),tr("Show Order")}};
 
-    tabs = new TreeItem(*this, {tr("Tabs")});
+    tabs = new TreeItem(*this, QPixmap(), {tr("Tabs")});
 
     QStringList top_ls = {tr("Client Management"), tr("Product Management"), tr("Order Management")};
 
     int i=0;
     for(auto& e : top_ls) {
-        addTopLevelItem(new TreeItem(*this,{e}));
+        addTopLevelItem(new TreeItem(*this,QPixmap(),e));
         auto elem = topLevelItem(i);
         expandItem(elem);
         auto title = elem->text(0).split(" ");
 
-        QTreeWidgetItem* add = new ToTabItem(add_views[i],*this, {tr("%1 Add").arg(title[0])} );
+        QTreeWidgetItem* add = new ToTabItem(add_views[i],*this, add_views[i]->getIcon(), {tr("%1 Add").arg(title[0])} );
         elem->addChild(add);
 
 
-        QTreeWidgetItem* show = new ToTabItem(show_views[i], *this, {tr("%1 Show / Find / Erase").arg(title[0])} );
+        QTreeWidgetItem* show = new ToTabItem(show_views[i], *this, show_views[i]->getIcon(), {tr("%1 Show / Find / Erase").arg(title[0])} );
         elem->addChild(show);
 
         i++;
@@ -69,26 +92,26 @@ ManagementTree::ManagementTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw} {
     expandItem(tabs);
 }
 
-NetworkTree::NetworkTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw}{
-    QList<ViewFactory*> add_views { new ViewMaker<AddParticipantView>{mgr,tr("Add Paticipants")}};
-    QList<ViewFactory*> show_views {new ViewMaker<ShowChatView>{mgr,tr("Show Chat")}};
+NetworkTree::NetworkTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,1}{
+    QList<ViewFactory*> add_views { new ViewMaker<AddParticipantView>{mgr,QIcon(),tr("Add Paticipants")}};
+    QList<ViewFactory*> show_views {new ViewMaker<ShowChatView>{mgr,QIcon(":/Icons/chat.png"),tr("Show Chat")}};
     QStringList top_ls = {tr("Network Management")};
 
     int i=0;
     for(auto& e : top_ls) {
-        addTopLevelItem(new TreeItem(*this,{e}));
+        addTopLevelItem(new TreeItem(*this,QPixmap(),{e}));
         auto elem = topLevelItem(i);
         expandItem(elem);
 
-        QTreeWidgetItem* add = new ToTabItem(add_views[i],*this, add_views[i]->getTitle() );
+        QTreeWidgetItem* add = new ToTabItem(add_views[i],*this,add_views[i]->getIcon(), add_views[i]->getTitle() );
         elem->addChild(add);
 
-        QTreeWidgetItem* show = new ToTabItem(show_views[i], *this, show_views[i]->getTitle() );
+        QTreeWidgetItem* show = new ToTabItem(show_views[i], *this,show_views[i]->getIcon(), show_views[i]->getTitle() );
         elem->addChild(show);
 
         i++;
     }
-    tabs = new TreeItem(*this, {tr("Tabs")});
+    tabs = new TreeItem(*this,QPixmap(), {tr("Tabs")});
     addTopLevelItem(tabs);
     expandItem(tabs);
 
