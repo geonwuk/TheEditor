@@ -53,14 +53,19 @@ void ServerManager::dropClient(QString id){
     auto it = net_clients.find(id.toStdString());
     assert(it!=net_clients.end());
     auto socket = it->second->socket;
-    //todo 온라인이면 메시지 보내고 오프라인이면 pending message에 추가
-    server->sendMessage(socket, Message{"",Chat_KickOut});
+    //todo 온라인이면 메시지 보내고
+    if(it->second->isOnline()){
+        server->sendMessage(socket, Message{"",Chat_KickOut});
+    }
+    else{
+       // 오프라인이면 pending message에 추가
+    }
     socket_to_nclient.remove(socket);
     net_clients.erase(it);
     notify();
 }
 
-void ServerManager::chatTalk(const QTcpSocket * const socket, const QString& contetnt){
+void ServerManager::chatTalk(const QTcpSocket * const socket, const QByteArray& data){
     auto itr = socket_to_nclient.find(socket);
     if(itr==socket_to_nclient.end()){
         server->sendMessage(socket, Message{"BAD_REQUEST",Chat_Talk});

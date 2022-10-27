@@ -66,7 +66,6 @@ namespace PM {
         bool eraseProduct(const PID id);
         Product& findProduct(const PID id);
         const Product& findProduct(const PID id) const;
-        std::shared_ptr<Product> copyProduct(const PID) const noexcept;
         const_iterator getProducts() const;
         bool buyProduct(const PID id, const unsigned int qty);
 		ofstream& saveProducts(ofstream&) const;
@@ -74,7 +73,7 @@ namespace PM {
         const unsigned int getSize() const;
     private:
         static unsigned int product_id;
-        map < std::string, std::shared_ptr<Product> > products;
+        map < std::string, Product > products;
         string generateRandID(tm time);
     public:
         class const_iterator{
@@ -82,7 +81,7 @@ namespace PM {
             struct Itr {
                 Itr(Itr_type p) :ptr{ p } {}
                 const Product& operator*() const {
-                    return *ptr->second.get();
+                    return ptr->second;
                 }
                 Itr_type operator++() {
                     return ++ptr;

@@ -26,9 +26,9 @@ std::pair<const Order_ID, bool> OrderManager::addOrder(const Order_ID oid, const
     for (const auto &product : products) {
         Product& found = pm.findProduct(product.id);
         if (found == no_product)
-            return { stoi(product.id), false };
+            return { oid, false };
         if (found.getQty()<product.qty)
-            return { stoi(product.id), false };
+            return { oid, false };
     }
     int i=0;
     for (auto product : products) {
@@ -38,27 +38,23 @@ std::pair<const Order_ID, bool> OrderManager::addOrder(const Order_ID oid, const
     }
     order.order_id = oid;
     assert(!(cm.findClient(client_id)==no_client));
-    order.client = cm.findClient(client_id);
+    order.client = &cm.findClient(client_id);
     auto inserted_order = orders.emplace(order_id, order);
     return {order_id++, true};
 }
 
-bool OrderManager::loadOrder(const Order_ID oid, const Client_ID client_id, vector<bill> products, tm time){
+bool OrderManager::loadOrder(const Order_ID oid, const Client_ID client_id, vector<Product> products, vector<unsigned int> qty, tm time){
     Order order;
     order.date = time;
 
-    for (const auto &product : products) {
-        Product& found = pm.findProduct(product.id);
-        if (found == no_product)
-            return false;
-    }
+    unsigned int i =0;
     for (auto product : products) {
-        order.products.emplace_back(pm.findProduct(product.id), product.qty);
+        order.products.emplace_back(product, qty.at(i++));
     }
     order.order_id = oid;
-    assert(!(cm.findClient(client_id)==no_client));
-    order.client = cm.findClient(client_id);
-    auto inserted_order = orders.emplace(order_id, order);
+    assert(!(cm.findClient(client_id)==no_client));//to do throw
+    order.client = &cm.findClient(client_id);
+    orders.emplace(order_id, order);
     order_id = (oid>order_id ? oid : order_id);
     order_id++;
     return true;
@@ -84,23 +80,32 @@ static std::ofstream& operator<< (std::ofstream& out, tm p) {
 }
 
 
-static std::ofstream& operator<<(std::ofstream& out, const OrderManager::Order& o)
+std::ofstream& OM::OrderManager::saveOrders(std::ofstream& out) const
 {
-    out << o.getID() << ',';
-    out << o.getClient().getId() << ',';
-    out << o.getDate();
-    for (auto product_info : o.getProducts()) {
-        out << ',' << product_info.product->getId()<<','<<product_info.qty;
+    for (const auto& o : orders) {
+        const Order& order = o.second;
+        out << order.getID() << ',';
+        out << order.getClient().getId() << ',';
+        out << order.getDate()<<',';
+        out << order.getProducts().size()<<','<<endl;
+        for(const auto product_info : order.getProducts()){
+            out<<*product_info.product<<','<<product_info.qty<<','<<endl;
+        }
 	}
 	return out;
 }
-
-std::ofstream& OM::OrderManager::saveOrders(std::ofstream& out) const
-{
-	for (const auto& p : orders) {
-        out << p.second << endl;
-	}
-	return out;
+static vector<string> split(const string& str){
+    vector<string> tmp;
+    auto begIdx = str.find_first_not_of(',');
+    while (begIdx != string::npos) {
+        auto endIdx = str.find_first_of(',', begIdx);
+        if (endIdx == string::npos) {
+            endIdx = str.length();
+        }
+        tmp.emplace_back(str.substr(begIdx, endIdx - begIdx));
+        begIdx = str.find_first_not_of(',', endIdx);
+    }
+    return tmp;
 }
 
 std::ifstream& OM::OrderManager::loadOrders(ifstream& in, unsigned int lines)
@@ -109,33 +114,35 @@ std::ifstream& OM::OrderManager::loadOrders(ifstream& in, unsigned int lines)
     try{
         std::string str;
         while (line++<lines && getline(in, str)) {
-            vector<string> tmp;
-            auto begIdx = str.find_first_not_of(',');
-            while (begIdx != string::npos) {
-                auto endIdx = str.find_first_of(',', begIdx);
-                if (endIdx == string::npos) {
-                    endIdx = str.length();
-                }
-                tmp.emplace_back(str.substr(begIdx, endIdx - begIdx));
-                begIdx = str.find_first_not_of(',', endIdx);
-            }
-            Order_ID oid = static_cast<unsigned int>(stoi(tmp.at(0)));
+            vector tmp = split(str);
+            Order_ID oid = stoi(tmp.at(0));
             Client_ID cid = tmp.at(1);
             string time_string = tmp.at(2);
             std::tm time;
             istringstream ss{ time_string };
-            ss >> std::get_time(&time, "%D %T");
-            vector<bill> bills;
-            if((tmp.size()-3)%2!=0){
+            if(ss.fail())
                 throw -1;
+            ss >> std::get_time(&time, "%D %T");
+
+            unsigned int products_size = stoi(tmp.at(3));
+            vector<Product> products;
+            vector<unsigned int> qtys;
+            for(unsigned int i=0; i<products_size; i++){
+                string product;
+                getline(in,product);
+                vector product_string= split(product);
+                string time_string = product_string.at(4);
+                tm time;
+                istringstream ss{ time_string };
+                ss >> std::get_time(&time, "%D %T");
+                unsigned int stock = stoul(product_string.at(3));
+                unsigned int price = stoul(product_string.at(2));
+                string name = product_string.at(1);
+                string id = product_string.at(0);
+                products.emplace_back(id,name,price,stock,time);
+                qtys.emplace_back(stoi(product_string.at(5)));
             }
-            for(auto b = tmp.begin()+3; b!=tmp.end(); ++b ){
-                PM::PID pid {*b};
-                ++b;
-                unsigned int qty = static_cast<unsigned int>(stoul(*b));
-                bills.emplace_back(pid, qty);
-            }
-            auto result = loadOrder(oid, cid, bills, time);
+            auto result = loadOrder(oid, cid, products, qtys, time);
             if(!result){
                 throw -1;
             }

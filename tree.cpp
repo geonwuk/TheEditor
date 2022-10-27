@@ -31,7 +31,6 @@ void Tree::tabCurrnetChanged(int index){
 
 void Tree::_itemDoubleClicked(QTreeWidgetItem* item, int){
     TreeItem* it = dynamic_cast<TreeItem*>(item);
-    qDebug()<<"double";
     it->doubleClicked();
 }
 
@@ -48,7 +47,6 @@ FocusTabItem::FocusTabItem(View* view, Tree& tree, const QIcon& icon, QString ti
 }
 
 void FocusTabItem::doubleClicked(){
-    //emit tree.setTabFocus(view);
     tree.tw->setCurrentWidget(view);
 }
 
@@ -56,7 +54,6 @@ void FocusTabItem::doubleClicked(){
 
 void ToTabItem::doubleClicked(){
     View* view = tree.makeView(view_factory);
-    //emit tree.treeToTab(view, view->icon, view->label);
     tree.tw->addTab(view, view->icon, view->label);
     tree.tw->setCurrentWidget(view);
 }

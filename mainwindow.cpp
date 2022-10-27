@@ -9,7 +9,7 @@
 #include "Network/server.h"
 #include <QFileDialog>
 #include <fstream>
-
+#include <QMessageBox>
 using namespace std;
 static const unsigned int parseTitle(ifstream& in, const string title, const unsigned int line );
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){
@@ -57,24 +57,25 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionSave,SIGNAL(triggered()),SLOT(save()));
     connect(ui->actionOpen,SIGNAL(triggered()),SLOT(load()));
     setWindowTitle(tr("Program"));
+
+    ui->verticalLayout->sizeHint();
+
 }
 
-void MainWindow::treeToTab(QWidget *page, const QIcon &icon, const QString &label){
-//    tw.addTab(page, icon, label);
-//    tw.setCurrentWidget(page);
-}
-void MainWindow::setTabFocus(QWidget* page){
-//    tw.setCurrentWidget(page);
+void Manager::updateAll(){
+    for (auto o : observers) {
+        o->update();
+    }
 }
 
 void MainWindow::save(){
     QString filename = QFileDialog::getSaveFileName(this);
     std::ofstream out(filename.toStdString());
-    out<<"[Clients],"<<mgrs.getCM().getSize()<<std::endl;
+    out<<"[Clients],"<<mgrs.getCM().getSize()<<','<<std::endl;
     mgrs.getCM().saveClients(out);
-    out<<"[Products],"<<mgrs.getPM().getSize()<<std::endl;
+    out<<"[Products],"<<mgrs.getPM().getSize()<<','<<std::endl;
     mgrs.getPM().saveProducts(out);
-    out<<"[Orders],"<<mgrs.getOM().getSize()<<std::endl;
+    out<<"[Orders],"<<mgrs.getOM().getSize()<<','<<std::endl;
     mgrs.getOM().saveOrders(out);
 }
 void MainWindow::load(){
@@ -88,10 +89,10 @@ void MainWindow::load(){
         mgrs.getPM().loadProducts(in, line);
         line = parseTitle(in,"[Orders]",line);
         mgrs.getOM().loadOrders(in, line);
+        mgrs.updateAll();
     } catch (...) {
-        qDebug()<<"FAIL LOAD";
+        QMessageBox::critical(this, tr("FAIL LOADING"), tr("FAIL LOADING"));
     }
-
 }
 
 MainWindow::~MainWindow()
@@ -100,10 +101,8 @@ MainWindow::~MainWindow()
 }
 
 void Manager::attachObserver(View* o){
-    qDebug()<<"attach observer";
     observers.emplace_back(o);
 }
-
 
 static const unsigned int parseTitle(ifstream& in, const string title, const unsigned int line ){
     try{
@@ -115,8 +114,10 @@ static const unsigned int parseTitle(ifstream& in, const string title, const uns
         if(str!=title){
             throw line;
         }
-        getline(in, str);
+        getline(in, str, ',');
         qDebug()<<str.c_str();
+        string temp;
+        getline(in,temp);
         return stoul(str);
     }
     catch(...){

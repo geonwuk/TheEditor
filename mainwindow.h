@@ -9,7 +9,6 @@
 #include "tree.h"
 #include <list>
 #include "Network/servermanager.h"
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -29,6 +28,8 @@ public:
         }
     }
 
+    void updateAll();
+
     CM::ClientManager& getCM(){
         return cm;
     }
@@ -44,7 +45,6 @@ public:
 
     void attachObserver(View* o);
     void detachObserver(View* o){
-        qDebug()<<"detach";
         observers.remove(o);
     }
 private:
@@ -65,8 +65,6 @@ public:
     Manager* getMgr(){return &mgrs;}
 
 private slots:
-    void treeToTab(QWidget *page, const QIcon &icon, const QString &label);
-    void setTabFocus(QWidget* page);
     void save();
     void load();
 

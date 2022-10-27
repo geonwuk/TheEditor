@@ -87,7 +87,7 @@ public:
     TreeItem(Tree& tree, const QIcon& icon, QString title):QTreeWidgetItem{(QTreeWidget*)nullptr,{title}},tree{tree}{
         setIcon(0,icon);
     }
-    virtual void doubleClicked(){qDebug()<<"default double";};
+    virtual void doubleClicked(){};
 };
 
 class ToTabItem : public TreeItem{

@@ -44,7 +44,6 @@ HEADERS += \
 FORMS += \
     Network/addParticipantView.ui \
     Network/chatRoom.ui \
-    server.ui \
     addClient.ui \
     addOrder.ui \
     addProduct.ui \

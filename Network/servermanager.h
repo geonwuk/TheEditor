@@ -21,6 +21,11 @@ public:
         const QString message;
         const QString time;
     };
+    struct 1ddd{
+        const quint64 session;
+        const quint64 chat_room_no;
+    };
+
 private:
     class NetClient{
         friend class ServerManager;
@@ -82,7 +87,7 @@ public:
 private:
     void login(const QTcpSocket* const socket, const QString &rmsg);
     void logOut(const QTcpSocket* const socket);
-    void chatTalk(const QTcpSocket* const socket , const QString& );
+    void chatTalk(const QTcpSocket* const socket , QByteArray& data );
     void fileTransmission(const QTcpSocket* const socket, QByteArray&);
     void notify();
 };

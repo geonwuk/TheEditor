@@ -5,6 +5,7 @@
 #include <QTableWidgetItem>
 #include <iomanip>
 #include <sstream>
+#include <QDateTimeEdit>
 //View::View() {}
 View::View(Manager& mgr, Tree& tree, const QIcon &icon, const QString label) : icon{icon}, label{label}, mgr{mgr},tree{tree} {
     tab = new FocusTabItem{this,tree,icon,label};
@@ -20,9 +21,9 @@ void View::removeFromTree(){
 
 
 
-QWidget* View::getCheckBoxWidget() {
-    QWidget* checkBoxWidget = new QWidget();
-    auto check_box = new QCheckBox;
+QWidget* View::getCheckBoxWidget(QWidget* parent) {
+    QWidget* checkBoxWidget = new QWidget(parent);
+    auto check_box = new QCheckBox(checkBoxWidget);
     QHBoxLayout *layoutCheckBox = new QHBoxLayout(checkBoxWidget);
     layoutCheckBox->addWidget(check_box);
     layoutCheckBox->setAlignment(Qt::AlignCenter);
@@ -30,6 +31,16 @@ QWidget* View::getCheckBoxWidget() {
     checkBoxWidget->setProperty("CB", QVariant::fromValue(check_box));
     return checkBoxWidget;
 }
+QDateTimeEdit* View::getDateTimeEditWidget(const QDateTime &datetime, QWidget* parent) {
+    auto dt = new QDateTimeEdit(datetime, parent);
+    dt->setReadOnly(true);
+//    QHBoxLayout *layoutCheckBox = new QHBoxLayout;
+//    layoutCheckBox->addWidget(dt);
+//    layoutCheckBox->setAlignment(Qt::AlignCenter);
+//    layoutCheckBox->setContentsMargins(0,0,0,0);
+    return dt;
+}
+
 
 QTableWidgetItem* View::ceateTableItem(const QString id, QString title){
     auto item = new QTableWidgetItem(title);
@@ -39,7 +50,7 @@ QTableWidgetItem* View::ceateTableItem(const QString id, QString title){
 }
 
 bool CView::modifyClient(const QString id, const QList<QString> ls){
-    bool re = mgr.getCM().modifyClient(id.toStdString(), CM::Client{ls[0].toStdString(),ls[1].toStdString(),ls[2].toStdString()});
+    bool re = mgr.getCM().modifyClient(id.toStdString(), CM::Client{id.toStdString(), ls[0].toStdString(),ls[1].toStdString(),ls[2].toStdString()});
     notify<CView>();
     notify<OView>();
     return re;
@@ -62,7 +73,7 @@ bool PView::addProduct(const QString name, const QString price, const QString qt
 }
 bool PView::modifyProduct(const QString id, const QList<QString> ls){
     tm time;
-    std::istringstream ss( ls[4].toStdString() );
+    std::istringstream ss( ls[3].toStdString() );
     ss >> std::get_time(&time, "%D %T");
     bool re = mgr.getPM().modifyProduct(id.toStdString(), PM::Product{ls[0].toStdString(),ls[1].toUInt(),ls[2].toUInt(),time});
     notify<PView>();

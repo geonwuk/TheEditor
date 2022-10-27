@@ -4,6 +4,7 @@
 #include <QShortcut>
 #include<QMenu>
 #include <QProgressDialog>
+#include <QDateTimeEdit>
 ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : CView{mgr, tabs,icon,label}
 {
     ui.setupUi(this);
@@ -124,6 +125,19 @@ ShowProductView::ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon, con
        is_edit_mode=status;
        using ET = QAbstractItemView::EditTrigger;
        is_edit_mode ? table->setEditTriggers(ET(ET::AllEditTriggers & ~ET::SelectedClicked &~ET::CurrentChanged)) : table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+       if(is_edit_mode){
+           for(int i=0; i<table->rowCount(); i++){
+               QDateTimeEdit* dt =qobject_cast<QDateTimeEdit*>(table->cellWidget(i,4));
+               dt->setReadOnly(false);
+           }
+       }
+       else{
+           for(int i=0; i<table->rowCount(); i++){
+               QDateTimeEdit* dt =qobject_cast<QDateTimeEdit*>(table->cellWidget(i,4));
+               dt->setReadOnly(true);
+           }
+       }
+
     });
     connect(table,SIGNAL(cellChanged(int,int)),SLOT(cellChanged(int,int)));
     connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed()));
@@ -146,10 +160,14 @@ void ShowProductView::fillContents(){
         table->setItem(i,j++,new QTableWidgetItem(QString::number(product.getQty())));
         auto tm = product.getDate();
 
-        QDate date {tm.tm_year+1900,tm.tm_mon,tm.tm_mday};
+        QDate date {tm.tm_year+1900,tm.tm_mon+1,tm.tm_mday};
         QTime time {tm.tm_hour,tm.tm_min,tm.tm_sec};
         QDateTime dateTime {date,time};
-        table->setItem(i,j++,new QTableWidgetItem(dateTime.toString()));
+        QDateTimeEdit* dt = View::getDateTimeEditWidget(dateTime,this);
+        connect(dt,&QDateTimeEdit::dateTimeChanged,[=]{
+            cellChanged(i,j);
+        });
+        table->setCellWidget(i,j++,dt);
         i++;
     }
     table->resizeColumnsToContents();
@@ -194,10 +212,12 @@ void ShowProductView::cellChanged(int row, int col){
         QString id = id_item->data(Role::id).value<QString>();
 
         QList<QString> ls;
-        for(int i=1; i<5; i++){
-            qDebug()<<"i: "<<i<<row<<col;
+        for(int i=1; i<4; i++){
             ls<<table->item(row, i)->text();
         }
+        QDateTimeEdit* dt = qobject_cast<QDateTimeEdit*>(table->cellWidget(row,4));
+        assert(dt!=nullptr);
+        ls<<dt->dateTime().toString("MM/dd/yy hh:mm:ss");
         //CM::Client client {0,ls[0],ls[1],ls[3]};
         table->blockSignals(true);
         modifyProduct(id,ls);
@@ -258,8 +278,10 @@ void ShowOrderView::fillContents() {
         }
         orderTable->setItem(i,j++, new QTableWidgetItem(QString::number(price)));
         auto tm = order.getDate();
-        QDate date {tm.tm_year+1900,tm.tm_mon,tm.tm_mday};
-        orderTable->setItem(i,j++,new QTableWidgetItem(date.toString()));
+        QDate date {tm.tm_year+1900,tm.tm_mon+1,tm.tm_mday};
+        QTime time {tm.tm_hour,tm.tm_min,tm.tm_sec};
+        QDateTime dateTime {date,time};
+        orderTable->setItem(i,j++,new QTableWidgetItem(dateTime.toString("MM/dd/yy hh:mm:ss")));
         i++;
     }
     orderTable->resizeColumnsToContents();
@@ -281,7 +303,6 @@ void ShowOrderView::orderItemSelectionChanged_(){
     OM::Order_ID order_id = item->data(Role::id).value<OM::Order_ID>();
     auto order = findOrder(order_id);
     assert(order!=OM::no_order);
-    unsigned int total_price=0;
     auto product_data = order.getProducts();
     orderInfoTable->setRowCount(product_data.size());
     int i=0;
@@ -295,7 +316,6 @@ void ShowOrderView::orderItemSelectionChanged_(){
         orderInfoTable->setItem(i, j++, new QTableWidgetItem(QString::number(qty)));
         unsigned int local_price = price*qty;
         orderInfoTable->setItem(i, j++, new QTableWidgetItem(QString::number(local_price)));
-        total_price+=local_price;
         i++;
     }
 }

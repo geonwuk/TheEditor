@@ -14,10 +14,6 @@ namespace CM {
 	class Client {
         friend class ClientManager;
 	public:
-
-        Client(string name, string phone_number, string address) :
-            name{ name }, phone_number{ phone_number }, address{ address } {}
-
         Client(string id, string name, string phone_number , string address ) :
             id{ id }, name{ name }, phone_number{ phone_number }, address{ address } {}
         const string getId() const { return id; }

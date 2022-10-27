@@ -30,7 +30,7 @@ std::ofstream& operator<< (std::ofstream& out, tm p) {
 
 std::ofstream& PM::operator<<(std::ofstream& out, const Product& p){
 	out << p.getId() << ',' << p.getName() << ',' << p.getPrice() << ',' << p.getQty()<<',';
-	out << p.getDate();
+    out << p.getDate()<<',';
 	return out;
 }
 
@@ -50,7 +50,7 @@ bool ProductManager::addProduct(const string name, const unsigned int price, con
     localtime_s(&local_time, &base_time);
     string ID = generateRandID(local_time);
     bool success;
-    tie(ignore, success) = products.emplace(ID, make_shared<Product>(ID, name, price, qty, local_time));
+    tie(ignore, success) = products.emplace(ID, Product(ID, name, price, qty, local_time));
     product_id++;
     return success;
 }
@@ -58,7 +58,7 @@ bool ProductManager::addProduct(const string name, const unsigned int price, con
 bool ProductManager::addProduct(const string id, const string name, const unsigned int price, const unsigned int qty, tm time)
 {
     bool success;
-    tie(ignore, success) = products.emplace(id, make_shared<Product>(id, name, price, qty, time));
+    tie(ignore, success) = products.emplace(id, Product(id, name, price, qty, time));
     product_id++;
     return success;
 }
@@ -66,7 +66,7 @@ bool ProductManager::addProduct(const string id, const string name, const unsign
 bool ProductManager::modifyProduct(const PID id, const Product new_product){
     auto it = products.find(id);
     if (it == products.end()) return false;
-    Product& the_product = *it->second.get();
+    Product& the_product = it->second;
     the_product = new_product;
     return true;
 }
@@ -82,7 +82,7 @@ bool ProductManager::eraseProduct(const PID id){
 
 bool ProductManager::buyProduct(const PID id, const unsigned int qty) {
     auto it = products.find(id);
-    Product& product= *it->second.get();
+    Product& product= it->second;
     if (it == products.end()||product.getQty()<qty) {
         return false;
 	}
@@ -97,7 +97,7 @@ const Product& ProductManager::findProduct(const PID id) const{
         return no_product;
     }
     else {
-        return *it->second.get();
+        return it->second;
     }
 }
 
@@ -107,13 +107,8 @@ Product& ProductManager::findProduct(const PID id){
         return const_cast<NoProduct&>(no_product);
     }
     else {
-        return *it->second.get();
+        return it->second;
     }
-}
-
-std::shared_ptr<Product> ProductManager::copyProduct(const PID id) const noexcept{
-    auto it = products.find(id);
-    return it->second;
 }
 
 ProductManager::const_iterator ProductManager::getProducts() const{
@@ -122,7 +117,7 @@ ProductManager::const_iterator ProductManager::getProducts() const{
 
 ofstream& PM::ProductManager::saveProducts(ofstream& out) const{
 	for (const auto& p : products) {
-        out << *p.second.get() << endl;
+        out << p.second << endl;
 	}
 	return out;
 }
@@ -163,8 +158,10 @@ std::ifstream& PM::ProductManager::loadProducts(ifstream& in, const unsigned int
     catch(...){
         throw ERROR_WHILE_LOADING{line};
     }
-
 }
+
+
+
 
 //const unsigned int PM::ProductManager::getMaxIndex() const {
 //    return products.empty() ? 0 : (--products.end())->first;

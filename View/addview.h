@@ -49,8 +49,7 @@ public:
 public slots:
     void addOrder();
     void commitOrder();
-    void cleintItemSelectionChanged_();
-
+    void itemSelectionChanged_();
 
 private:
     Ui::addOrder ui {};
@@ -64,6 +63,7 @@ private:
     void fillClientTab();
     void fillProductTab();
     void fillClientInfoTab(QList<QString>);
+    void fillProductInfoTab(QList<QString>);
     std::vector<QString> getCheckedIDs(QTableWidget* table);
 
 };

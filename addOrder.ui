@@ -41,23 +41,6 @@
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <widget class="QComboBox" name="comboBox"/>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="lineEdit"/>
-           </item>
-           <item>
-            <widget class="QPushButton" name="searchButton">
-             <property name="text">
-              <string>Search</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
             <spacer name="horizontalSpacer">
@@ -75,7 +58,7 @@
            <item>
             <widget class="QPushButton" name="commitOrderButton">
              <property name="text">
-              <string>PushButton</string>
+              <string>Commit</string>
              </property>
             </widget>
            </item>
@@ -88,11 +71,23 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QTreeWidget" name="orderTree">
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
+          <property name="lineWidth">
+           <number>1</number>
+          </property>
+          <property name="midLineWidth">
+           <number>1</number>
+          </property>
           <property name="rootIsDecorated">
            <bool>true</bool>
           </property>
           <property name="uniformRowHeights">
            <bool>false</bool>
+          </property>
+          <property name="animated">
+           <bool>true</bool>
           </property>
           <property name="allColumnsShowFocus">
            <bool>true</bool>
@@ -101,19 +96,17 @@
            <bool>false</bool>
           </property>
           <property name="headerHidden">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="expandsOnDoubleClick">
            <bool>true</bool>
           </property>
           <attribute name="headerVisible">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="headerStretchLastSection">
            <bool>false</bool>
           </attribute>
-          <column>
-           <property name="text">
-            <string notr="true">1</string>
-           </property>
-          </column>
          </widget>
         </item>
         <item>
@@ -134,7 +127,7 @@
           <item>
            <widget class="QPushButton" name="addOrderButton">
             <property name="text">
-             <string>PushButton</string>
+             <string>Add</string>
             </property>
            </widget>
           </item>

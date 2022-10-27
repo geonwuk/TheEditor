@@ -10,6 +10,7 @@ class OView;
 class QTableWidgetItem;
 class FocusTabItem;
 class NView;
+class QDateTimeEdit;
 class View : public QWidget{
 public:
     virtual ~View();
@@ -24,14 +25,17 @@ protected:
     Manager& mgr;
     template<typename T>
     void notify(){
-        mgr.notify([](View* o){
-           if(nullptr!=dynamic_cast<T*>(o)){
-               o->update();
-                qDebug()<<o->label <<"notify";
+        mgr.notify([=](View* o){
+           T* self;
+           if((self=dynamic_cast<T*>(o))!=nullptr){
+               if(self!=(T*)(this))
+                   o->update();
+                //qDebug()<<o->label <<"notify";
            }
         });
     }
-    QWidget* getCheckBoxWidget();
+    QWidget* getCheckBoxWidget(QWidget* parent);
+    QDateTimeEdit* getDateTimeEditWidget(const QDateTime &datetime, QWidget* parent);
     enum Role {id = Qt::UserRole};
     QTableWidgetItem* ceateTableItem(const QString id, QString title);
 private:
