@@ -15,7 +15,7 @@ class Tree;
 class TabWidget;
 class ViewFactory {
 protected:
-     const QString title;
+     QString title;
      const QIcon icon;
 public:
      ViewFactory(const QIcon& icon, const QString title) : title{title}, icon{icon} {}
@@ -26,6 +26,9 @@ public:
     const QIcon& getIcon(){
         return icon;
     }
+    void setTitle(QString title_){
+        title=title_;
+    }
 };
 template<typename T>
 class ViewMaker : public ViewFactory{
@@ -35,8 +38,8 @@ public:
     View* make(Tree* tree){
         return new T{mgr,*tree,icon,title};
     }
-
 };
+
 
 class Tree : public QTreeWidget {
     Q_OBJECT
@@ -92,6 +95,7 @@ public:
 
 class ToTabItem : public TreeItem{
     ViewFactory* view_factory;
+    unsigned int id;
 public:
     ToTabItem(ViewFactory* view_factory, Tree& tree, const QIcon& icon, QString title):TreeItem{tree,icon,title},view_factory{view_factory}{}
     void doubleClicked();

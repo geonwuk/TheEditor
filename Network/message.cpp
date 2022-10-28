@@ -6,8 +6,8 @@
 #include <QFile>
 #include <QProgressDialog>
 #include <QFileInfo>
-Message::Message(QString str, REQUEST req): type(req) {
-   data.append(str.toUtf8());
+Message::Message(unsigned int chat_room_no, QString message, REQUEST req): type(req) {
+    data.append((QString::number(chat_room_no)+QString(',')+message).toUtf8());
 }
 
 Message::operator const QByteArray() const{
@@ -59,10 +59,6 @@ FileMessage::FileMessage(QFile* file, QProgressDialog* progress_dialog):file{fil
         stream<<e;
     }
     stream<<'\0';
-
-
-
-
     while(bytes_read<file_size){
         auto data_read = file->read(file_size);
         data.append(data_read);

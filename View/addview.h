@@ -69,6 +69,7 @@ private:
 };
 
 #include "ui_addParticipantView.h"
+
 class AddParticipantView : public NView{
     Q_OBJECT
 public:
@@ -83,6 +84,7 @@ private:
 private slots:
     void addParticipant();
     void dropParticipant();
+    void on_addChatRoomButton_clicked();
 
 };
 

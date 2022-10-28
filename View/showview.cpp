@@ -191,9 +191,10 @@ void ShowProductView::returnPressed(){
     QList<int> rows_to_delete;
     for(int row=0; row<table->rowCount(); row++){
         QStringList ls;
-        for(int col=0; col<table->columnCount(); col++){
+        for(int col=0; col<table->columnCount()-1; col++){
             ls<<table->item(row,col)->text();
         }
+        ls<<qobject_cast<QDateTimeEdit*>(table->cellWidget(row,4))->dateTime().toString("yyyy/MM/dd hh:mm:ss");
         for(const auto &e : ls){
             if(e.contains(str)) goto end;
         }
@@ -339,12 +340,15 @@ ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QSt
     smgr.registerChatView(this);
     //ui.splitter->setSizes({120,500});
     //ui.clientTreeWidget->selectionMode()
-
+    auto chat_room_names = View::label.split(',');
+    View::label=chat_room_names[1];
+    chat_room_no=chat_room_names[0].toInt();
+    View::tab->setText(0,chat_room_names[1]);
     QAction* removeAction = new QAction(tr("&Kick out"));
     connect(removeAction, &QAction::triggered, [&]{
         for(auto& item : ui.clientTreeWidget->selectedItems()) {
             QString id = item->text(1);
-            mgr.getSM().dropClient(id);
+            //mgr.getSM().dropClient(id);
         }
         notify<NView>();
     });
@@ -369,7 +373,7 @@ void ShowChatView::clientLogin(){
 
 }
 
-void ShowChatView::addLog(const ServerManager::ChatMessage& msg ){
+void ShowChatView::addLog(const ChatMessage& msg ){
     QTreeWidgetItem* item = new QTreeWidgetItem(ui.messageTreeWidget);
     item->setText(0, msg.ip);
     item->setText(1, msg.port);
@@ -383,13 +387,14 @@ void ShowChatView::addLog(const ServerManager::ChatMessage& msg ){
 }
 
 void ShowChatView::fillclientTree(){
-    int row=0;
+    auto chat_room_itr = std::next(smgr.getChatRooms().begin(),chat_room_no-1);
+    //data(0, Role::id).value<QString>();
     ui.clientTreeWidget->clear();
-    for(auto participant : smgr){
+    for(auto participant : chat_room_itr->getParticipants()){
         int j=0;
-        auto client = participant.second->getClient();
-        auto icon = participant.second->isOnline() ? QStyle::SP_DialogYesButton : QStyle::SP_DialogNoButton;
-        auto online_string = participant.second->isOnline() ? "online" : "offline";
+        auto client = participant->getClient();
+        auto icon = participant->isOnline() ? QStyle::SP_DialogYesButton : QStyle::SP_DialogNoButton;
+        auto online_string = participant->isOnline() ? "online" : "offline";
         auto item = new QTreeWidgetItem{ui.clientTreeWidget,{online_string,client.getId().c_str(),client.getName().c_str()}};
         item->setIcon(0,qApp->style()->standardIcon(icon));
 

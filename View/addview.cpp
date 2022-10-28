@@ -1,5 +1,5 @@
 #include "addview.h"
-#include "mainwindow.h"
+
 #include <QDate>
 #include <QCheckBox>
 #include <QShortCut>
@@ -276,18 +276,20 @@ void AddOrderView::addOrder(){
 AddOrderView::~AddOrderView(){
 
 }
-
-
-
-
+#include "Network/servermanager.h"
+static QTreeWidgetItem* createTreeItem(const unsigned int col, const QString id, QList<QString> titles){
+    auto item = new QTreeWidgetItem(titles);
+    item->setData(col, Qt::UserRole, id);
+    return item;
+}
 AddParticipantView::AddParticipantView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label)
     : NView{mgr, tabs, icon,label} {
     initUI();
 
     fillContents();
 
-    connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addParticipant()));
-    connect(ui.dropButton,SIGNAL(pressed()),this,SLOT(dropParticipant()));
+    connect(ui.addButton,SIGNAL(clicked()),this,SLOT(addParticipant()));
+    connect(ui.dropButton,SIGNAL(clicked()),this,SLOT(dropParticipant()));
 }
 void AddParticipantView::initUI(){
     ui.setupUi(this);
@@ -317,7 +319,6 @@ void AddParticipantView::initUI(){
     setLayout(center_layout);
 
 
-
     splitter->setCollapsible(1,false);
     splitter->setStretchFactor(0,1);
     splitter->setStretchFactor(1,0);
@@ -325,56 +326,77 @@ void AddParticipantView::initUI(){
     splitter->setHandleWidth(1);
     //splitter->setSizes({1,0,1});
 
-
     QList<QString> headers {tr("ID"),tr("Name")};
     ui.clientList->setColumnCount(headers.size());
     ui.clientList->setHorizontalHeaderLabels(headers);
-    QList<QString> p_list_headers {tr("ID"),tr("Name")};
-    ui.participantList->setColumnCount(p_list_headers.size());
-    ui.participantList->setHorizontalHeaderLabels(p_list_headers);
 }
 
 void AddParticipantView::addParticipant(){
     auto ranges = ui.clientList->selectedRanges();
-    if(ranges.empty()) return;
+    if(ranges.empty()){
+        QMessageBox::warning(this,tr("Warning"),tr("Please select clients"));
+        return;
+    }
+    auto chat_rooms =ui.chatRoomTree->selectedItems();
+    if(chat_rooms.empty()){
+        QMessageBox::warning(this,tr("Warning"),tr("Please select chat rooms"));
+        return;
+    }
+    for(auto chat_room : chat_rooms){
+        if(chat_room->parent()!=nullptr){
+            QMessageBox::warning(this,tr("Warning"),tr("Please select chat rooms only"));
+            return;
+        }
+    }
+
     for(auto range : ranges){
         for(int top = range.topRow(); top<= range.bottomRow(); top++){
             auto id_item = ui.clientList->item(top,0);
             QString id = id_item->data(Role::id).value<QString>();
             auto client = mgr.getCM().copyClient(id.toStdString());
-            mgr.getSM().addClient(client);
+            NetClient&  nc = mgr.getSM().addClient(client);
+
+            auto chat_rooms = ui.chatRoomTree->selectedItems();
+            for(auto& chat_room : chat_rooms){
+                auto chat_room_no = chat_room->data(0,Role::id).value<unsigned int>();
+                mgr.getSM().attendClient(chat_room_no, nc);
+            }
         }
     }
+
     fillContents();
     notify<NView>();
 }
 void AddParticipantView::dropParticipant(){
-    auto ranges = ui.participantList->selectedRanges();
-    if(ranges.empty()) return;
-    for(auto range : ranges){
-        for(int top = range.topRow(); top<= range.bottomRow(); top++) {
-            auto id_item = ui.participantList->item(top,0);
-            QString id = id_item->data(Role::id).value<QString>();
-            mgr.getSM().dropClient(id);
+    auto ls = ui.chatRoomTree->selectedItems();
+    if(ls.empty()){
+        QMessageBox::warning(this,tr("Warning"),tr("Please select Participants"));
+        return;
+    }
+    for(const auto& participants : ls){
+        if(participants->parent()==nullptr){
+             QMessageBox::warning(this, tr("Warning"), tr("Please Select Participants Only."));
+             return;
         }
+    }
+    for(const auto& participant : ls){
+        auto chat_room = participant->parent();
+        unsigned int chat_room_no = chat_room->data(0,Role::id).value<QString>().toInt();
+        QString id = participant->data(1, Role::id).value<QString>();
+        mgr.getSM().dropClient(chat_room_no,id);
     }
     fillContents();
     notify<NView>();
 }
+
+
 void AddParticipantView::fillContents(){
     ui.clientList->clearContents();
     ui.clientList->setRowCount(mgr.getCM().getSize());
     int i=0;
-    auto participants = mgr.getSM().begin();
+    auto participants = mgr.getSM().getNetClients();
     for(auto client = mgr.getCM().getCleints().begin(); client!=mgr.getCM().getCleints().end(); ++client){
         int j=0;
-        while(participants!=mgr.getSM().end() && client!=mgr.getCM().getCleints().end() && (client->getId()==participants->second->getClient().getId())){
-            ++client;
-            ++participants;
-            continue;
-        }
-        if(client == mgr.getCM().getCleints().end())
-            break;
         ui.clientList->setItem(i,j++,ceateTableItem(client->getId().c_str(), client->getId().c_str()) );
         ui.clientList->setItem(i,j++,new QTableWidgetItem(client->getName().c_str()));
         i++;
@@ -383,17 +405,38 @@ void AddParticipantView::fillContents(){
     ui.clientList->resizeColumnsToContents();
     ui.clientList->resizeRowsToContents();
 
-    ui.participantList->setRowCount(mgr.getSM().getSize());
-    int p_i=0;
-    for(auto& participant : mgr.getSM()){
-        int j=0;
-        auto& client = participant.second->getClient();
-        ui.participantList->setItem(p_i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()) );
-        ui.participantList->setItem(p_i,j++,new QTableWidgetItem(client.getName().c_str()));
-        p_i++;
+    ui.chatRoomTree->clear();
+    for(const auto& chat_room_info : mgr.getSM().getChatRooms()){
+        const auto chat_room_id = chat_room_info.getId();
+        const auto& chat_room = chat_room_info;
+        auto item = createTreeItem(0,QString::number(chat_room_id),{chat_room.getName()});
+        ui.chatRoomTree->addTopLevelItem(item);
+        for(const NetClient* participant : chat_room.getParticipants()){
+            qDebug()<<"attendants"<<participant->getClient().getId().c_str();
+            item->addChild(createTreeItem(1,participant->getClient().getId().c_str(),{"",participant->getClient().getId().c_str(),participant->getClient().getName().c_str()}));
+        }
+        ui.chatRoomTree->expandItem(item);
     }
-    ui.participantList->resizeColumnsToContents();
-    ui.participantList->resizeRowsToContents();
+    for(int i=0; i<ui.chatRoomTree->columnCount(); i++){
+        ui.chatRoomTree->resizeColumnToContents(i);
+    }
+}
+#include <QInputDialog>
+#include "View/showview.h"
+void AddParticipantView::on_addChatRoomButton_clicked(){
+    bool ok;
+    QString text = QInputDialog::getText(nullptr, tr("Add Chat Room"),
+                                         tr("Chat Room name:"), QLineEdit::Normal,
+                                         "", &ok);
+    if (ok && !text.isEmpty()){
+        auto chat_room = mgr.getSM().addChatRoom(text.toStdString());
+        ViewFactory* showChat {new ViewMaker<ShowChatView>{mgr,QIcon(":/Icons/chat.png"),QString::number(chat_room.getId())+','+chat_room.getName()}};
+        QTreeWidgetItem* chat_room_view = new ToTabItem(showChat, tree, showChat->getIcon(), chat_room.getName());
+        tree.topLevelItem(0)->child(1)->addChild(chat_room_view);
+        tree.expandAll();
+        fillContents();
+        notify<NView>();
+    }
 }
 
 AddParticipantView::~AddParticipantView(){}

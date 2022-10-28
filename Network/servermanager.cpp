@@ -5,20 +5,30 @@
 #include "Network/server.h"
 #include <QDateTime>
 #include <QFile>
+
+static QList<QString> parseMessage(const QByteArray& data){
+    QString info{data};
+    QList<QString> ls = info.split(',');
+    assert(ls.size()==2); //디버깅 용도로 프로토콜은 (채팅방 번호,메시지 내용)인지 확인하는 용도
+    return ls;
+}
+
+
 ServerManager::ServerManager(Manager& mgr): mgr{mgr} {}
 
-void ServerManager::addClient(const std::shared_ptr<Client>& c)
+NetClient& ServerManager::addClient(const std::shared_ptr<Client>& c)
 {
-    qDebug()<<"ADDING NEW NC";
-    auto nc = std::make_shared<NetClient>(c, log_no);
+    qDebug()<<"ADDING NEW NC" <<c->getId().c_str();
+    auto nc = std::make_shared<NetClient>(c);
     auto result = net_clients.emplace(c->getId(), nc);
-    assert(result.second);
+    //assert(result.second);
+    return *result.first->second;
 }
 
 void ServerManager::login(const QTcpSocket* const socket, const QString& id){
     auto nc_itr = net_clients.find(id.toStdString());
     if(nc_itr==net_clients.end()){
-        server->sendMessage(socket,Message{"NO_ID",Chat_Login});
+        server->sendMessage(socket,Message{0,"NO_ID",Chat_Login});
         return;
     }
     auto nc = nc_itr->second.get();
@@ -27,10 +37,8 @@ void ServerManager::login(const QTcpSocket* const socket, const QString& id){
     socket_to_nclient.insert(socket, nc);
     qDebug()<<nc->self->getId().c_str()<<"login complete";
     notify();
-    server->sendMessage(socket,Message{"SUCCESS",Chat_Login});
+    server->sendMessage(socket,Message{0,"SUCCESS",Chat_Login});
 
-    //todo
-    //현재 로그 no와 클라이언트 로그 no를 비교해서 클라이언트에 쏴주기
 }
 
 void ServerManager::logOut(const QTcpSocket* const socket){
@@ -38,7 +46,7 @@ void ServerManager::logOut(const QTcpSocket* const socket){
         return;
     auto itr = socket_to_nclient.find(socket);
     if(itr==socket_to_nclient.end()){
-        server->sendMessage(socket, Message{"BAD_REQUEST",Chat_LogOut});
+        server->sendMessage(socket, Message{0,"BAD_REQUEST",Chat_LogOut});
         return;
     }
     auto nc = itr.value();
@@ -49,26 +57,42 @@ void ServerManager::logOut(const QTcpSocket* const socket){
     notify();
 }
 
-void ServerManager::dropClient(QString id){
+void ServerManager::dropClient(const unsigned int chat_room_no_, const QString id){
     auto it = net_clients.find(id.toStdString());
     assert(it!=net_clients.end());
-    auto socket = it->second->socket;
-    //todo 온라인이면 메시지 보내고
+    auto nc = it->second;
+    auto socket = nc->socket;
     if(it->second->isOnline()){
-        server->sendMessage(socket, Message{"",Chat_KickOut});
+        server->sendMessage(socket, Message{chat_room_no_, "",Chat_KickOut});
     }
     else{
-       // 오프라인이면 pending message에 추가
+       // 오프라인이면
     }
-    socket_to_nclient.remove(socket);
-    net_clients.erase(it);
+    qDebug()<<chat_room_no_;
+    auto chat_room = std::find(chat_rooms.begin(),chat_rooms.end(),chat_room_no_);
+    assert(chat_room!=chat_rooms.end());
+    auto& participants = chat_room->participants;
+    for(auto p = participants.begin(); p!=participants.end(); p++ ){
+        if((*p)->self->getId()==id.toStdString()){
+            participants.erase(p);
+            break;
+        }
+    }
+    nc->removeRoom(chat_room_no_);
+
+    if(it->second->attending_rooms.empty()){
+        socket_to_nclient.remove(socket);
+        net_clients.erase(it);
+    }
     notify();
 }
 
 void ServerManager::chatTalk(const QTcpSocket * const socket, const QByteArray& data){
+    auto ls = parseMessage(data);
+    unsigned int chat_room_no = ls.at(0).toInt();
     auto itr = socket_to_nclient.find(socket);
     if(itr==socket_to_nclient.end()){
-        server->sendMessage(socket, Message{"BAD_REQUEST",Chat_Talk});
+        server->sendMessage(socket, Message{chat_room_no, "BAD_REQUEST", Chat_Talk});
         return;
     }
     auto nc = itr.value();
@@ -77,22 +101,22 @@ void ServerManager::chatTalk(const QTcpSocket * const socket, const QByteArray& 
     QString port = QString::number(socket->peerPort());
     QString id = nc->self->getId().c_str();
     QString name = nc->self->getName().c_str();
-    QString chat = contetnt;
+    QString chat = ls.at(1);
     QString time = QDateTime::currentDateTime().toString();
     const ChatMessage msg{ip,port,id,name,chat,time};
     for(auto itr : net_clients){
         auto peer_socket = itr.second->socket;
         if(peer_socket!=socket){
             QString str = id + ',' + chat;
-            server->sendMessage(peer_socket,Message(str,Chat_Talk));
+            server->sendMessage(peer_socket,Message(chat_room_no,str,Chat_Talk));
         }
     }
-
+    auto chat_room = std::find(chat_rooms.begin(),chat_rooms.end(),chat_room_no);
+    assert(chat_room!=chat_rooms.end());
+    chat_room->logs.emplace_back(msg);
     for(auto v: chat_views){
         v->addLog(msg);
     }
-    logs.push_back(msg);
-    ++log_no;
 }
 
 
@@ -123,8 +147,7 @@ void ServerManager::processMessage(const QTcpSocket* const socket, QByteArray da
         logOut(socket);
         break;
     case Chat_Talk:{
-        QString rmsg {data};
-        chatTalk(socket,rmsg);}
+        chatTalk(socket,data);}
         break;
     case Chat_FileTransmission:
         fileTransmission(socket,data);
@@ -157,8 +180,17 @@ void ServerManager::fileTransmission(const QTcpSocket* const socket, QByteArray&
 
 }
 
+bool ServerManager::attendClient(unsigned int chat_room_no_, NetClient& nc){
+    qDebug()<<"chat room no"<<chat_room_no_<<nc.self->getId().c_str();
+    auto chat_room = std::find(chat_rooms.begin(),chat_rooms.end(),chat_room_no_);
+    chat_room->participants.emplace_back(&nc);
+    nc.attending_rooms.emplace_back(&*chat_room);
+    return true;
+}
+
 void ServerManager::notify(){
     for(auto v : chat_views){
         v->update();
     }
 }
+

@@ -15,10 +15,11 @@ enum REQUEST{
 
 class Message {
 public:
-    Message(QString, REQUEST);
+    Message(unsigned int chat_room_no, QString message, REQUEST);
     operator const QByteArray() const;
 
 private:
+    unsigned int chat_room_no;
     char type;
     QByteArray data;
 };

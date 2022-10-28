@@ -87,9 +87,10 @@ public:
     Ui::chatRoom ui;
     void update();
     void clientLogin();
-    void addLog(const ServerManager::ChatMessage& );
+    void addLog(const ChatMessage& );
 
 private:
+    unsigned int chat_room_no;
     void fillclientTree();
     ServerManager& smgr;
 

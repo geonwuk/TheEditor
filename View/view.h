@@ -30,7 +30,6 @@ protected:
            if((self=dynamic_cast<T*>(o))!=nullptr){
                if(self!=(T*)(this))
                    o->update();
-                //qDebug()<<o->label <<"notify";
            }
         });
     }
@@ -38,7 +37,7 @@ protected:
     QDateTimeEdit* getDateTimeEditWidget(const QDateTime &datetime, QWidget* parent);
     enum Role {id = Qt::UserRole};
     QTableWidgetItem* ceateTableItem(const QString id, QString title);
-private:
+protected:
     Tree& tree;
     FocusTabItem* tab=nullptr;
 

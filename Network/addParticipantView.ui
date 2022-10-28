@@ -27,13 +27,13 @@
      <enum>QLayout::SetDefaultConstraint</enum>
     </property>
     <property name="leftMargin">
-     <number>10</number>
+     <number>0</number>
     </property>
     <property name="topMargin">
      <number>10</number>
     </property>
     <property name="rightMargin">
-     <number>10</number>
+     <number>0</number>
     </property>
     <property name="bottomMargin">
      <number>10</number>
@@ -72,43 +72,89 @@
      <height>234</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="participantsLayout" stretch="1,0">
+   <layout class="QVBoxLayout" name="participantsLayout" stretch="0,0">
     <property name="sizeConstraint">
      <enum>QLayout::SetDefaultConstraint</enum>
     </property>
     <property name="leftMargin">
-     <number>10</number>
+     <number>0</number>
     </property>
     <property name="topMargin">
      <number>10</number>
     </property>
     <property name="rightMargin">
-     <number>10</number>
+     <number>0</number>
     </property>
     <property name="bottomMargin">
      <number>10</number>
     </property>
     <item>
-     <widget class="QLabel" name="label_2">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>Participants</string>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Chat Rooms</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="addChatRoomButton">
+        <property name="text">
+         <string>+</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="eraseChatRoomButton">
+        <property name="text">
+         <string>-</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </item>
     <item>
-     <widget class="QTableWidget" name="participantList">
+     <widget class="QTreeWidget" name="chatRoomTree">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>100</horstretch>
         <verstretch>100</verstretch>
        </sizepolicy>
       </property>
+      <column>
+       <property name="text">
+        <string>ChatRoom</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Participant ID</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Participant Name</string>
+       </property>
+      </column>
      </widget>
     </item>
    </layout>
@@ -143,6 +189,9 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="styleSheet">
+       <string notr="true">text-align: center</string>
+      </property>
       <property name="text">
        <string>...</string>
       </property>
@@ -155,6 +204,9 @@
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">text-align: center</string>
       </property>
       <property name="text">
        <string>...</string>

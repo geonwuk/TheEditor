@@ -91,7 +91,7 @@ ManagementTree::ManagementTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,3} {
 
 NetworkTree::NetworkTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,1}{
     QList<ViewFactory*> add_views { new ViewMaker<AddParticipantView>{mgr,QIcon(),tr("Add Paticipants")}};
-    QList<ViewFactory*> show_views {new ViewMaker<ShowChatView>{mgr,QIcon(":/Icons/chat.png"),tr("Show Chat")}};
+    //QList<ViewFactory*> show_views {new ViewMaker<ShowChatView>{mgr,QIcon(":/Icons/chat.png"),tr("Show Chat")}};
     QStringList top_ls = {tr("Network Management")};
 
     int i=0;
@@ -103,7 +103,7 @@ NetworkTree::NetworkTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,1}{
         QTreeWidgetItem* add = new ToTabItem(add_views[i],*this,add_views[i]->getIcon(), add_views[i]->getTitle() );
         elem->addChild(add);
 
-        QTreeWidgetItem* show = new ToTabItem(show_views[i], *this,show_views[i]->getIcon(), show_views[i]->getTitle() );
+        QTreeWidgetItem* show = new TreeItem({*this,QPixmap(),tr("Show Chat")});//new ToTabItem(show_views[i], *this,show_views[i]->getIcon(), show_views[i]->getTitle() );
         elem->addChild(show);
 
         i++;

@@ -23,7 +23,7 @@ void ChattingClient::initUI(){
     connect(loginButton,&QPushButton::clicked,[=](){
         clientSocket->connectToHost(serverAddress->text(),
                                     serverPort->text().toInt());
-        Message msg{idEdit->text(), Chat_Login};
+        Message msg{0, idEdit->text(), Chat_Login};
         clientSocket->write(msg);
     });
 
@@ -99,7 +99,7 @@ void ChattingClient::sendMessage(){
     QString str = inputLine->text( );
     if(str.length( )) {
         message->append("<font color=red>나</font> : " + str);
-        Message msg{str,Chat_Talk};
+        Message msg{0,str,Chat_Talk};////////////////////////////////todo 수정 필요
         clientSocket->write(msg);
     }
 }
@@ -181,7 +181,7 @@ void ChattingClient::processMessage(ReadMessage rmsg){
 }
 
 void ChattingClient::logOut(){
-    clientSocket->write(Message{"",Chat_LogOut});
+    clientSocket->write(Message{0,"",Chat_LogOut});
     clientSocket->disconnectFromHost();
     if(clientSocket->state() != QAbstractSocket::UnconnectedState)
         clientSocket->waitForDisconnected();
