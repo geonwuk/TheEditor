@@ -24,6 +24,7 @@ private:
     QLineEdit* searchLineEdit;
     bool eraseClient(int row);
     const int id_col=0;
+    QShortcut* shortcut;
 
 private slots:
     void cellChanged(int,int);
@@ -75,9 +76,11 @@ class QMenu;
 class QProgressDialog;
 class ServerManager;
 #include "ui_chatRoom.h"
+#include "Network/logthread.h"
 class ShowChatView : public NView
 {
     Q_OBJECT
+    LogThread* log_thread;
     QProgressDialog* progressDialog;
     QMenu* menu;
 //    std::vector<std::shared_ptr<NetClient>> participants;
@@ -95,6 +98,7 @@ private:
 
 private slots:
     void on_clientTreeWidget_customContextMenuRequested(const QPoint &pos);
+    void savePressed();
 };
 
 #endif // SHOWVIEW_H

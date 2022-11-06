@@ -11,7 +11,6 @@ AddClientView::AddClientView(Manager& mgr, Tree& tabs, const QIcon icon, const Q
 }
 
 void AddClientView::addClient(){
-    qDebug()<<"add client";
     QString ID = ui.IDLineEdit->text();
     QString name = ui.NameEdit->text();
     QString phone_number = ui.PhoneNumberEdit->text();
@@ -31,7 +30,6 @@ AddProductView::AddProductView(Manager& mgr, Tree& tabs, const QIcon icon, const
 }
 
 void AddProductView::addProduct(){
-    qDebug()<<"add product";
     QString name = ui.NameEdit->text();
     QString price = ui.PriceEdit->text();
     QString qty = ui.QuantityEdit->text();
@@ -76,12 +74,8 @@ AddOrderView::AddOrderView(Manager& mgr, Tree& tabs, const QIcon icon, const QSt
     connect(ui.addOrderButton,SIGNAL(pressed()),this,SLOT(addOrder()));
     connect(&clientTab,SIGNAL(itemSelectionChanged()),this,SLOT(itemSelectionChanged_()));
     connect(&productTab,SIGNAL(itemSelectionChanged()),this,SLOT(itemSelectionChanged_()));
-//    connect(&productTab, &QTableWidget::itemSelectionChanged, [this](){
-//        itemSelectionChanged_(productTab);
-//    });
-    //label.append(tr("Add Order"));
-    ui.splitter_2->setSizes({ui.CPTab->sizeHint().width(),ui.orderTree->sizeHint().width()});
 
+    ui.splitter_2->setSizes({ui.CPTab->sizeHint().width(),ui.orderTree->sizeHint().width()});
 }
 
 
@@ -221,7 +215,6 @@ void AddOrderView::commitOrder(){
 
     for(const auto& p : product_ids){
         for(int row = 0; row < buyers.size(); row++){
-            qDebug()<<"tree count"<<orderTree->topLevelItemCount();
             auto elem = buyers[row];
             auto product = new QTreeWidgetItem(elem);
             product->setData(0, Role::id, p);
@@ -235,12 +228,10 @@ void AddOrderView::commitOrder(){
 
 void AddOrderView::update(){
     if(!is_update){
-        qDebug()<<"update false";
         fillClientTab();
         fillProductTab();
     }
     else{
-        qDebug()<<"is_update : TRUE!";
     }
 }
 

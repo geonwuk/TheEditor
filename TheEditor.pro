@@ -12,7 +12,7 @@ SOURCES += \
     Manager/ClientManager.cpp \
     Manager/OrderManager.cpp \
     Manager/ProductManager.cpp \
-    Network/chattingclient.cpp \
+    Network/logthread.cpp \
     Network/message.cpp \
     Network/server.cpp \
     Network/servermanager.cpp \
@@ -22,14 +22,13 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     tabwidget.cpp \
-    tree.cpp \
-    ttest.cpp
+    tree.cpp
 
 HEADERS += \
     Manager/ClientManager.h \
     Manager/OrderManager.h \
     Manager/ProductManager.h \
-    Network/chattingclient.h \
+    Network/logthread.h \
     Network/message.h \
     Network/server.h \
     Network/servermanager.h \
@@ -38,8 +37,7 @@ HEADERS += \
     View/view.h \
     mainwindow.h \
     tabwidget.h \
-    tree.h \
-    ttest.h
+    tree.h
 
 FORMS += \
     Network/addParticipantView.ui \
@@ -49,8 +47,7 @@ FORMS += \
     addProduct.ui \
     mainwindow.ui \
     showClient.ui \
-    showOrder.ui \
-    ttest.ui
+    showOrder.ui
 
 TRANSLATIONS += \
     TheEditor_ko_KR.ts

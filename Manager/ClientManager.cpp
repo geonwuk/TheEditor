@@ -99,10 +99,6 @@ std::ifstream& ClientManager::loadClients(std::ifstream& in, const unsigned int 
 
 }
 
-//const unsigned int ClientManager::getMaxIndex() const{
-//    return clients.empty() ? 0 : (--clients.end())->first;
-//}
-
 const unsigned int ClientManager::getSize() const{
     return clients.size();
 }

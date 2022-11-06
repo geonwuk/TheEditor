@@ -5,7 +5,7 @@
 #include <QHash>
 
 
-
+#define PORT_NUMBER 9718
 
 class QTcpServer;
 class QTcpSocket;

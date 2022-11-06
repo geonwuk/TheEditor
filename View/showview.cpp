@@ -5,6 +5,7 @@
 #include<QMenu>
 #include <QProgressDialog>
 #include <QDateTimeEdit>
+#include <QFileDialog>
 ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : CView{mgr, tabs,icon,label}
 {
     ui.setupUi(this);
@@ -22,11 +23,14 @@ ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const
        is_edit_mode ? table->setEditTriggers(ET(ET::AllEditTriggers & ~ET::SelectedClicked &~ET::CurrentChanged)) : table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     });
     connect(table,SIGNAL(cellChanged(int,int)),SLOT(cellChanged(int,int)));
-    connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed()));
-    auto shortcut = new QShortcut(Qt::Key_Delete, table, table, [this](){
+    connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed()));          //엔터키를 신호 연결
+    shortcut = new QShortcut(Qt::Key_Delete, table, table, [this](){                //항목을 삭제할 때
         if(!is_edit_mode) return;
         eraseClient(table->currentRow());
     });
+}
+ShowClientView::~ShowClientView(){
+    delete shortcut;
 }
 void ShowClientView::fillContents(){
     table->blockSignals(true);
@@ -48,7 +52,6 @@ void ShowClientView::fillContents(){
 
 void ShowClientView::update(){
     fillContents();
-    qDebug()<<"Show CLient view update";
 }
 void ShowClientView::cellChanged(int row, int col){
     if(is_edit_mode){
@@ -58,18 +61,14 @@ void ShowClientView::cellChanged(int row, int col){
         QList<QString> ls;
         int d = table->columnCount();
         for(int i=1; i<d; i++){
-            qDebug()<<"i: "<<i<<row<<col;
             ls<<table->item(row, i)->text();
         }
-        //CM::Client client {0,ls[0],ls[1],ls[3]};
         table->blockSignals(true);
         modifyClient(id,ls);
         table->blockSignals(false);
     }
-    qDebug()<<"end222";
 }
 void ShowClientView::returnPressed(){
-    qDebug()<<"return pressed;";
     fillContents();
     QString str = searchLineEdit->text();
     QList<int> rows_to_delete;
@@ -95,15 +94,10 @@ bool ShowClientView::eraseClient(int row){
     auto item = table->item(row,id_col);
     QString id = item->data(Role::id).value<QString>();
     bool result = CView::eraseClient(id);
-     qDebug()<<"delete table item"<<result;
     if(!result) return false;
     table->removeRow(row);
     table->update();
     return result;
-}
-
-ShowClientView::~ShowClientView(){
-
 }
 
 
@@ -177,23 +171,21 @@ void ShowProductView::fillContents(){
 
 void ShowProductView::update(){
     if(!is_update){
-        qDebug()<<"product update false";
         fillContents();
     }
     else{
-        qDebug()<<"prodcut is_update : TRUE!";
     }
 }
 void ShowProductView::returnPressed(){
-    qDebug()<<"return pressed;";
     fillContents();
     QString str = searchLineEdit->text();
     QList<int> rows_to_delete;
     for(int row=0; row<table->rowCount(); row++){
         QStringList ls;
-        for(int col=0; col<table->columnCount(); col++){
+        for(int col=0; col<table->columnCount()-1; col++){
             ls<<table->item(row,col)->text();
         }
+        ls<<qobject_cast<QDateTimeEdit*>(table->cellWidget(row,4))->dateTime().toString("yyyy/MM/dd hh:mm:ss");
         for(const auto &e : ls){
             if(e.contains(str)) goto end;
         }
@@ -229,7 +221,7 @@ bool ShowProductView::eraseProduct(int row){
     auto item = table->item(row,id_col);
     QString id = item->data(Role::id).value<QString>();
     bool result = PView::eraseProduct(id);
-     qDebug()<<"delete product item"<<result;
+
     if(!result) return false;
     table->removeRow(row);
     table->update();
@@ -266,7 +258,6 @@ void ShowOrderView::fillContents() {
 
     int i=0;
     for(const auto& order : getOrders()){
-        qDebug()<<"filling order"<<i <<" ";
         int j=0;
         orderTable->setItem(i,j++,ceateTableItem(QString::number(order.getID()), QString::number(order.getID())));
         auto client = order.getClient();
@@ -320,13 +311,11 @@ void ShowOrderView::orderItemSelectionChanged_(){
     }
 }
 
-void ShowOrderView::update(){
-    if(!is_update){
-        qDebug()<<"show order updated";
-        fillContents();
+void ShowOrderView::update(){       //옵저버 패턴의 update
+    if(!is_update){                 //현재 is_update를 쓰지 않지만 나중에 최적화를 위해서 남겨 둠
+        fillContents();             //다시 화면을 채우는 작업
     }
     else{
-        qDebug()<<"show order is_update : TRUE!";
     }
 }
 
@@ -336,12 +325,14 @@ ShowOrderView::~ShowOrderView(){}
 
 ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : NView{mgr, tabs,icon,label}, smgr{mgr.getSM()} {
     ui.setupUi(this);
+    log_thread=new LogThread(this);
+
     smgr.registerChatView(this);
     //ui.splitter->setSizes({120,500});
     //ui.clientTreeWidget->selectionMode()
 
     QAction* removeAction = new QAction(tr("&Kick out"));
-    connect(removeAction, &QAction::triggered, [&]{
+    connect(removeAction, &QAction::triggered, [&]{                         //Kick out 컨텍스트 메뉴를 클릭하면 강퇴하기
         for(auto& item : ui.clientTreeWidget->selectedItems()) {
             QString id = item->text(1);
             mgr.getSM().dropClient(id);
@@ -357,17 +348,35 @@ ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QSt
     progressDialog->reset();
 
     fillclientTree();
-
+    log_thread->start();
+    connect(ui.savePushButton, SIGNAL(pressed()), SLOT(savePressed()));
 }
+void ShowChatView::savePressed(){
+    QString filename = QFileDialog::getSaveFileName(this);
+    std::ofstream out(filename.toStdString());
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return;
+    for(int i=0; i<ui.messageTreeWidget->topLevelItemCount(); i++){
+        QTextStream out(&file);
+        auto item = ui.messageTreeWidget->topLevelItem(i);
+        out << item->text(0) << ", ";
+        out << item->text(1) << ", ";
+        out << item->text(2) << ", ";
+        out << item->text(3) << ", ";
+        out << item->text(4) << ", ";
+        out << item->text(5) << "\n";
+    }
+    file.close();
+}
+
 
 ShowChatView::~ShowChatView(){
     mgr.getSM().unregisterChatView(this);
+    log_thread->terminate();
 }
 
-void ShowChatView::clientLogin(){
-
-
-}
+void ShowChatView::clientLogin(){}
 
 void ShowChatView::addLog(const ServerManager::ChatMessage& msg ){
     QTreeWidgetItem* item = new QTreeWidgetItem(ui.messageTreeWidget);
@@ -380,10 +389,10 @@ void ShowChatView::addLog(const ServerManager::ChatMessage& msg ){
     for(int i=0; i<ui.messageTreeWidget->columnCount(); i++){
         ui.messageTreeWidget->resizeColumnToContents(i);
     }
+    log_thread->appendData(item);
 }
 
 void ShowChatView::fillclientTree(){
-    int row=0;
     ui.clientTreeWidget->clear();
     for(auto participant : smgr){
         int j=0;
@@ -392,7 +401,6 @@ void ShowChatView::fillclientTree(){
         auto online_string = participant.second->isOnline() ? "online" : "offline";
         auto item = new QTreeWidgetItem{ui.clientTreeWidget,{online_string,client.getId().c_str(),client.getName().c_str()}};
         item->setIcon(0,qApp->style()->standardIcon(icon));
-
     }
     for(int i=0; i<ui.clientTreeWidget->columnCount(); i++){
         ui.clientTreeWidget->resizeColumnToContents(i);
@@ -402,8 +410,7 @@ void ShowChatView::fillclientTree(){
 void ShowChatView::on_clientTreeWidget_customContextMenuRequested(const QPoint &pos){
     auto items = ui.clientTreeWidget->selectedItems();
     QPoint globalPos = ui.clientTreeWidget->mapToGlobal(pos);
-    QAction* ac = menu->exec(globalPos);
-    qDebug()<<"Context";
+    menu->exec(globalPos);                                      //컨텍스트 실행
 }
 
 void ShowChatView::update(){

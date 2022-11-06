@@ -4,6 +4,7 @@
 #include <memory>
 #include <QHash>
 #include "Network/message.h"
+#include "Network/logthread.h"
 class QTcpSocket;
 using CM::Client;
 
@@ -21,13 +22,9 @@ public:
         const QString message;
         const QString time;
     };
-    struct 1ddd{
-        const quint64 session;
-        const quint64 chat_room_no;
-    };
 
 private:
-    class NetClient{
+    class NetClient{                                //기존 고객 Client에서 채팅방에 참여하는 CLient를 NetClient로 지칭
         friend class ServerManager;
         std::shared_ptr<Client> self;
         bool is_online=false;
@@ -62,11 +59,7 @@ public:
     decltype(net_clients)::iterator findNetClient(QString id){
         return net_clients.find(id.toStdString());
     }
-
-
-
-
-    void registerChatView(ShowChatView* view){
+    void registerChatView(ShowChatView* view){      //ServerManager에서 현재 생성된 chatView만 업데이트를 하기 위해 따로 등록을 받는다 Todo: 수정 필요)
         chat_views.emplace_back(view);
     }
     void unregisterChatView(ShowChatView* view);
@@ -87,7 +80,7 @@ public:
 private:
     void login(const QTcpSocket* const socket, const QString &rmsg);
     void logOut(const QTcpSocket* const socket);
-    void chatTalk(const QTcpSocket* const socket , QByteArray& data );
+    void chatTalk(const QTcpSocket* const socket , const QByteArray& data );
     void fileTransmission(const QTcpSocket* const socket, QByteArray&);
     void notify();
 };

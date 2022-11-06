@@ -160,13 +160,6 @@ std::ifstream& PM::ProductManager::loadProducts(ifstream& in, const unsigned int
     }
 }
 
-
-
-
-//const unsigned int PM::ProductManager::getMaxIndex() const {
-//    return products.empty() ? 0 : (--products.end())->first;
-//}
-
 const unsigned int ProductManager::getSize() const{
     return products.size();
 }

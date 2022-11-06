@@ -12,7 +12,7 @@ Server::Server(ServerManager& mgr, QWidget *parent)
 {
     tcpServer= new QTcpServer(this);
     connect(tcpServer, SIGNAL(newConnection()),SLOT(clientConnect()));
-    if(!tcpServer->listen()){
+    if(!tcpServer->listen(QHostAddress::Any, PORT_NUMBER)){
         QMessageBox::critical(this,tr("Echo Server"),tr("Unable to start the server: %1")
                               .arg(tcpServer->errorString()));
         close();
@@ -22,7 +22,6 @@ Server::Server(ServerManager& mgr, QWidget *parent)
 
 }
 void Server::clientConnect(){
-    qDebug()<<"connect attempt";
     QTcpSocket* clientConnection = tcpServer->nextPendingConnection();
     connect(clientConnection, SIGNAL(disconnected()), SLOT(clientDisconnected()));
     connect(clientConnection,SIGNAL(readyRead()),SLOT(readData()));
@@ -37,26 +36,20 @@ void Server::clientDisconnected(){
 void Server::readData(){    
     QTcpSocket* socket = (QTcpSocket*)(sender());
     Data& recv_data = socket_data[socket];
-    qDebug()<<"ready?"<<recv_data.is_ready;
     if(!recv_data.is_ready){
         if(socket->bytesAvailable()<sizeof(quint64)){
-            qDebug()<<"bytes avail"<<socket->bytesAvailable();
             return;
         }
         QDataStream stream{socket};
         stream>>recv_data.target_size ;
-        qDebug()<<"size set"<<recv_data.target_size;
         recv_data.is_ready=true;
     }
 
     recv_data.data.append(socket->read(recv_data.target_size));
     if(recv_data.data.size()<recv_data.target_size){
-        qDebug()<<QString("downlading(%1/%2)").arg(recv_data.data.size()).arg(recv_data.target_size);
+        sendMessage(socket,Message{QString::number(recv_data.data.size()),Chat_FileTransmission});      //파일 전송 progress_dialog의 값을 업데이트 하도록 출력
         return;
     }
-//    ReadMessage read_msg {recv_data.data};
-
-    qDebug()<<"read datasssss";
 
     mgr.processMessage(socket,recv_data.data);
 
@@ -67,6 +60,8 @@ void Server::readData(){
 void Server::sendMessage(const QTcpSocket * socket_, const Message& msg){
     auto socket = const_cast<QTcpSocket*>(socket_);
     socket->write(msg);
+    socket->flush();
+
 }
 void Server::disconnectSocket(const QTcpSocket* socket_){
     auto socket = const_cast<QTcpSocket*>(socket_);

@@ -9,7 +9,6 @@ ServerManager::ServerManager(Manager& mgr): mgr{mgr} {}
 
 void ServerManager::addClient(const std::shared_ptr<Client>& c)
 {
-    qDebug()<<"ADDING NEW NC";
     auto nc = std::make_shared<NetClient>(c, log_no);
     auto result = net_clients.emplace(c->getId(), nc);
     assert(result.second);
@@ -25,12 +24,8 @@ void ServerManager::login(const QTcpSocket* const socket, const QString& id){
     nc->is_online=true;
     nc->socket=socket;
     socket_to_nclient.insert(socket, nc);
-    qDebug()<<nc->self->getId().c_str()<<"login complete";
-    notify();
+    notify();       //chat_view만 업데이트
     server->sendMessage(socket,Message{"SUCCESS",Chat_Login});
-
-    //todo
-    //현재 로그 no와 클라이언트 로그 no를 비교해서 클라이언트에 쏴주기
 }
 
 void ServerManager::logOut(const QTcpSocket* const socket){
@@ -45,7 +40,6 @@ void ServerManager::logOut(const QTcpSocket* const socket){
     nc->is_online=false;
     nc->socket=nullptr;
     socket_to_nclient.erase(itr);
-    qDebug()<<"log out" <<nc->self->getId().c_str()<<nc->self->getName().c_str();
     notify();
 }
 
@@ -53,12 +47,12 @@ void ServerManager::dropClient(QString id){
     auto it = net_clients.find(id.toStdString());
     assert(it!=net_clients.end());
     auto socket = it->second->socket;
-    //todo 온라인이면 메시지 보내고
+    //온라인이면 메시지 보내고
     if(it->second->isOnline()){
         server->sendMessage(socket, Message{"",Chat_KickOut});
     }
     else{
-       // 오프라인이면 pending message에 추가
+       // 오프라인이면
     }
     socket_to_nclient.remove(socket);
     net_clients.erase(it);
@@ -77,14 +71,16 @@ void ServerManager::chatTalk(const QTcpSocket * const socket, const QByteArray& 
     QString port = QString::number(socket->peerPort());
     QString id = nc->self->getId().c_str();
     QString name = nc->self->getName().c_str();
-    QString chat = contetnt;
+    QString chat {data};
     QString time = QDateTime::currentDateTime().toString();
     const ChatMessage msg{ip,port,id,name,chat,time};
-    for(auto itr : net_clients){
-        auto peer_socket = itr.second->socket;
-        if(peer_socket!=socket){
-            QString str = id + ',' + chat;
-            server->sendMessage(peer_socket,Message(str,Chat_Talk));
+    for(auto& itr : net_clients){
+        if(itr.second->isOnline()){
+            auto peer_socket = itr.second->socket;
+            if(peer_socket!=socket){
+                QString str = id + ',' + chat;
+                server->sendMessage(peer_socket,Message(str,Chat_Talk));
+            }
         }
     }
 
@@ -123,8 +119,7 @@ void ServerManager::processMessage(const QTcpSocket* const socket, QByteArray da
         logOut(socket);
         break;
     case Chat_Talk:{
-        QString rmsg {data};
-        chatTalk(socket,rmsg);}
+        chatTalk(socket,data);}
         break;
     case Chat_FileTransmission:
         fileTransmission(socket,data);
@@ -133,9 +128,7 @@ void ServerManager::processMessage(const QTcpSocket* const socket, QByteArray da
 
 }
 
-void ServerManager::fileTransmission(const QTcpSocket* const socket, QByteArray& data){
-    auto nc = socket_to_nclient[socket];
-    qDebug()<<"File transmission to server writing";
+static QString parseString(QByteArray& data){
     int i=0;
     QString str;
     for(auto e:data){
@@ -148,13 +141,19 @@ void ServerManager::fileTransmission(const QTcpSocket* const socket, QByteArray&
         }
     }
     data.remove(0,i+1);
-    qDebug()<<"file_name_tmp"<<str;
-    QString name {QString("%1_%2").arg(nc->self->getId().c_str()).arg(str)};
-    QFile x{name};
-    x.open(QIODeviceBase::WriteOnly);
-    qDebug()<<"filesize"<<data.size();
-    x.write(data);
+    return str;
+}
 
+void ServerManager::fileTransmission(const QTcpSocket* const socket, QByteArray& data){
+    QString file_name_ = parseString(data);
+
+    QString sender_id = parseString(data);
+    QString name = QString("%1_%2").arg(sender_id).arg(file_name_);
+    QFile f{name};
+    f.open(QIODeviceBase::WriteOnly);
+
+    f.write(data);
+    server->sendMessage(socket,Message{QString::number(data.size()),Chat_FileTransmission});
 }
 
 void ServerManager::notify(){

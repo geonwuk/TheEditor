@@ -1,10 +1,7 @@
 #include "mainwindow.h"
-
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
-
-#include "Network/chattingclient.h"
 
 int main(int argc, char *argv[])
 {
@@ -22,11 +19,6 @@ int main(int argc, char *argv[])
     }
     MainWindow w;
     w.show();
-
-    ChattingClient c;
-    c.show();
-    ChattingClient c2;
-    c2.show();
 
     return a.exec();
 }

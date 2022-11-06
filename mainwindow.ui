@@ -35,13 +35,6 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QToolButton" name="toolButton_2">
-          <property name="text">
-           <string>Dashboard</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QToolButton" name="ManagementButton">
           <property name="text">
            <string>Management</string>
@@ -66,7 +59,7 @@
         <item>
          <widget class="QToolButton" name="ChatButton">
           <property name="text">
-           <string>Chat</string>
+           <string>Network</string>
           </property>
          </widget>
         </item>
@@ -105,7 +98,7 @@
      <x>0</x>
      <y>0</y>
      <width>997</width>
-     <height>17</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -115,13 +108,7 @@
     <addaction name="actionSave"/>
     <addaction name="actionOpen"/>
    </widget>
-   <widget class="QMenu" name="menu_Window">
-    <property name="title">
-     <string>&amp;Window</string>
-    </property>
-   </widget>
    <addaction name="menu_File"/>
-   <addaction name="menu_Window"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">

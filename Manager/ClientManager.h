@@ -55,7 +55,6 @@ namespace CM {
 		std::ofstream& saveClients(std::ofstream& out) const;								                 
         std::ifstream& loadClients(std::ifstream& in, const unsigned int lines);
         const_iterator getCleints() const;
-//		const unsigned int getMaxIndex() const;
         const unsigned int getSize() const;
 	private:
 		static unsigned int client_id;
