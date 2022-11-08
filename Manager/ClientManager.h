@@ -4,41 +4,14 @@
 #include <string>
 #include <iosfwd>
 #include <vector>
-#include <memory>
 #include <iostream>
+#include "Model/type.h"
+#include "Model/model.h"
 namespace CM {
 	using std::map;
     using std::string;
-    using CID = string;
     struct ERROR_WHILE_LOADING {unsigned int line;};
-	class Client {
-        friend class ClientManager;
-	public:
-        Client(string id, string name, string phone_number , string address ) :
-            id{ id }, name{ name }, phone_number{ phone_number }, address{ address } {}
-        const string getId() const { return id; }
-        const string getName() const { return name; }
-        const string getPhoneNumber() const { return phone_number; }
-        const string getAddress() const { return address; }
-        Client()=default;
-        ~Client(){}
-        Client& operator= (const Client& rhs){
-            name=rhs.name;
-            phone_number=rhs.phone_number;
-            address=rhs.address;
-            return *this;
-        }
-    private:
 
-
-        const string id;
-		string name;           
-		string phone_number;   
-        string address;
-
-	protected:
-
-	};
     std::ofstream& operator<<(std::ofstream& out, const Client& c);
     struct NoClient : public Client { NoClient(){} };
     const NoClient no_client;
@@ -60,34 +33,38 @@ namespace CM {
 		static unsigned int client_id;
         map< CID, std::shared_ptr<Client> > clients;
     public:
-        class const_iterator{
+
+        class const_iterator : public Iterator<Client> {
             using Itr_type = decltype(clients)::const_iterator;
-            struct Itr {
+
+            struct Itr : public IteratorElem<Client> {
                 Itr(Itr_type p) :ptr{ p } {}
-                const Client& operator*() const {
+
+                const Client& operator*() const override {
                     return *ptr->second.get();
                 }
-                Itr_type operator++() {
-                    return ++ptr;
+                void operator++() override {
+                    ++ptr;
                 }
-                bool operator!=(Itr b) {
-                    return ptr != b.ptr ? true : false;
+                bool operator!=(IteratorElem& b) override {
+                    return ptr != static_cast<Itr&>(b).ptr ? true : false;
                 }
-                bool operator==(Itr b) {
-                    return ptr == b.ptr ? true : false;
+                bool operator==(IteratorElem& b) override {
+                    return ptr == static_cast<Itr&>(b).ptr ? true : false;
                 }
-                Itr_type::value_type::second_type operator->(){
-                    return (ptr->second);
+                Itr_type::value_type::second_type::element_type* operator->() override{
+                    return (ptr->second.get());
                 }
-
             private:
                 Itr_type ptr;
             };
-            Itr st, ed;
+
+            Itr st;
+            Itr ed;
         public:
             const_iterator(const decltype(clients)& c): st{c.begin()}, ed{c.end()} {}
-            Itr begin() {return st;}
-            Itr end() {return ed;}
+            Itr& begin() {return st;}
+            Itr& end() {return ed;}
         };
 
 	};

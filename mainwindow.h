@@ -9,6 +9,7 @@
 #include "tree.h"
 #include <list>
 #include "Network/servermanager.h"
+#include "Model/model.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -30,7 +31,7 @@ public:
 
     void updateAll();
 
-    CM::ClientManager& getCM(){
+    ClientModel& getCM(){
         return cm;
     }
     PM::ProductManager& getPM(){

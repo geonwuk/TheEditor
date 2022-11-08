@@ -65,12 +65,12 @@ void Manager::updateAll(){          //파일을 불러오기한 경우 모두 �
 void MainWindow::save(){                                                //파일을 CSV포맷으로 저장하는 함수로 QAction과 연결되어 있다
     QString filename = QFileDialog::getSaveFileName(this);
     std::ofstream out(filename.toStdString());
-    out<<"[Clients],"<<mgrs.getCM().getSize()<<','<<std::endl;      //고객
-    mgrs.getCM().saveClients(out);
-    out<<"[Products],"<<mgrs.getPM().getSize()<<','<<std::endl;     //물품
-    mgrs.getPM().saveProducts(out);
-    out<<"[Orders],"<<mgrs.getOM().getSize()<<','<<std::endl;       //주문
-    mgrs.getOM().saveOrders(out);
+//    out<<"[Clients],"<<mgrs.getCM().getSize()<<','<<std::endl;      //고객
+//    mgrs.getCM().saveClients(out);
+//    out<<"[Products],"<<mgrs.getPM().getSize()<<','<<std::endl;     //물품
+//    mgrs.getPM().saveProducts(out);
+//    out<<"[Orders],"<<mgrs.getOM().getSize()<<','<<std::endl;       //주문
+//    mgrs.getOM().saveOrders(out);
 }
 void MainWindow::load(){                                                        //CSV 포맷으로 저장된 파일을 불러오는 함수로 QAction과 연결되어 있다
     try {                                                                       //try-catch를 써서 로딩 중에 프로그램이 죽지 않고 로딩 실패가 되도록 로직코드를 감싸준다

@@ -1,0 +1,6 @@
+Create TABLE IF NOT EXISTS client(
+  id varchar(20) PRIMARY KEY,
+  name varchar(20),
+  phone_number varchar(20),
+  address varchar(50)
+);

@@ -13,6 +13,8 @@ SOURCES += \
     Manager/ClientManager.cpp \
     Manager/OrderManager.cpp \
     Manager/ProductManager.cpp \
+    Model/model.cpp \
+    Model/type.cpp \
     Network/logthread.cpp \
     Network/message.cpp \
     Network/server.cpp \
@@ -30,6 +32,8 @@ HEADERS += \
     Manager/ClientManager.h \
     Manager/OrderManager.h \
     Manager/ProductManager.h \
+    Model/model.h \
+    Model/type.h \
     Network/logthread.h \
     Network/message.h \
     Network/server.h \

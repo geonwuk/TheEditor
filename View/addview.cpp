@@ -2,7 +2,7 @@
 #include "mainwindow.h"
 #include <QDate>
 #include <QCheckBox>
-#include <QShortCut>
+#include <QShortcut>
 #include <QSpinBox>
 #include <QMessageBox>
 AddClientView::AddClientView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : CView{mgr,tabs,icon,label} {
@@ -86,7 +86,8 @@ void AddOrderView::fillClientTab(){
     clientTab.setHorizontalHeaderLabels({tr("Select"),tr("ID"),tr("Name")});
 
     int i=0;
-    for(const auto& client : mgr.getCM().getCleints()){
+
+    for(const auto& client : mgr.getCM().getClients()){
         clientTab.setCellWidget(i,0, getCheckBoxWidget(this));
         clientTab.setItem(i,1,ceateTableItem(client.getId().c_str(), client.getId().c_str()));
         clientTab.setItem(i,2,new QTableWidgetItem(client.getName().c_str()));
@@ -357,14 +358,14 @@ void AddParticipantView::fillContents(){
     ui.clientList->setRowCount(mgr.getCM().getSize());
     int i=0;
     auto participants = mgr.getSM().begin();
-    for(auto client = mgr.getCM().getCleints().begin(); client!=mgr.getCM().getCleints().end(); ++client){
+    for(auto client = mgr.getCM().getClients().begin(); client!=mgr.getCM().getClients().end(); ++client){
         int j=0;
-        while(participants!=mgr.getSM().end() && client!=mgr.getCM().getCleints().end() && (client->getId()==participants->second->getClient().getId())){
+        while(participants!=mgr.getSM().end() && client!=mgr.getCM().getClients().end() && (client->getId()==participants->second->getClient().getId())){
             ++client;
             ++participants;
             continue;
         }
-        if(client == mgr.getCM().getCleints().end())
+        if(client == mgr.getCM().getClients().end())
             break;
         ui.clientList->setItem(i,j++,ceateTableItem(client->getId().c_str(), client->getId().c_str()) );
         ui.clientList->setItem(i,j++,new QTableWidgetItem(client->getName().c_str()));
