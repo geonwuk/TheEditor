@@ -87,7 +87,13 @@ void AddOrderView::fillClientTab(){
 
     int i=0;
 
-    for(const auto& client : mgr.getCM().getClients()){
+    std::unique_ptr<IteratorElem<CM::Client>> itr = mgr.getCM().itreator();
+    IteratorElem<CM::Client>* begin = itr.get();
+
+IteratorElem<CM::Client>& x = *itr.get();
+ddddd
+    for( ; itr.get()!=mgr.getCM().getClients()->End();  ){
+        const CM::Client& client = *x;
         clientTab.setCellWidget(i,0, getCheckBoxWidget(this));
         clientTab.setItem(i,1,ceateTableItem(client.getId().c_str(), client.getId().c_str()));
         clientTab.setItem(i,2,new QTableWidgetItem(client.getName().c_str()));

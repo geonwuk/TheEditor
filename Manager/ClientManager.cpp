@@ -58,9 +58,6 @@ ofstream& CM::operator<<(std::ofstream& out, const Client& c){
 	return out;
 }
 
-ClientManager::const_iterator ClientManager::getCleints() const{
-    return clients;
-}
 
 
 ofstream& ClientManager::saveClients(ofstream& out) const{
@@ -99,7 +96,7 @@ std::ifstream& ClientManager::loadClients(std::ifstream& in, const unsigned int 
 
 }
 
-const unsigned int ClientManager::getSize() const{
+unsigned int ClientManager::getSize() const{
     return clients.size();
 }
 

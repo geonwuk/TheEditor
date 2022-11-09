@@ -78,7 +78,7 @@ void MainWindow::load(){                                                        
         ifstream in(filename.toStdString());
         unsigned int line=0;
         line = parseTitle(in,"[Clients]",line);
-        mgrs.getCM().loadClients(in, line);
+        //mgrs.getCM().loadClients(in, line);
         line = parseTitle(in,"[Products]",line);
         mgrs.getPM().loadProducts(in, line);
         line = parseTitle(in,"[Orders]",line);

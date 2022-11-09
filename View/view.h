@@ -59,8 +59,8 @@ public:
     const CM::Client& findClient(const CM::CID id) const{
         return mgr.getCM().findClient(id);
     }
-    decltype(mgr.getCM().getClients()) getCleints() const{
-        return mgr.getCM().getClients();
+    decltype(mgr.getCM().itreator()) getClients(){
+        return mgr.getCM().itreator();
     }
     const unsigned int getSize() const{
         return mgr.getCM().getSize();

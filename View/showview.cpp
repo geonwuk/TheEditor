@@ -6,6 +6,7 @@
 #include <QProgressDialog>
 #include <QDateTimeEdit>
 #include <QFileDialog>
+#include "Manager/ClientManager.h"
 ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : CView{mgr, tabs,icon,label}
 {
     ui.setupUi(this);
@@ -32,12 +33,16 @@ ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const
 ShowClientView::~ShowClientView(){
     delete shortcut;
 }
+
 void ShowClientView::fillContents(){
     table->blockSignals(true);
     table->clearContents();
     table->setRowCount(getSize());
     int i=0;
-    for(const auto& client : getCleints()){
+
+//    for(IteratorElem<CM::Client>& b = getClients().begin(); b!=getClients().end(); ++b){
+    for(auto client : getClients()){
+        //auto client = *b;
         int j=0;
         table->setItem(i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()));
         table->setItem(i,j++,new QTableWidgetItem(client.getName().c_str()));
