@@ -2,10 +2,13 @@
 #include "View/view.h"
 
 void TabWidget::tabClosed(int index){
+    blockSignals(true);
     View* wg = static_cast<View*>(widget(index));   //탭 위젯의 모든 뷰는 View클래스를 상속한다
     removeTab(index);       //QTabWidget의 removeTab 호출
     wg->removeFromTree();   //지우기 전에 트리에서 먼저 목록을 삭제한다
     delete wg;
+    blockSignals(false);
+    emit tabCurrentChanged_(currentIndex());
 }
 
 void TabWidget::tabCurrentChanged(int index){

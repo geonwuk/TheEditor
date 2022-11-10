@@ -86,14 +86,7 @@ void AddOrderView::fillClientTab(){
     clientTab.setHorizontalHeaderLabels({tr("Select"),tr("ID"),tr("Name")});
 
     int i=0;
-
-    std::unique_ptr<IteratorElem<CM::Client>> itr = mgr.getCM().itreator();
-    IteratorElem<CM::Client>* begin = itr.get();
-
-IteratorElem<CM::Client>& x = *itr.get();
-ddddd
-    for( ; itr.get()!=mgr.getCM().getClients()->End();  ){
-        const CM::Client& client = *x;
+    for(auto& client : mgr.getCM()){
         clientTab.setCellWidget(i,0, getCheckBoxWidget(this));
         clientTab.setItem(i,1,ceateTableItem(client.getId().c_str(), client.getId().c_str()));
         clientTab.setItem(i,2,new QTableWidgetItem(client.getName().c_str()));
@@ -359,22 +352,26 @@ void AddParticipantView::dropParticipant(){
     fillContents();
     notify<NView>();
 }
+#include <memory>
 void AddParticipantView::fillContents(){
     ui.clientList->clearContents();
     ui.clientList->setRowCount(mgr.getCM().getSize());
+
     int i=0;
+    auto& cm = mgr.getCM();
     auto participants = mgr.getSM().begin();
-    for(auto client = mgr.getCM().getClients().begin(); client!=mgr.getCM().getClients().end(); ++client){
-        int j=0;
-        while(participants!=mgr.getSM().end() && client!=mgr.getCM().getClients().end() && (client->getId()==participants->second->getClient().getId())){
-            ++client;
+    for(auto client_iter = cm.begin(); client_iter!=cm.end(); ++client_iter){
+        while(participants!=mgr.getSM().end() && client_iter!=cm.end() && ((*client_iter).getId()==participants->second.getClient().getId())){
+            ++client_iter;
             ++participants;
             continue;
         }
-        if(client == mgr.getCM().getClients().end())
+        if(client_iter == cm.end())
             break;
-        ui.clientList->setItem(i,j++,ceateTableItem(client->getId().c_str(), client->getId().c_str()) );
-        ui.clientList->setItem(i,j++,new QTableWidgetItem(client->getName().c_str()));
+        int j=0;
+        const Client client = *client_iter;
+        ui.clientList->setItem(i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()) );
+        ui.clientList->setItem(i,j++,new QTableWidgetItem(client.getName().c_str()));
         i++;
     }
     ui.clientList->setRowCount(i);
@@ -385,7 +382,7 @@ void AddParticipantView::fillContents(){
     int p_i=0;
     for(auto& participant : mgr.getSM()){
         int j=0;
-        auto& client = participant.second->getClient();
+        auto& client = participant.second.getClient();
         ui.participantList->setItem(p_i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()) );
         ui.participantList->setItem(p_i,j++,new QTableWidgetItem(client.getName().c_str()));
         p_i++;

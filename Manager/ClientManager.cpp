@@ -38,7 +38,7 @@ bool ClientManager::eraseClient(const CID id){
 		return false;
 }
 
-const Client& ClientManager::findClient(const CID id) const{
+const Client ClientManager::findClient(const CID id) const{
     auto it = clients.find(id);
     if (it == clients.end()) {
         return no_client;
@@ -48,9 +48,9 @@ const Client& ClientManager::findClient(const CID id) const{
     }
 }
 
-std::shared_ptr<Client> ClientManager::copyClient(const CID id) const noexcept{
+Client ClientManager::copyClient(const CID id) const {
     auto it = clients.find(id);
-    return it->second;
+    return Client{*it->second.get()};
 }
 
 ofstream& CM::operator<<(std::ofstream& out, const Client& c){

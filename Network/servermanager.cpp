@@ -7,10 +7,9 @@
 #include <QFile>
 ServerManager::ServerManager(Manager& mgr): mgr{mgr} {}
 
-void ServerManager::addClient(const std::shared_ptr<Client>& c)
+void ServerManager::addClient(const Client& c)
 {
-    auto nc = std::make_shared<NetClient>(c, log_no);
-    auto result = net_clients.emplace(c->getId(), nc);
+    auto result = net_clients.emplace(make_pair(c.getId(),NetClient{c,0}));
     assert(result.second);
 }
 
@@ -20,10 +19,10 @@ void ServerManager::login(const QTcpSocket* const socket, const QString& id){
         server->sendMessage(socket,Message{"NO_ID",Chat_Login});
         return;
     }
-    auto nc = nc_itr->second.get();
-    nc->is_online=true;
-    nc->socket=socket;
-    socket_to_nclient.insert(socket, nc);
+    auto nc = nc_itr->second;
+    nc.is_online=true;
+    nc.socket=socket;
+    socket_to_nclient.insert(socket, &nc);
     notify();       //chat_view만 업데이트
     server->sendMessage(socket,Message{"SUCCESS",Chat_Login});
 }
@@ -46,9 +45,9 @@ void ServerManager::logOut(const QTcpSocket* const socket){
 void ServerManager::dropClient(QString id){
     auto it = net_clients.find(id.toStdString());
     assert(it!=net_clients.end());
-    auto socket = it->second->socket;
+    auto socket = it->second.socket;
     //온라인이면 메시지 보내고
-    if(it->second->isOnline()){
+    if(it->second.isOnline()){
         server->sendMessage(socket, Message{"",Chat_KickOut});
     }
     else{
@@ -69,14 +68,14 @@ void ServerManager::chatTalk(const QTcpSocket * const socket, const QByteArray& 
 
     QString ip = socket->peerAddress().toString();
     QString port = QString::number(socket->peerPort());
-    QString id = nc->self->getId().c_str();
-    QString name = nc->self->getName().c_str();
+    QString id = nc->self.getId().c_str();
+    QString name = nc->self.getName().c_str();
     QString chat {data};
     QString time = QDateTime::currentDateTime().toString();
     const ChatMessage msg{ip,port,id,name,chat,time};
     for(auto& itr : net_clients){
-        if(itr.second->isOnline()){
-            auto peer_socket = itr.second->socket;
+        if(itr.second.isOnline()){
+            auto peer_socket = itr.second.socket;
             if(peer_socket!=socket){
                 QString str = id + ',' + chat;
                 server->sendMessage(peer_socket,Message(str,Chat_Talk));

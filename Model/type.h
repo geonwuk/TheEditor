@@ -17,11 +17,15 @@ public:
     ~Client(){}
     Client& operator= (const Client& rhs);
 private:
-    const string id;
+    string id;
     string name;
     string phone_number;
     string address;
 };
+struct NoClient : public Client { NoClient(){} };
+const NoClient no_client;
+bool operator== (const Client& c, const NoClient&);
+
 }
 
 

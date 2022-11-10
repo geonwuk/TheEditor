@@ -12,7 +12,7 @@ Tree::Tree(MainWindow* mw, TabWidget *tw, int tabs_item_position) : QTreeWidget{
 }
 
 void Tree::tabCurrnetChanged(int index){
-    qDebug()<<"index"<<index;//활성화된 아이템의 텍스트를 볼드처리함으로써 무슨 탭이 활성화 됐는지 알려주는 기능을 구현합니다
+    //활성화된 아이템의 텍스트를 볼드처리함으로써 무슨 탭이 활성화 됐는지 알려주는 기능을 구현합니다
     if(index==-1)                                       //탭이 하나도 없을 경우 리턴
         return;
     auto tabs = topLevelItem(tabs_item_position);
@@ -21,6 +21,7 @@ void Tree::tabCurrnetChanged(int index){
 
     QFont un_bold(child->font(0));
     un_bold.setBold(false);
+    if(prev_child!=nullptr)
     prev_child->setFont(0,un_bold);      //이전에 활성화된 아이템의 텍스트의 볼드를 해제합니다
 
     QFont bold(child->font(0));

@@ -39,10 +39,9 @@ void ShowClientView::fillContents(){
     table->clearContents();
     table->setRowCount(getSize());
     int i=0;
-
-//    for(IteratorElem<CM::Client>& b = getClients().begin(); b!=getClients().end(); ++b){
-    for(auto client : getClients()){
-        //auto client = *b;
+    auto& cm = mgr.getCM();
+    for(IteratorPTR<CM::Client> begin = cm.begin(); begin!=cm.end(); ++begin ){
+        const auto client = *begin;
         int j=0;
         table->setItem(i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()));
         table->setItem(i,j++,new QTableWidgetItem(client.getName().c_str()));
@@ -401,9 +400,9 @@ void ShowChatView::fillclientTree(){
     ui.clientTreeWidget->clear();
     for(auto participant : smgr){
         int j=0;
-        auto client = participant.second->getClient();
-        auto icon = participant.second->isOnline() ? QStyle::SP_DialogYesButton : QStyle::SP_DialogNoButton;
-        auto online_string = participant.second->isOnline() ? "online" : "offline";
+        auto client = participant.second.getClient();
+        auto icon = participant.second.isOnline() ? QStyle::SP_DialogYesButton : QStyle::SP_DialogNoButton;
+        auto online_string = participant.second.isOnline() ? "online" : "offline";
         auto item = new QTreeWidgetItem{ui.clientTreeWidget,{online_string,client.getId().c_str(),client.getName().c_str()}};
         item->setIcon(0,qApp->style()->standardIcon(icon));
     }

@@ -15,7 +15,7 @@ View::~View() {
     mgr.detachObserver(this);           //옵저버 패턴: 소멸 시 리스트에서 뺸다
 }
 void View::removeFromTree(){
-     tree.getTabs().removeChild(tab);   //트리에서 View 삭제
+    tree.getTabs().removeChild(tab);   //트리에서 View 삭제
 }
 
 

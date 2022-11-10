@@ -30,12 +30,17 @@ static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 
 
     return splitter;
 }
-
+//#include <QStyleFactory>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     sw=ui->stackedWidget;
+    //management_tw.setPalette(QStyleFactory::create("Fusion")->standardPalette().color(QPalette::Normal,QPalette::Window));
+   // management_tw.setPalette(QColor(53,53,53));
+//sw->setPalette(QColor(53,53,53));
+//sw->setStyle(qApp->style());
+//management_tw.hide();
     ui->actionSave->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogSaveButton));      //save 액션 아이콘 추가
     ui->actionOpen->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogOpenButton));      //load 액션 아이콘 추가
 

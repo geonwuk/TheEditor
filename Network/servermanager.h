@@ -26,32 +26,32 @@ public:
 private:
     class NetClient{                                //기존 고객 Client에서 채팅방에 참여하는 CLient를 NetClient로 지칭
         friend class ServerManager;
-        std::shared_ptr<Client> self;
+        Client self;
         bool is_online=false;
         std::vector<Message> pending_messages;
         const QTcpSocket* socket=nullptr;
         const unsigned int log_no;
     public:
-        NetClient(std::shared_ptr<Client> self, const unsigned int log_no ):self{self}, log_no{log_no} {}
+        NetClient(Client self, const unsigned int log_no ):self{self}, log_no{log_no} {}
         const bool isOnline() const{
             return is_online;
         }
         const Client& getClient() const{
-            return *self.get();
+            return self;
         }
     };
     Manager& mgr;
     Server* server;
     std::vector<ChatMessage> logs;
     unsigned int log_no=1;
-    std::map<const std::string, std::shared_ptr<NetClient>> net_clients;
+    std::map<const std::string, NetClient> net_clients;
     std::vector<ShowChatView*> chat_views;
     QHash<const QTcpSocket*, NetClient*> socket_to_nclient;
 public:
     ServerManager(Manager&);
     void setServer(Server* server_){server=server_;}
 
-    void addClient(const std::shared_ptr<Client>& c);
+    void addClient(const Client& c);
     void dropClient(QString);
 
 
