@@ -22,6 +22,8 @@ static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 
     tree.setMaximumSize(1920,1920);                                             //수동으로 스플리터를 움직여서 트리 크기를 조절할 수 있도록 최대 크기를 일반적인 1920픽셀로 설정한다
     splitter->addWidget(&tree);
 
+
+
     tw.setTabsClosable(true);
     QSizePolicy tab_policy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     tab_policy.setHorizontalStretch(100);                                       //화면이 확대될 때 트리는 가만히, 탭 화면만 확대되야 함
@@ -30,7 +32,7 @@ static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 
 
     return splitter;
 }
-//#include <QStyleFactory>
+#include <QStyleFactory>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -41,11 +43,17 @@ MainWindow::MainWindow(QWidget *parent)
 //sw->setPalette(QColor(53,53,53));
 //sw->setStyle(qApp->style());
 //management_tw.hide();
+
     ui->actionSave->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogSaveButton));      //save 액션 아이콘 추가
     ui->actionOpen->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogOpenButton));      //load 액션 아이콘 추가
 
     QSplitter* splitter = initTreeAndTab(management_tree,management_tw);                     //고객,물품,주문관리 splitter
     QSplitter* splitter2 = initTreeAndTab(network_tree, network_tw);                        //네트워크 splitter
+//management_tw.setPalette(QStyleFactory::create("Fusion")->standardPalette().color(QPalette::Button));
+//management_tw.setStyleSheet("  background-color: red; ");
+//management_tw.setPalette(Qt::transparent);
+//    management_tw.setAttribute(Qt::WA_TranslucentBackground, true);
+//management_tw.setWindowFlags(Qt::FramelessWindowHint);
 
     sw->addWidget(splitter);         //고객,물품,주문관리
     sw->addWidget(splitter2);        //네트워크
@@ -85,7 +93,7 @@ void MainWindow::load(){                                                        
         line = parseTitle(in,"[Clients]",line);
         //mgrs.getCM().loadClients(in, line);
         line = parseTitle(in,"[Products]",line);
-        mgrs.getPM().loadProducts(in, line);
+        //mgrs.getPM().loadProducts(in, line);
         line = parseTitle(in,"[Orders]",line);
         mgrs.getOM().loadOrders(in, line);
         mgrs.updateAll();

@@ -9,6 +9,8 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    DB/db_clientmanager.cpp \
+    DB/db_productmanager.cpp \
     DB/dbmanager.cpp \
     Manager/ClientManager.cpp \
     Manager/OrderManager.cpp \
@@ -28,6 +30,8 @@ SOURCES += \
     tree.cpp
 
 HEADERS += \
+    DB/db_clientmanager.h \
+    DB/db_productmanager.h \
     DB/dbmanager.h \
     Manager/ClientManager.h \
     Manager/OrderManager.h \

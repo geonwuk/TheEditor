@@ -76,13 +76,9 @@ bool PView::eraseProduct(const QString id){
      notify<OView>();       //OView 상속 받는 View 업데이트 (주문)
      return result;
 }
-const PM::Product& PView::findProduct(const QString id) const{
+const PM::Product PView::findProduct(const QString id) const{
     return mgr.getPM().findProduct(id.toStdString());
 }
-PM::ProductManager::const_iterator PView::getProducts() const{
-    return mgr.getPM().getProducts();
-}
-
 const unsigned int PView::getSize() const{
     return mgr.getPM().getSize();
 }
@@ -95,6 +91,7 @@ const OM::OrderManager::Order& OView::findOrder(const OM::Order_ID order_id) con
 std::pair<const unsigned int, bool> OView::addOrder(const QString client_id, std::vector<OM::OrderManager::bill> products){
     auto result = mgr.getOM().addOrder(client_id.toStdString(),products);
     notify<OView>();
+    notify<PView>();
     return result;
 }
 OM::OrderIterator OView::getOrders() const{

@@ -16,7 +16,7 @@ public:
 };
 template<typename T, typename ITR=Iterator<T>>
 struct IteratorPTR : private std::unique_ptr<ITR>{
-    IteratorPTR(ITR* itr) : std::unique_ptr<ITR>{itr} {}
+    explicit IteratorPTR( ITR* itr) : std::unique_ptr<ITR>{itr} {}
     const T operator*() const{return **std::unique_ptr<ITR>::get();}
     void operator++(){ ++*std::unique_ptr<ITR>::get();}
     bool operator!=(const IteratorPTR& rhs){return *std::unique_ptr<ITR>::get()!=*rhs.get();}
@@ -33,6 +33,18 @@ public:
     virtual CM::Client copyClient(const CM::CID) const =0;
     virtual IteratorPTR<CM::Client> begin()=0;
     virtual IteratorPTR<CM::Client> end()=0;
+};
+
+class ProductModel{
+public:
+    virtual bool addProduct(const std::string name, const unsigned int price, const unsigned int qty)=0;
+    virtual bool modifyProduct(const PM::PID id, const PM::Product new_product)=0;
+    virtual bool eraseProduct(const PM::PID id)=0;
+    virtual const PM::Product findProduct(const PM::PID id) const=0;
+    virtual bool buyProduct(const PM::PID id, const unsigned int qty)=0;
+    virtual const unsigned int getSize() const=0;
+    virtual IteratorPTR<PM::Product> begin()=0;
+    virtual IteratorPTR<PM::Product> end()=0;
 };
 
 #endif // MODEL_H

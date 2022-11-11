@@ -23,7 +23,7 @@ namespace OM {
 
 	class OrderManager{
 	public:
-        OrderManager(ClientManager& cm, ProductManager& pm) :cm{ cm }, pm{ pm }{}
+        OrderManager(ClientModel& cm, ProductModel& pm) :cm{ cm }, pm{ pm }{}
         struct OrderedProduct{
             const Product* product;
             unsigned int qty;
@@ -34,13 +34,13 @@ namespace OM {
         private:
             friend class OrderManager;
 			Order_ID order_id;				
-            const Client* client;
+            Client client;
             std::tm date;
             using qty = unsigned int;
             vector<std::pair<Product,qty>> products;
         public:
             const Order_ID getID() const {return order_id;}
-            const Client& getClient() const {return *client;}
+            const Client& getClient() const {return client;}
             const std::tm getDate() const {return date;}
             const vector<OrderedProduct> getProducts() const;
         };
@@ -63,8 +63,8 @@ namespace OM {
         bool loadOrder(const Order_ID oid, const Client_ID client_id,  vector<Product> products, vector<unsigned int> qty, tm time);
 		unsigned int order_id = 0;								
         std::map<Order_ID, Order> orders;
-        const ClientManager& cm;
-        ProductManager& pm;
+        const ClientModel& cm;
+        ProductModel& pm;
 		
 	public:
 		using OM_itr = decltype(OrderManager::orders)::const_iterator;

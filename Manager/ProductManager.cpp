@@ -91,7 +91,7 @@ bool ProductManager::buyProduct(const PID id, const unsigned int qty) {
 	}
 }
 
-const Product& ProductManager::findProduct(const PID id) const{
+const Product ProductManager::findProduct(const PID id) const{
     auto it = products.find(id);
     if (it == products.end()) {
         return no_product;
@@ -101,19 +101,6 @@ const Product& ProductManager::findProduct(const PID id) const{
     }
 }
 
-Product& ProductManager::findProduct(const PID id){
-    auto it = products.find(id);
-    if (it == products.end()) {
-        return const_cast<NoProduct&>(no_product);
-    }
-    else {
-        return it->second;
-    }
-}
-
-ProductManager::const_iterator ProductManager::getProducts() const{
-	return products;
-}
 
 ofstream& PM::ProductManager::saveProducts(ofstream& out) const{
 	for (const auto& p : products) {

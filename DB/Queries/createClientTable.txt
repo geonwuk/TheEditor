@@ -1,4 +1,4 @@
-Create TABLE IF NOT EXISTS client(
+Create TABLE IF NOT EXISTS Client(
   id varchar(20) PRIMARY KEY,
   name varchar(20),
   phone_number varchar(20),

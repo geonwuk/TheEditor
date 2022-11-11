@@ -173,7 +173,7 @@ void AddOrderView::fillProductTab(){
     productTab.setColumnCount(3);
     productTab.setHorizontalHeaderLabels({tr("Select"),tr("ID"),tr("Name")});
     int i=0;
-    for(const auto& product : mgr.getPM().getProducts()){
+    for(const auto& product : mgr.getPM()){
         productTab.setCellWidget(i,0, getCheckBoxWidget(this));
         productTab.setItem(i,1,ceateTableItem(product.getId().c_str(), product.getId().c_str()));
         productTab.setItem(i,2,new QTableWidgetItem(product.getName().c_str()));

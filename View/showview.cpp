@@ -150,7 +150,7 @@ void ShowProductView::fillContents(){
     table->clearContents();
     table->setRowCount(getSize());
     int i=0;
-    for(const auto& product : getProducts()){
+    for(const auto& product : mgr.getPM()){
         int j =0;
         table->setItem(i,j++,ceateTableItem(product.getId().c_str(), product.getId().c_str()));
         table->setItem(i,j++,new QTableWidgetItem(product.getName().c_str()));

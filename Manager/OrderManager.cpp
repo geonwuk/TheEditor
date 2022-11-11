@@ -24,7 +24,7 @@ std::pair<const Order_ID, bool> OrderManager::addOrder(const Order_ID oid, const
     order.date = time;
 
     for (const auto &product : products) {
-        Product& found = pm.findProduct(product.id);
+        Product found = pm.findProduct(product.id);
         if (found == no_product)
             return { oid, false };
         if (found.getQty()<product.qty)
@@ -38,7 +38,7 @@ std::pair<const Order_ID, bool> OrderManager::addOrder(const Order_ID oid, const
     }
     order.order_id = oid;
     assert(!(cm.findClient(client_id)==no_client));
-    order.client = &cm.findClient(client_id);
+    order.client = cm.findClient(client_id);
     auto inserted_order = orders.emplace(order_id, order);
     return {order_id++, true};
 }
@@ -53,7 +53,7 @@ bool OrderManager::loadOrder(const Order_ID oid, const Client_ID client_id, vect
     }
     order.order_id = oid;
     assert(!(cm.findClient(client_id)==no_client));//to do throw
-    order.client = &cm.findClient(client_id);
+    order.client = cm.findClient(client_id);
     orders.emplace(order_id, order);
     order_id = (oid>order_id ? oid : order_id);
     order_id++;

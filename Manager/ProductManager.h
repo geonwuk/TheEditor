@@ -8,97 +8,59 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include "Model/model.h"
 namespace PM {
 	using std::map;
 	using std::string;
 	using std::ofstream;
 	using std::ifstream;
-    using PID = string;
-    class ProductManager;
+
     struct ERROR_WHILE_LOADING { const unsigned int line; };
-	class Product{
-	public:
-        Product(string name, unsigned int price, unsigned int qty, std::tm date) :
-            name{ name }, price{ price }, qty{ qty }, registered_date{date} {}
-        Product(string id, string name, unsigned int price, unsigned int qty, std::tm date) :
-            id{ id }, name{ name }, price{ price }, qty{ qty }, registered_date{ date }{}
-        const string getId() const { return id; }
-		const string getName() const { return name; }
-		const unsigned int getPrice() const { return price; }
-		const unsigned int getQty() const { return qty; }
-		const std::tm getDate() const { return registered_date; }
-        Product& operator= (const Product& rhs){
-            name=rhs.name;
-            price=rhs.price;
-            qty=rhs.qty;
-            registered_date=rhs.registered_date;
-            return *this;
-        }
-	protected:
-		Product() = default;
-	private:
-        friend class ProductManager;
-        string id;
-		string name;			
-		unsigned int price;		
-		unsigned int qty;		
-        tm registered_date;
-        bool decreaseQty(const unsigned int desc){
-            return qty<desc ? false : qty-=desc , true;
-        }
 
-
-	};
-	ofstream& operator<<(ofstream& out, const Product& p);
-
-    struct NoProduct : public Product { NoProduct(){} };
-    const NoProduct no_product;
-	bool operator== (const Product& p, const NoProduct&);		
+    ofstream& operator<<(ofstream& out, const Product& p);
 	
 
-	class ProductManager
-	{
+    class ProductManager : public ProductModel{
 	public:
-        class const_iterator;
-        bool addProduct(const string name, const unsigned int price, const unsigned int qty);
+        bool addProduct(const string name, const unsigned int price, const unsigned int qty) override;
         bool addProduct(const string id, const string name, const unsigned int price, const unsigned int qty, std::tm);
-        bool modifyProduct(const PID id, const Product new_product);
-        bool eraseProduct(const PID id);
-        Product& findProduct(const PID id);
-        const Product& findProduct(const PID id) const;
-        const_iterator getProducts() const;
-        bool buyProduct(const PID id, const unsigned int qty);
+        bool modifyProduct(const PID id, const Product new_product) override;
+        bool eraseProduct(const PID id) override;
+        const Product findProduct(const PID id) const override;
+        bool buyProduct(const PID id, const unsigned int qty) override;
 		ofstream& saveProducts(ofstream&) const;
         ifstream& loadProducts(ifstream&, unsigned int);
-        const unsigned int getSize() const;
+        const unsigned int getSize() const override;
     private:
         static unsigned int product_id;
         map < std::string, Product > products;
         string generateRandID(tm time);
-    public:
-        class const_iterator{
-            using Itr_type = decltype(products)::const_iterator;
-            struct Itr {
-                Itr(Itr_type p) :ptr{ p } {}
-                const Product& operator*() const {
-                    return ptr->second;
-                }
-                Itr_type operator++() {
-                    return ++ptr;
-                }
-                bool operator!=(Itr b) {
-                    return ptr != b.ptr ? true : false;
-                }
-            private:
-                Itr_type ptr;
-            };
-            Itr st, ed;
+        class PIterator : public Iterator<Product>{
         public:
-            const_iterator(const decltype(products)& c): st{c.begin()}, ed{c.end()} {}
-            Itr begin() {return st;}
-            Itr end() {return ed;}
+            using Itr_type = decltype(products)::const_iterator;
+            PIterator(Itr_type p) :ptr{ p } {}
+            const Product operator*() const override{
+                return ptr->second;
+            }
+            void operator++() override{
+                ++ptr;
+            }
+            bool operator!=(Iterator& rhs) override {
+                return (ptr != static_cast<PIterator&>(rhs).ptr ? true : false);
+            }
+            bool operator==(Iterator& rhs) override {
+                return (ptr == static_cast<PIterator&>(rhs).ptr ? true : false);
+            }
+        private:
+            Itr_type ptr;
         };
-
+    public:
+        IteratorPTR<PM::Product> begin() override {
+            return IteratorPTR<PM::Product>(new PIterator{products.begin()});
+        }
+        IteratorPTR<PM::Product> end() override {
+            return IteratorPTR<PM::Product>(new PIterator{products.end()});
+        }
 	};
 
 

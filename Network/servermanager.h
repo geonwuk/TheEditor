@@ -1,18 +1,23 @@
 #ifndef SERVERMANAGER_H
 #define SERVERMANAGER_H
-#include "Manager/ClientManager.h"
+#include "Model/type.h"
 #include <memory>
 #include <QHash>
+#include <map>
 #include "Network/message.h"
-#include "Network/logthread.h"
+
 class QTcpSocket;
 using CM::Client;
-
+/*
+Client의 정보가 수정될 경우 NetClient정보가 수정되지 않음.
+NetClientModel을 새로 만들어야 함.
+*/
 
 class ShowChatView;
 class Server;
 class Manager;
 class ServerManager{
+
 public:
     struct ChatMessage{
         const QString ip;

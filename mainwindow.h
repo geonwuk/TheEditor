@@ -10,6 +10,7 @@
 #include <list>
 #include "Network/servermanager.h"
 #include "Model/model.h"
+#include "DB/db_clientmanager.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -32,9 +33,9 @@ public:
     void updateAll();
 
     ClientModel& getCM(){
-        return cm;
+        return cm2;
     }
-    PM::ProductManager& getPM(){
+    ProductModel& getPM(){
         return pm;
     }
     OM::OrderManager& getOM(){
@@ -52,8 +53,10 @@ private:
     std::list<View*> observers;
     MainWindow& mw;
     CM::ClientManager cm;
+    DBM::ClientManager cm2;
+
     PM::ProductManager pm;
-    OM::OrderManager om{cm,pm};
+    OM::OrderManager om{getCM(),getPM()};
     ServerManager sm{*this};
 };
 

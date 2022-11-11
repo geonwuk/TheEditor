@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/DB/Queries">
+    <qresource prefix="/">
         <file>DB/Queries/createClientTable.txt</file>
     </qresource>
 </RCC>

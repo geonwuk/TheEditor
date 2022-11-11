@@ -56,7 +56,7 @@ public:
     bool eraseClient(const QString id);
     bool modifyClient(const QString id, const QList<QString> client_info);
 
-    const CM::Client& findClient(const CM::CID id) const{
+    const CM::Client findClient(const CM::CID id) const{
         return mgr.getCM().findClient(id);
     }
     const unsigned int getSize() const{
@@ -70,8 +70,7 @@ public:
     bool addProduct(const QString name, const QString price, const QString qty);
     bool modifyProduct(const QString id, const QList<QString> ls);
     bool eraseProduct(const QString id);
-    const PM::Product& findProduct(const QString id) const;
-    PM::ProductManager::const_iterator getProducts() const;
+    const PM::Product findProduct(const QString id) const;
     const unsigned int getSize() const;
 };
 
