@@ -242,7 +242,7 @@ void AddOrderView::addOrder(){
     for(int i=0; i<orderTree->topLevelItemCount(); i++){
         auto client = orderTree->topLevelItem(i);
         QString client_id = client->data(0, Role::id).value<QString>();
-        std::vector<OM::OrderManager::bill> products;
+        std::vector<OrderModel::bill> products;
         for(int j=0; j<client->childCount(); j++){
             auto product = client->child(j);
             auto qty_box = static_cast<QSpinBox*>(orderTree->itemWidget(product,2));

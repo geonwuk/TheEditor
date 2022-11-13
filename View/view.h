@@ -77,9 +77,8 @@ public:
 class OView : public View {
 public:
     OView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString()) : View{mgr, tabs, icon,label} {}
-    const OM::OrderManager::Order& findOrder(const OM::Order_ID order_id) const;
+    const OM::Order& findOrder(const OM::Order_ID order_id) const;
     std::pair<const unsigned int, bool> addOrder(const QString client_id, std::vector<OM::OrderManager::bill>);
-    OM::OrderIterator getOrders() const;
     const size_t getSize() const;
 protected:
     static bool is_order_moified;

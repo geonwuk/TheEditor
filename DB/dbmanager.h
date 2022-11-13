@@ -9,6 +9,10 @@
 #include <QSqlError>
 #include "Model/model.h"
 #include <QSqlRecord>
+#include <initializer_list>
+enum AddMode{
+    EXPLICIT_FIELD_NAME
+};
 template<const char* table_name>
 class DBManager
 {
@@ -45,6 +49,7 @@ public:
             qDebug()<<columnNamesQuery.value(0).toString();
             column_names<<columnNamesQuery.value(0).toString();
         }
+        column_names.removeFirst();//ID 칼럼 삭제
 
     }
     QSqlQuery getSize() const{
@@ -56,36 +61,80 @@ public:
         query.bindValue(":id",id);
         return query;
     }
+    QSqlQuery find(const QString table_name_, const QString id) const {
+        QSqlQuery query{db};
+        query.prepare(QString("select * from ")+table_name_+QString(" where id = :id;"));
+        query.bindValue(":id",id);
+        return query;
+    }
     template <typename T>
-    QSqlQuery bindValue(QSqlQuery query, T arg) {
+    static QSqlQuery bindValue(QSqlQuery query, T arg) {
         query.addBindValue(arg);
         return query;
     }
     template <typename T,typename... Types>
-    QSqlQuery bindValue(QSqlQuery query, T arg, Types... args) {
+    static QSqlQuery bindValue(QSqlQuery query, T arg, Types... args) {
         query.addBindValue(arg);
         return bindValue(query, args...);
     }
     template <std::size_t sz>
-    QString appendQueryString(QString query){
+    static QString appendQueryString(QString query){
         query+="?,";
         return appendQueryString<sz-1>(query);
     }
     template <>
-    QString appendQueryString<0>(QString query){
+    static QString appendQueryString<0>(QString query){
         query.chop(1);
-        query+=");";
+        query+=")";
         return query;
     }
     template <typename... Args>
     QSqlQuery add(Args... args) {
         QString query_string ((QString("insert into ")+table_name+" values ("));
         query_string = appendQueryString<sizeof...(args)>(query_string);
-        qDebug()<<query_string;
+        query_string += ";";
         QSqlQuery query{db};
         query.prepare(query_string);
         return bindValue(query, args...);
     }
+    template <typename... Args>
+    QSqlQuery add(QString table_name_p, Args... args) {
+        QString query_string ((QString("insert into ")+table_name_p+" values ("));
+        query_string = appendQueryString<sizeof...(args)>(query_string);
+        query_string += ";";
+        QSqlQuery query{db};
+        query.prepare(query_string);
+        return bindValue(query, args...);
+    }
+
+    struct ExplicitAdd {
+        ExplicitAdd(QString tb_name) : tb_name{tb_name} {}
+        QSqlQuery add(std::initializer_list<std::initializer_list<QString>> args) {
+            QString query_string ((QString("insert into ")+tb_name+" ("));
+            for(const auto& field : args){
+                query_string += *field.begin();
+                query_string += ",";
+            }
+            query_string.chop(1);
+            query_string+=") values (";
+            for(int i=0; i<args.size(); i++){
+                query_string+="?,";
+            }
+            query_string.chop(1);
+            query_string+=");";
+            QSqlQuery query{db};
+            query.prepare(query_string);
+            for(const auto& pair : args){
+                auto s = pair.begin();
+                query.addBindValue(*(++s));
+            }
+            return query;
+        }
+    private:
+        QString tb_name;
+    };
+
+
 
 
     template <typename... Fields>
@@ -102,6 +151,7 @@ public:
         query = bindValue(query, args...);
         query.addBindValue(id);
         qDebug()<<"modify query: "<<query.lastQuery();
+        qDebug()<<"err"<<query.lastError().text();
         return query;
     }
 
@@ -116,32 +166,29 @@ public:
     struct DBIterator : public Iterator<T>{
         using Itr_type = int;
         DBIterator(Itr_type p) : ptr{ p } {}
-        void operator++(){
+        void operator++() override final {
             ++ptr;
         }
-        bool operator!=(Iterator<T>& rhs){
+        bool operator!=(Iterator<T>& rhs) override final {
             auto it = static_cast<DBIterator&>(rhs);
             return getPtr()!=it.getPtr();
         }
-        bool operator==(Iterator<T>& rhs){
+        bool operator==(Iterator<T>& rhs) override final {
             auto it = static_cast<DBIterator&>(rhs);
             return getPtr()==it.getPtr();
         }
         const T operator*() const override{
-            return T{};
-            //static_assert(false,"d");
+            assert(false); //이 메소드는 무조건 오버라이드 되어야 합니다.
+            return T();
         }
         QSqlRecord getPtr() const{
             QSqlQuery query{QString("select * from ")+table_name+" order by id;",db};
             query.seek(ptr);
             return query.record();
         }
-
     private:
         Itr_type ptr;
     };
-
-
 
 
 protected:

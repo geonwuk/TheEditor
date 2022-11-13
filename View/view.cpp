@@ -85,7 +85,7 @@ const unsigned int PView::getSize() const{
 
 //OVIEW-----------------------------------------------------------------------------------
 bool OView::is_order_moified {false};
-const OM::OrderManager::Order& OView::findOrder(const OM::Order_ID order_id) const{
+const OM::Order& OView::findOrder(const OM::Order_ID order_id) const{
     return mgr.getOM().findOrder(order_id);
 }
 std::pair<const unsigned int, bool> OView::addOrder(const QString client_id, std::vector<OM::OrderManager::bill> products){
@@ -93,9 +93,6 @@ std::pair<const unsigned int, bool> OView::addOrder(const QString client_id, std
     notify<OView>();
     notify<PView>();
     return result;
-}
-OM::OrderIterator OView::getOrders() const{
-    return mgr.getOM().getOrders();
 }
 const size_t OView::getSize() const{
     return mgr.getOM().getSize();

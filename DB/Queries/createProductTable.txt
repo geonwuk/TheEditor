@@ -1,0 +1,7 @@
+Create TABLE IF NOT EXISTS Product(
+  id varchar(20) PRIMARY KEY,
+  name varchar(20),
+  price INTEGER,
+  qty INTEGER,
+  date TEXT
+);

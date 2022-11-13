@@ -3,9 +3,11 @@
 #include "Model/model.h"
 #include <QSqlRecord>
 #include <QString>
+#include "DB/dbmanager.h"
+extern const char PRODUCT_TABLE_NAME[];
 namespace DBM{
 
-class ProductManager : public ProductModel
+class ProductManager : public ProductModel, public DBManager<PRODUCT_TABLE_NAME>
 {
 public:
     bool addProduct(const std::string name, const unsigned int price, const unsigned int qty) override;
@@ -14,24 +16,18 @@ public:
     bool eraseProduct(const PM::PID id) override;
     const PM::Product findProduct(const PM::PID id) const override;
     bool buyProduct(const PM::PID id, const unsigned int qty) override;
-
+    virtual const unsigned int getSize() const override;
+    virtual IteratorPTR<PM::Product> begin() override;
+    virtual IteratorPTR<PM::Product> end() override;
 private:
-    class PIterator : public Iterator<PM::Product> {
-        using Itr_type = int;
+    std::string generateRandID(tm time);
+    static unsigned int product_id;
+private:
+    class PIterator : public DBIterator<PM::Product> {
     public:
-        //friend class ClientManager;
-        PIterator(Itr_type p) : ptr{ p } {}
-        ~PIterator() {}
+        using DBIterator::DBIterator;
         const PM::Product operator*() const override ;
-        void operator++() override;
-//            CIterator& operator= (Iterator& rhs) override;
-        bool operator!=(Iterator& b) override;
-        bool operator==(Iterator& b) override;
-        QSqlRecord getPtr() const;
-    private:
-        Itr_type ptr;
     };
-
 };
 
 }

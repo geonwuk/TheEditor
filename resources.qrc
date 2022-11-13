@@ -6,5 +6,7 @@
         <file>Icons/order.png</file>
         <file>Icons/product.png</file>
         <file>Icons/quit.png</file>
+        <file>Icons/database.png</file>
+        <file>Icons/ram.png</file>
     </qresource>
 </RCC>

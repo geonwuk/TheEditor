@@ -23,28 +23,10 @@ class ClientManager : public ClientModel, public DBManager<name2>{
 
     private:
         class CIterator : public DBIterator<CM::Client> {
-            using Itr_type = int;
         public:
             using DBIterator::DBIterator;
-            //friend class ClientManager;
-            //CIterator(Itr_type p) : ptr{ p } {}
-            ~CIterator() {}
             const CM::Client operator*() const override ;
-//            void operator++() override;
-//            CIterator& operator= (Iterator& rhs) override;
-//            bool operator!=(Iterator& b) override;
-//            bool operator==(Iterator& b) override;
-//            QSqlRecord getPtr() const;
-        private:
-            Itr_type ptr;
         };
-public:
-
-
-
-    private:
-        const QObject* parent;
-        QString db_name;
         //static QSqlDatabase db;
     };
 

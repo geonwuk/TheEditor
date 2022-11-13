@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     DB/db_clientmanager.cpp \
+    DB/db_ordermanager.cpp \
     DB/db_productmanager.cpp \
     DB/dbmanager.cpp \
     Manager/ClientManager.cpp \
@@ -31,6 +32,7 @@ SOURCES += \
 
 HEADERS += \
     DB/db_clientmanager.h \
+    DB/db_ordermanager.h \
     DB/db_productmanager.h \
     DB/dbmanager.h \
     Manager/ClientManager.h \
@@ -55,6 +57,7 @@ FORMS += \
     addClient.ui \
     addOrder.ui \
     addProduct.ui \
+    dashboard.ui \
     mainwindow.ui \
     showClient.ui \
     showOrder.ui

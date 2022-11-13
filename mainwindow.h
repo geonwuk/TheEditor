@@ -11,6 +11,7 @@
 #include "Network/servermanager.h"
 #include "Model/model.h"
 #include "DB/db_clientmanager.h"
+#include "DB/db_productmanager.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -36,7 +37,7 @@ public:
         return cm2;
     }
     ProductModel& getPM(){
-        return pm;
+        return pm2;
     }
     OM::OrderManager& getOM(){
         return om;
@@ -56,6 +57,7 @@ private:
     DBM::ClientManager cm2;
 
     PM::ProductManager pm;
+    DBM::ProductManager pm2;
     OM::OrderManager om{getCM(),getPM()};
     ServerManager sm{*this};
 };

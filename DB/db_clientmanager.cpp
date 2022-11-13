@@ -7,47 +7,20 @@
 #include <QSqlRecord>
 #include <QSqlQuery>
 #include <string>
+extern const char name2[] = "Client";
 using namespace DBM;
 using std::string;
 //QSqlDatabase ClientManager::db {};
-extern const char name2[] = "Client";
-//ClientManager::ClientManager(QString db_name) : db_name{db_name}
-//{
-//    ClientManager::db = QSqlDatabase::addDatabase("QSQLITE","CLIENT");
-//    db.setDatabaseName(db_name);
-//    if(!db.open()){
-//        qDebug()<<"not open";
-//    }
-
-//    QFile create_query_file{":/DB/Queries/createClientTable.txt"};
-//    if(!create_query_file.open(QIODevice::ReadOnly|QIODevice::Text))
-//        throw -1;// todo
-
-//    QString create_query = create_query_file.readAll();
-
-//    create_query.remove('\n');
-
-//    qDebug()<<create_query;
-//    auto query_result = db.exec(create_query);
-//    if(query_result.lastError().isValid())
-//        throw -1;
-//}
 
 
 unsigned int ClientManager::getSize() const{
-    QSqlQuery query{"select count(id) from client;",db};
-    if(query.next()){
-        return query.value(0).toUInt();
-    }
-    else{
-        return 0;
-    }
+    auto query = DBManager::getSize();
+    query.exec();
+    return query.next() ? query.value(0).toUInt() : 0;
 }
 
 const CM::Client ClientManager::findClient(const CM::CID id) const {
-    QSqlQuery query{db};
-    query.prepare("select * from client where id = :id;");
-    query.bindValue(":id",QString(id.c_str()));
+    auto query = find(id.c_str());
     query.exec();
     if(query.next()){
         string id = query.value("id").toString().toStdString();
@@ -62,29 +35,19 @@ const CM::Client ClientManager::findClient(const CM::CID id) const {
 }
 
 bool ClientManager::addClient(std::string id, std::string name, std::string phone_number, std::string address){
-    QSqlQuery query{db};
-    query.prepare("insert into client values (:id, :name, :phone_number, :address);");
-    query.bindValue(":id", id.c_str());
-    query.bindValue(":name", name.c_str());
-    query.bindValue(":phone_number", phone_number.c_str());
-    query.bindValue(":address", address.c_str());
+    auto query = add(id.c_str(),name.c_str(),phone_number.c_str(),address.c_str());
+    qDebug()<<query.lastQuery();
     return query.exec();
 }
 
 bool ClientManager::modifyClient(const CM::CID id, const CM::Client client){
-    QSqlQuery query{db};
-    query.prepare("update client set name=:name, phone_number=:phone_number, address=:address where id=:id;");
-    query.bindValue(":id",id.c_str());
-    query.bindValue(":name",client.getName().c_str());
-    query.bindValue(":phone_number",client.getPhoneNumber().c_str());
-    query.bindValue(":address",client.getAddress().c_str());
+    auto query = modify(id.c_str(), client.getName().c_str(), client.getPhoneNumber().c_str(), client.getAddress().c_str());
+    qDebug()<<query.lastQuery();
     return query.exec();
 }
 
 bool ClientManager::eraseClient(const CM::CID id){
-    QSqlQuery query{db};
-    query.prepare("delete from client where id=:id;");
-    query.bindValue(":id",id.c_str());
+    auto query = erase(id.c_str());
     return query.exec();
 }
 

@@ -202,7 +202,7 @@ void ShowProductView::returnPressed(){
         compensation++;
     }
 }
-void ShowProductView::cellChanged(int row, int col){
+void ShowProductView::cellChanged(int row, int){
     if(is_edit_mode){
         auto id_item = table->item(row,0);
         QString id = id_item->data(Role::id).value<QString>();
@@ -261,15 +261,15 @@ void ShowOrderView::fillContents() {
     orderTable->setRowCount(getSize());
 
     int i=0;
-    for(const auto& order : getOrders()){
+    for(const auto& order : mgr.getOM()){
         int j=0;
         orderTable->setItem(i,j++,ceateTableItem(QString::number(order.getID()), QString::number(order.getID())));
         auto client = order.getClient();
         orderTable->setItem(i,j++, new QTableWidgetItem(client.getName().c_str()));
         unsigned int price=0;
-        for(auto ordered_product : order.getProducts()){
+        for(const auto& ordered_product : order.getProducts()){
             auto product = ordered_product.product;
-            price += product->getPrice()*ordered_product.qty;
+            price += product.getPrice()*ordered_product.qty;
         }
         orderTable->setItem(i,j++, new QTableWidgetItem(QString::number(price)));
         auto tm = order.getDate();
@@ -298,14 +298,14 @@ void ShowOrderView::orderItemSelectionChanged_(){
     OM::Order_ID order_id = item->data(Role::id).value<OM::Order_ID>();
     auto order = findOrder(order_id);
     assert(order!=OM::no_order);
-    auto product_data = order.getProducts();
+    const auto& product_data = order.getProducts();
     orderInfoTable->setRowCount(product_data.size());
     int i=0;
     for(auto pd : product_data){
         int j=0;
         auto product = pd.product;
-        orderInfoTable->setItem(i, j++, new QTableWidgetItem(product->getName().c_str()));
-        unsigned int price = product->getPrice();
+        orderInfoTable->setItem(i, j++, new QTableWidgetItem(product.getName().c_str()));
+        unsigned int price = product.getPrice();
         orderInfoTable->setItem(i, j++, new QTableWidgetItem(QString::number(price)));
         unsigned int qty = pd.qty;
         orderInfoTable->setItem(i, j++, new QTableWidgetItem(QString::number(qty)));
