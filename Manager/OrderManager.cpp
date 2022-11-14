@@ -61,7 +61,7 @@ bool OrderManager::loadOrder(const Order_ID oid, const Client_ID client_id, vect
     return true;
 }
 
-const Order& OrderManager::findOrder(const Order_ID order_id) const {
+const Order OrderManager::findOrder(const Order_ID order_id) const {
 	auto o = orders.find(order_id);
 	if (o == orders.end()) {
 		return no_order;

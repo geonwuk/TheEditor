@@ -26,13 +26,22 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
         <property name="spacing">
-         <number>0</number>
+         <number>5</number>
         </property>
         <property name="sizeConstraint">
          <enum>QLayout::SetDefaultConstraint</enum>
         </property>
+        <property name="leftMargin">
+         <number>2</number>
+        </property>
+        <property name="topMargin">
+         <number>5</number>
+        </property>
         <property name="rightMargin">
-         <number>0</number>
+         <number>2</number>
+        </property>
+        <property name="bottomMargin">
+         <number>5</number>
         </property>
         <item>
          <widget class="QToolButton" name="ManagementButton">
@@ -60,6 +69,13 @@
          <widget class="QToolButton" name="ChatButton">
           <property name="text">
            <string>Network</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="memoryButton">
+          <property name="text">
+           <string>Memory</string>
           </property>
          </widget>
         </item>

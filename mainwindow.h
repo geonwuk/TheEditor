@@ -12,8 +12,10 @@
 #include "Model/model.h"
 #include "DB/db_clientmanager.h"
 #include "DB/db_productmanager.h"
+#include "DB/db_ordermanager.h"
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui { class MainWindow;
+             class dashboard;}
 QT_END_NAMESPACE
 
 class MainWindow;
@@ -39,8 +41,8 @@ public:
     ProductModel& getPM(){
         return pm2;
     }
-    OM::OrderManager& getOM(){
-        return om;
+    OrderModel& getOM(){
+        return om3;
     }
     ServerManager& getSM(){
         return sm;
@@ -58,7 +60,9 @@ private:
 
     PM::ProductManager pm;
     DBM::ProductManager pm2;
-    OM::OrderManager om{getCM(),getPM()};
+        DBM::OrderManager om3{cm2,pm2};
+    OM::OrderManager om{cm,pm};
+
     ServerManager sm{*this};
 };
 
@@ -69,13 +73,17 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     Manager* getMgr(){return &mgrs;}
+    bool is_dirty=false;
 
 private slots:
     void save();
     void load();
+    void onRadioButtonDBClicked();
+    void onRadioButtonMemoryClicked();
 
 private:
     Ui::MainWindow *ui;
+    Ui::dashboard* dash_board;
     Manager mgrs{*this};
     TabWidget management_tw{this};
     ManagementTree management_tree{this,&management_tw};
@@ -84,6 +92,8 @@ private:
     NetworkTree network_tree{this,&network_tw};
 
     QStackedWidget* sw;
+
+
 
 
 

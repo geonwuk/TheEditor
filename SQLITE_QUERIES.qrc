@@ -2,5 +2,8 @@
     <qresource prefix="/">
         <file>DB/Queries/createClientTable.txt</file>
         <file>DB/Queries/createProductTable.txt</file>
+        <file>DB/Queries/createOrderedProductTable.txt</file>
+        <file>DB/Queries/createOrderListTable.txt</file>
+        <file>DB/Queries/createOrdersTable.txt</file>
     </qresource>
 </RCC>

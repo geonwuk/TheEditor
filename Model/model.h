@@ -57,7 +57,7 @@ public:
     };
 
     virtual std::pair<const OM::Order_ID, bool> addOrder(const CM::CID client_id, std::vector<bill>)=0;
-    virtual const OM::Order& findOrder(const OM::Order_ID order_id) const=0;
+    virtual const OM::Order findOrder(const OM::Order_ID order_id) const=0;
     virtual const size_t getSize() const =0;
     virtual IteratorPTR<OM::Order> begin()=0;
     virtual IteratorPTR<OM::Order> end()=0;

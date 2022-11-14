@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-
 #include <QLabel>
 #include <QList>
 #include "ui_mainwindow.h"
@@ -10,55 +9,46 @@
 #include <QFileDialog>
 #include <fstream>
 #include <QMessageBox>
+#include "ui_dashboard.h"
 using namespace std;
 static const unsigned int parseTitle(ifstream& in, const string title, const unsigned int line );
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 탭 화면을 스플리터로 나누는 함수
     QSplitter* splitter = new QSplitter;
     splitter->setChildrenCollapsible(false);
-
     QSizePolicy tree_policy(QSizePolicy::Maximum, QSizePolicy::Expanding);
     tree_policy.setHorizontalStretch(0);                                        //화면이 확대될 때 트리는 가만히 있어야 함
     tree.setSizePolicy(tree_policy);                                            //Maximum 사이즈 정책 적용
     tree.setMaximumSize(1920,1920);                                             //수동으로 스플리터를 움직여서 트리 크기를 조절할 수 있도록 최대 크기를 일반적인 1920픽셀로 설정한다
     splitter->addWidget(&tree);
-
-
-
-    tw.setTabsClosable(true);
     QSizePolicy tab_policy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    tab_policy.setHorizontalStretch(100);                                       //화면이 확대될 때 트리는 가만히, 탭 화면만 확대되야 함
+    tab_policy.setHorizontalStretch(1);                                       //화면이 확대될 때 트리는 가만히, 탭 화면만 확대되야 함
     tw.setSizePolicy(tab_policy);                                               //Expanding 사이즈 정책 적용
     splitter->addWidget(&tw);                                                   //스플리터에 추가
-
+    tw.setTabsClosable(true);
     return splitter;
 }
 #include <QStyleFactory>
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow)
+    : QMainWindow(parent), ui(new Ui::MainWindow), dash_board(new Ui::dashboard)
 {
     ui->setupUi(this);
     sw=ui->stackedWidget;
-    //management_tw.setPalette(QStyleFactory::create("Fusion")->standardPalette().color(QPalette::Normal,QPalette::Window));
-   // management_tw.setPalette(QColor(53,53,53));
-//sw->setPalette(QColor(53,53,53));
-//sw->setStyle(qApp->style());
-//management_tw.hide();
+
 
     ui->actionSave->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogSaveButton));      //save 액션 아이콘 추가
     ui->actionOpen->setIcon(qApp->style()->standardIcon(QStyle::SP_DialogOpenButton));      //load 액션 아이콘 추가
 
     QSplitter* splitter = initTreeAndTab(management_tree,management_tw);                     //고객,물품,주문관리 splitter
     QSplitter* splitter2 = initTreeAndTab(network_tree, network_tw);                        //네트워크 splitter
-//management_tw.setPalette(QStyleFactory::create("Fusion")->standardPalette().color(QPalette::Button));
-//management_tw.setStyleSheet("  background-color: red; ");
-//management_tw.setPalette(Qt::transparent);
-//    management_tw.setAttribute(Qt::WA_TranslucentBackground, true);
-//management_tw.setWindowFlags(Qt::FramelessWindowHint);
 
     sw->addWidget(splitter);         //고객,물품,주문관리
     sw->addWidget(splitter2);        //네트워크
-    connect(ui->ManagementButton, &QToolButton::pressed,[=]{ sw->setCurrentIndex(0);}); //고객,물품,주문관리
-    connect(ui->ChatButton, &QToolButton::pressed,[=]{ sw->setCurrentIndex(1); });      //네트워크
+    QWidget* dash_board_widget = new QWidget(this);
+    dash_board->setupUi(dash_board_widget);
+    sw->addWidget(dash_board_widget);
+    connect(ui->ManagementButton, &QToolButton::pressed, this, [=]{ sw->setCurrentIndex(0);}); //고객,물품,주문관리
+    connect(ui->ChatButton, &QToolButton::pressed, this, [=]{ sw->setCurrentIndex(1); });      //네트워크
+    connect(ui->memoryButton, &QToolButton::pressed, this, [=]{ sw->setCurrentIndex(2); });      //메모리
 
     mgrs.getSM().setServer(new Server{mgrs.getSM()});                                   //서버 생성 후 포인터로 설정
 
@@ -66,8 +56,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionOpen,SIGNAL(triggered()),SLOT(load()));       //불러오기
     setWindowTitle(tr("Program"));
 
-//    ui->verticalLayout->sizeHint();
+    connect(dash_board->radioButtonDB, SIGNAL(clicked()), this, SLOT(onRadioButtonDBClicked()));
+    connect(dash_board->radioButtonMemory, SIGNAL(clicked()), this, SLOT(onRadioButtonMemoryClicked()));
+
+
 }
+
 
 void Manager::updateAll(){          //파일을 불러오기한 경우 모두 업데이트 한다
     for (auto o : observers) {
@@ -75,17 +69,43 @@ void Manager::updateAll(){          //파일을 불러오기한 경우 모두 �
     }
 }
 
-void MainWindow::save(){                                                //파일을 CSV포맷으로 저장하는 함수로 QAction과 연결되어 있다
+void MainWindow::onRadioButtonDBClicked(){
+
+
+}
+void MainWindow::onRadioButtonMemoryClicked(){
+
+}
+void MainWindow::save(){                                                //파일을 sqlite DB로 저장하는 함수로 QAction과 연결되어 있다
     QString filename = QFileDialog::getSaveFileName(this);
     std::ofstream out(filename.toStdString());
-//    out<<"[Clients],"<<mgrs.getCM().getSize()<<','<<std::endl;      //고객
-//    mgrs.getCM().saveClients(out);
-//    out<<"[Products],"<<mgrs.getPM().getSize()<<','<<std::endl;     //물품
-//    mgrs.getPM().saveProducts(out);
-//    out<<"[Orders],"<<mgrs.getOM().getSize()<<','<<std::endl;       //주문
-//    mgrs.getOM().saveOrders(out);
+
+    DBM::ClientManager dbcm{filename};
+    DBM::ProductManager dbpm{filename};
+    DBM::OrderManager dbom{dbcm,dbpm,filename};
+
+    for(const auto& c : mgrs.getCM()){
+        dbcm.addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
+    }
+
+    for(const auto& p : mgrs.getPM()){
+        dbpm.addProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
+    }
+
+    for(const auto& o : mgrs.getOM()){
+        std::vector<OrderModel::bill> bills;
+        for(const auto& ordered_product : o.getProducts()){
+            bills.emplace_back(ordered_product.product.getId(),ordered_product.qty);
+        }
+        dbom.addOrder(o.getClient().getId(),bills);
+    }
+
 }
 void MainWindow::load(){                                                        //CSV 포맷으로 저장된 파일을 불러오는 함수로 QAction과 연결되어 있다
+    if(is_dirty){
+
+
+    }
     try {                                                                       //try-catch를 써서 로딩 중에 프로그램이 죽지 않고 로딩 실패가 되도록 로직코드를 감싸준다
         QString filename = QFileDialog::getOpenFileName(this);
         ifstream in(filename.toStdString());
@@ -95,7 +115,7 @@ void MainWindow::load(){                                                        
         line = parseTitle(in,"[Products]",line);
         //mgrs.getPM().loadProducts(in, line);
         line = parseTitle(in,"[Orders]",line);
-        mgrs.getOM().loadOrders(in, line);
+        //mgrs.getOM().loadOrders(in, line);
         mgrs.updateAll();
     } catch (...) {
         QMessageBox::critical(this, tr("FAIL LOADING"), tr("FAIL LOADING"));
@@ -105,6 +125,7 @@ void MainWindow::load(){                                                        
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete dash_board;
 }
 
 void Manager::attachObserver(View* o){

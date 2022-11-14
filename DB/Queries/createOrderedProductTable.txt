@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS Ordered_Product (
+  product_id varchar(20),
+  product_history_seq INTEGER,
+  name varchar(20),
+  price INTEGER,
+  date TEXT,
+  foreign key(product_id) references Product(id)
+);

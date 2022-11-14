@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS ORDER_LIST (
+  SEQ INTEGER PRIMARY KEY autoincrement,
+  order_id INTEGER,
+  product_id varchar(20),
+  product_history_seq INTEGER,
+  qty INTEGER,
+  foreign key(product_id) references Ordered_product(id),
+  foreign key(product_history_seq) references Ordered_product(product_history_seq)
+);

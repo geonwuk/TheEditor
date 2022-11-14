@@ -1,0 +1,7 @@
+Create TABLE IF NOT EXISTS Orders (
+  id INTEGER PRIMARY KEY,
+  client_id varchar(20),
+  price INTEGER,
+  date TEXT,
+  foreign key(client_id) references client(id)
+);

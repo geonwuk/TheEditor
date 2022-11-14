@@ -10,6 +10,7 @@
 #include "Model/model.h"
 #include <QSqlRecord>
 #include <initializer_list>
+#include <sstream>
 enum AddMode{
     EXPLICIT_FIELD_NAME
 };
@@ -17,24 +18,21 @@ template<const char* table_name>
 class DBManager
 {
 public:
-
-    DBManager(){
+    DBManager(QString file_name="test.txt") : file_name{file_name}{
         DBManager::db = QSqlDatabase::addDatabase(DBType,table_name);
-        db.setDatabaseName(db_name);
+        db.setDatabaseName(file_name);
         if(!db.open()){
             qDebug()<<"not open";
         }
-        QString file_name{":/DB/Queries/create"};
-        file_name+=(QString(table_name)+QString("Table.txt"));
-        qDebug()<<"filename"<<file_name;
-        QFile create_query_file{file_name};
+        QString file_name2{":/DB/Queries/create"};
+        file_name2+=(QString(table_name)+QString("Table.txt"));
+        qDebug()<<"filename"<<file_name2;
+        QFile create_query_file{file_name2};
         if(!create_query_file.open(QIODevice::ReadOnly|QIODevice::Text))
             throw -1;// todo
 
         QString create_query = create_query_file.readAll();
-
         create_query.remove('\n');
-
         qDebug()<<create_query;
         auto query_result = db.exec(create_query);
         if(query_result.lastError().isValid())
@@ -67,27 +65,7 @@ public:
         query.bindValue(":id",id);
         return query;
     }
-    template <typename T>
-    static QSqlQuery bindValue(QSqlQuery query, T arg) {
-        query.addBindValue(arg);
-        return query;
-    }
-    template <typename T,typename... Types>
-    static QSqlQuery bindValue(QSqlQuery query, T arg, Types... args) {
-        query.addBindValue(arg);
-        return bindValue(query, args...);
-    }
-    template <std::size_t sz>
-    static QString appendQueryString(QString query){
-        query+="?,";
-        return appendQueryString<sz-1>(query);
-    }
-    template <>
-    static QString appendQueryString<0>(QString query){
-        query.chop(1);
-        query+=")";
-        return query;
-    }
+
     template <typename... Args>
     QSqlQuery add(Args... args) {
         QString query_string ((QString("insert into ")+table_name+" values ("));
@@ -134,9 +112,6 @@ public:
         QString tb_name;
     };
 
-
-
-
     template <typename... Fields>
     QSqlQuery modify(QString id,Fields... args){
         QString query_string ((QString("update ")+table_name+" set "));
@@ -160,6 +135,20 @@ public:
         query.prepare(QString("delete from ")+table_name+" where id=:id;");
         query.bindValue(":id",id);
         return query;
+    }
+
+    static std::tm getDate(QString dt){
+        std::string date = dt.toStdString();
+        tm time;
+        std::istringstream ss{ date };
+        ss >> std::get_time(&time, "%D %T");
+        return time;
+    }
+
+    static QString getDate(std::tm dt){
+        std::ostringstream ss;
+        ss<<std::put_time(&dt, "%D %T");
+        return ss.str().c_str();
     }
 
     template<typename T>
@@ -190,13 +179,34 @@ public:
         Itr_type ptr;
     };
 
-
 protected:
-
-    QString db_name{"test"};
     QString DBType{"QSQLITE"};
     static QSqlDatabase db;
     QStringList column_names;
+    QString file_name;
+private:
+
+    template <typename T>
+    static QSqlQuery bindValue(QSqlQuery query, T arg) {
+        query.addBindValue(arg);
+        return query;
+    }
+    template <typename T,typename... Types>
+    static QSqlQuery bindValue(QSqlQuery query, T arg, Types... args) {
+        query.addBindValue(arg);
+        return bindValue(query, args...);
+    }
+    template <std::size_t sz>
+    static QString appendQueryString(QString query){
+        query+="?,";
+        return appendQueryString<sz-1>(query);
+    }
+    template <>
+    static QString appendQueryString<0>(QString query){
+        query.chop(1);
+        query+=")";
+        return query;
+    }
 };
 
 template <const char* table_name>

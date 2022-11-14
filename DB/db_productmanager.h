@@ -10,6 +10,8 @@ namespace DBM{
 class ProductManager : public ProductModel, public DBManager<PRODUCT_TABLE_NAME>
 {
 public:
+    ProductManager():DBManager{} {}
+    ProductManager(QString file_name):DBManager{file_name} {}
     bool addProduct(const std::string name, const unsigned int price, const unsigned int qty) override;
     bool addProduct(const std::string id, const std::string name, const unsigned int price, const unsigned int qty, std::tm);
     bool modifyProduct(const PM::PID id, const PM::Product new_product) override;

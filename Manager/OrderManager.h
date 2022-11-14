@@ -26,7 +26,7 @@ namespace OM {
 		std::ofstream & saveOrders(std::ofstream&) const;												
         std::ifstream& loadOrders(std::ifstream&, unsigned int lines);
         std::pair<const Order_ID, bool> addOrder(const Client_ID client_id, vector<bill>) override;
-        const Order& findOrder(const Order_ID order_id) const override;
+        const Order findOrder(const Order_ID order_id) const override;
         const size_t getSize() const override {return orders.size();}
         IteratorPTR<OM::Order> begin() override;
         IteratorPTR<OM::Order> end() override;

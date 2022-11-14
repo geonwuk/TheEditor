@@ -81,15 +81,16 @@ struct OrderedProduct{
 };
 
 struct Order {
-private:
+public:
     using qty = unsigned int;
+private:
     friend class OrderManager;
     Order_ID order_id;
     Client client;
     std::tm date;
     vector<std::pair<Product,qty>> products;
 public:
-    Order(Order_ID id, Client c, std::tm t, decltype(products)::value_type p) : order_id{id}, client{c}, date{t}, products{p} {}
+    Order(Order_ID id, Client c, std::tm t, decltype(products) p) : order_id{id}, client{c}, date{t}, products{p} {}
     Order(){}
     const Order_ID getID() const {return order_id;}
     const Client& getClient() const {return client;}
@@ -97,7 +98,7 @@ public:
     vector<OrderedProduct> getProducts() const;
 };
 
-struct NoOrder : public Order { NoOrder() : Order{0,no_client,std::tm(), std::make_pair(no_product ,0)}{}};
+struct NoOrder : public Order { NoOrder() : Order{0,no_client,std::tm(), {std::make_pair(no_product ,0)}}{}};
 extern const NoOrder no_order;
 inline bool operator== (const Order& o, const NoOrder&){ return (&o == &no_order ? true : false); }
 inline bool operator!= (const Order& o, const NoOrder&){ return (&o != &no_order ? true : false); }
