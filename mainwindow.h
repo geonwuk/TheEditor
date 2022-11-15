@@ -56,11 +56,11 @@ private:
     std::list<View*> observers;
     MainWindow& mw;
     CM::ClientManager cm;
-    DBM::ClientManager cm2;
+    DBM::ClientManager cm2{"cleint"};
 
     PM::ProductManager pm;
-    DBM::ProductManager pm2;
-        DBM::OrderManager om3{cm2,pm2};
+    DBM::ProductManager pm2{"product"};
+        DBM::OrderManager om3{cm2,pm2,"orders"};
     OM::OrderManager om{cm,pm};
 
     ServerManager sm{*this};

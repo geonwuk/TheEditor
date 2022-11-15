@@ -18,8 +18,8 @@ template<const char* table_name>
 class DBManager
 {
 public:
-    DBManager(QString file_name="test.txt") : file_name{file_name}{
-        DBManager::db = QSqlDatabase::addDatabase(DBType,table_name);
+    DBManager(QString connection_name, QString file_name="test.txt") : file_name{file_name}, connection_name{connection_name}{
+        DBManager::db = QSqlDatabase::addDatabase(DBType,connection_name);
         db.setDatabaseName(file_name);
         if(!db.open()){
             qDebug()<<"not open";
@@ -184,6 +184,7 @@ protected:
     static QSqlDatabase db;
     QStringList column_names;
     QString file_name;
+    QString connection_name;
 private:
 
     template <typename T>

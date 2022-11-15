@@ -37,7 +37,7 @@ const CM::Client ClientManager::findClient(const CM::CID id) const {
 bool ClientManager::addClient(std::string id, std::string name, std::string phone_number, std::string address){
     auto query = add(id.c_str(),name.c_str(),phone_number.c_str(),address.c_str());
     qDebug()<<query.lastQuery();
-    return query.exec();
+    return query.exec() && !query.lastError().isValid();
 }
 
 bool ClientManager::modifyClient(const CM::CID id, const CM::Client client){
@@ -84,7 +84,19 @@ CM::Client ClientManager::copyClient(const CM::CID cid) const{
 //    return query.record();
 //}
 
-
+void ClientManager::loadClients(QString file_name) {
+    try{
+        DBM::ClientManager db_data{"load_client",file_name};
+        for(const auto& c : db_data){
+            bool re = addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
+            if(!re)
+                throw -1;
+        }
+    }
+    catch(...){
+        throw;
+    }
+}
 
 const CM::Client ClientManager::CIterator::operator*() const {
     const QSqlRecord record = getPtr();
@@ -106,10 +118,10 @@ const CM::Client ClientManager::CIterator::operator*() const {
 //    return getPtr()==it.getPtr();
 //}
 
-IteratorPTR<CM::Client> ClientManager::begin(){
+IteratorPTR<CM::Client> ClientManager::begin() const{
     return IteratorPTR<CM::Client>{ new CIterator{0} };
 }
-IteratorPTR<CM::Client> ClientManager::end() {
+IteratorPTR<CM::Client> ClientManager::end() const{
   QSqlQuery query{QString("select count(id) from ") + name2, db};
   if (query.next()) {
     return IteratorPTR<CM::Client>{new CIterator{query.value(0).toInt()}};

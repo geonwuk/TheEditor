@@ -10,6 +10,9 @@
 #include <fstream>
 #include <QMessageBox>
 #include "ui_dashboard.h"
+#include <QDialog>
+#include <QPushButton>
+#include <QListWidget>
 using namespace std;
 static const unsigned int parseTitle(ifstream& in, const string title, const unsigned int line );
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 탭 화면을 스플리터로 나누는 함수
@@ -77,29 +80,88 @@ void MainWindow::onRadioButtonMemoryClicked(){
 
 }
 void MainWindow::save(){                                                //파일을 sqlite DB로 저장하는 함수로 QAction과 연결되어 있다
-    QString filename = QFileDialog::getSaveFileName(this);
-    std::ofstream out(filename.toStdString());
-
-    DBM::ClientManager dbcm{filename};
-    DBM::ProductManager dbpm{filename};
-    DBM::OrderManager dbom{dbcm,dbpm,filename};
-
-    for(const auto& c : mgrs.getCM()){
-        dbcm.addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
+    QString file_name = QFileDialog::getSaveFileName(this);
+   // std::ofstream out(file_name.toStdString());
+    if(file_name.size()==0){
+        //return;
     }
 
-    for(const auto& p : mgrs.getPM()){
-        dbpm.addProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
-    }
+    QDialog* dialog = new QDialog(this);
+    dialog->setModal(true);
 
-    for(const auto& o : mgrs.getOM()){
-        std::vector<OrderModel::bill> bills;
-        for(const auto& ordered_product : o.getProducts()){
-            bills.emplace_back(ordered_product.product.getId(),ordered_product.qty);
+    QListWidget* list = new QListWidget(dialog);
+    list->addItem("a");
+    list->addItem("b");
+    QPushButton* accept = new QPushButton("OK",dialog);
+    QVBoxLayout* v_layout = new QVBoxLayout;
+    v_layout->addWidget(list);
+    v_layout->addWidget(accept);
+
+    dialog->setLayout(v_layout);
+    connect(accept,SIGNAL(clicked()),dialog,SLOT(accept()));
+    dialog->exec();
+
+
+
+qDebug()<<"ee"<<file_name<<list->currentItem()->text();
+return;
+
+QString mode = list->currentItem()->text();
+if(mode=="db"){
+    try{
+        DBM::ClientManager save_client{"save_client",file_name};
+        for(const auto& c : mgrs.getCM()){
+            bool re = save_client.addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
+            if(!re)
+                throw -1;
         }
-        dbom.addOrder(o.getClient().getId(),bills);
+        DBM::ProductManager save_product{"save_product",file_name};
+        for(const auto& p : mgrs.getPM()){
+            save_product.addProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
+        }
+        DBM::OrderManager save_order{mgrs.getCM(),mgrs.getPM(),"save_order",file_name};
+        for(const auto& o : mgrs.getOM()){
+            std::vector<OrderModel::bill> bills;
+            for(const auto& ordered_product : o.getProducts()){
+                bills.emplace_back(ordered_product.product.getId(),ordered_product.qty);
+            }
+            save_order.addOrder(o.getClient().getId(),bills);
+        }
     }
+    catch(...){
 
+    }
+}
+else if(mode=="CSV"){
+    QDialog* dialog = new QDialog(this);
+    dialog->setModal(true);
+
+    QListWidget* list = new QListWidget(dialog);
+    list->addItem("client");
+    list->addItem("product");
+    list->addItem("order");
+    QPushButton* accept = new QPushButton("OK",dialog);
+    QVBoxLayout* v_layout = new QVBoxLayout;
+    v_layout->addWidget(list);
+    v_layout->addWidget(accept);
+
+    dialog->setLayout(v_layout);
+    connect(accept,SIGNAL(clicked()),dialog,SLOT(accept()));
+    dialog->exec();
+
+    switch(list->currentIndex().row()){
+    case 0://client CSV로 export
+
+
+
+        break;
+    };
+}
+
+
+
+
+delete dialog;
 }
 void MainWindow::load(){                                                        //CSV 포맷으로 저장된 파일을 불러오는 함수로 QAction과 연결되어 있다
     if(is_dirty){

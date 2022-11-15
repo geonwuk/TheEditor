@@ -23,8 +23,8 @@ namespace CM {
         bool eraseClient(const CID id)override;
         const Client findClient(const CID id) const override;
         Client copyClient(const CID) const override;
-		std::ofstream& saveClients(std::ofstream& out) const;								                 
-        std::ifstream& loadClients(std::ifstream& in, const unsigned int lines);
+
+        void loadClients(QString file_name) noexcept(false) override;
 
         unsigned int getSize() const override;
 	private:
@@ -60,10 +60,10 @@ namespace CM {
             Itr_type ptr;
         };
     public:
-        IteratorPTR<CM::Client> begin() override {
+        IteratorPTR<CM::Client> begin() const override {
             return IteratorPTR<CM::Client>(new CIterator{clients.begin()});
         }
-        IteratorPTR<CM::Client> end() override {
+        IteratorPTR<CM::Client> end() const override {
             return IteratorPTR<CM::Client>(new CIterator{clients.end()});
         }
     };

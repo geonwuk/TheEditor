@@ -6,7 +6,7 @@
 #include <ctime>
 #include <random>
 #include <functional>
-
+#include "DB/db_clientmanager.h"
 using namespace std;
 using namespace CM;
 unsigned int ClientManager::client_id = 0; 
@@ -60,41 +60,45 @@ ofstream& CM::operator<<(std::ofstream& out, const Client& c){
 
 
 
-ofstream& ClientManager::saveClients(ofstream& out) const{
-	for (const auto& c : clients) {
-        out << *c.second.get()<<',' << endl;
-	}
-	return out;
-}
+//void ClientManager::saveClients(QString file_name, const ClientModel& data_owner) const noexcept(false) {
+////	for (const auto& c : clients) {
+////        out << *c.second.get()<<',' << endl;
+////	}
+////	return out;
+//}
 
-std::ifstream& ClientManager::loadClients(std::ifstream& in, const unsigned int lines) {
-    unsigned int line =0;
-    try{
-        string str;
-        while (line++<lines && getline(in, str)) {
-            vector<string> tmp;
-            auto beg = str.find_first_not_of(',');
-            while (beg != string::npos) {
-                auto endIdx = str.find_first_of(',', beg);
-                if (endIdx == string::npos) {
-                    endIdx = str.length();
-                }
-                tmp.emplace_back(str.substr(beg, endIdx - beg));
-                beg = str.find_first_not_of(',', endIdx);
-            }
-            string address = tmp.at(3);
-            string phone_number = tmp.at(2);
-            string name = tmp.at(1);
-            string id = tmp.at(0);
-            addClient(id, name, phone_number, address);
-        }
-        return in;
-    }
-    catch(...){
-        throw ERROR_WHILE_LOADING{line};
-    }
+void ClientManager::loadClients(QString file_name){
 
 }
+
+//std::ifstream& ClientManager::loadClients(std::ifstream& in, const unsigned int lines) {
+//    unsigned int line =0;
+//    try{
+//        string str;
+//        while (line++<lines && getline(in, str)) {
+//            vector<string> tmp;
+//            auto beg = str.find_first_not_of(',');
+//            while (beg != string::npos) {
+//                auto endIdx = str.find_first_of(',', beg);
+//                if (endIdx == string::npos) {
+//                    endIdx = str.length();
+//                }
+//                tmp.emplace_back(str.substr(beg, endIdx - beg));
+//                beg = str.find_first_not_of(',', endIdx);
+//            }
+//            string address = tmp.at(3);
+//            string phone_number = tmp.at(2);
+//            string name = tmp.at(1);
+//            string id = tmp.at(0);
+//            addClient(id, name, phone_number, address);
+//        }
+//        return in;
+//    }
+//    catch(...){
+//        throw ERROR_WHILE_LOADING{line};
+//    }
+
+//}
 
 unsigned int ClientManager::getSize() const{
     return clients.size();

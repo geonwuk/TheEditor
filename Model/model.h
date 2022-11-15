@@ -30,9 +30,10 @@ public:
     virtual bool addClient(std::string, std::string, std::string, std::string) = 0;
     virtual bool modifyClient(const CM::CID, const CM::Client) = 0;
     virtual bool eraseClient(const CM::CID) = 0;
-    virtual CM::Client copyClient(const CM::CID) const =0;
-    virtual IteratorPTR<CM::Client> begin()=0;
-    virtual IteratorPTR<CM::Client> end()=0;
+    virtual CM::Client copyClient(const CM::CID) const = 0;
+    virtual void loadClients(QString file_name) noexcept(false) = 0;
+    virtual IteratorPTR<CM::Client> begin() const = 0;
+    virtual IteratorPTR<CM::Client> end() const = 0;
 };
 
 class ProductModel{

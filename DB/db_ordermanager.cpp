@@ -17,12 +17,12 @@ void OrderManager::createTable(QString file_name){
         throw -1;
 }
 
-OrderManager::OrderManager(ClientModel& cm, ProductModel& pm, QString file_name) : DBManager{file_name}, cm{cm}, pm{pm} {
+OrderManager::OrderManager(ClientModel& cm, ProductModel& pm, QString connection_name, QString file_name) : DBManager{connection_name, file_name}, cm{cm}, pm{pm} {
     createTable(":/DB/Queries/createOrderListTable.txt");
     createTable(":/DB/Queries/createOrderedProductTable.txt");
 }
 
-OrderManager::OrderManager(ClientModel& cm, ProductModel& pm) : DBManager(), cm{cm}, pm{pm}{
+OrderManager::OrderManager(ClientModel& cm, ProductModel& pm, QString connection_name) : DBManager(connection_name), cm{cm}, pm{pm}{
     createTable(":/DB/Queries/createOrderListTable.txt");
     createTable(":/DB/Queries/createOrderedProductTable.txt");
 
