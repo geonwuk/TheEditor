@@ -28,7 +28,6 @@ namespace PM {
         bool eraseProduct(const PID id) override;
         const Product findProduct(const PID id) const override;
         bool buyProduct(const PID id, const unsigned int qty) override;
-		ofstream& saveProducts(ofstream&) const;
         ifstream& loadProducts(ifstream&, unsigned int);
         const unsigned int getSize() const override;
     private:

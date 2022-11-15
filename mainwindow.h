@@ -23,58 +23,55 @@ class View;
 class Tree;
 class QStackedWidget;
 class Manager {
+    friend class MainWindow;
 public:
-    Manager(MainWindow& mw) : mw{mw} {}
-
+    Manager(MainWindow& mw) : mw{mw} {
+        cm = new DBM::ClientManager{"client"};
+        pm = new DBM::ProductManager{"product"};
+        om = new DBM::OrderManager{*cm,*pm,"orders"};
+    }
     template<typename F>
     void notify(F notify_){
         for (auto o : observers) {
             notify_(o);
         }
     }
-
     void updateAll();
-
     ClientModel& getCM(){
-        return cm2;
+        return *cm;
     }
     ProductModel& getPM(){
-        return pm2;
+        return *pm;
     }
     OrderModel& getOM(){
-        return om3;
+        return *om;
     }
     ServerManager& getSM(){
         return sm;
     }
-
     void attachObserver(View* o);
-    void detachObserver(View* o){
-        observers.remove(o);
-    }
+    void detachObserver(View* o);
+    void changeToDB();
+    void changeToMemory();
+    void reset();
+
 private:
     std::list<View*> observers;
     MainWindow& mw;
-    CM::ClientManager cm;
-    DBM::ClientManager cm2{"cleint"};
-
-    PM::ProductManager pm;
-    DBM::ProductManager pm2{"product"};
-        DBM::OrderManager om3{cm2,pm2,"orders"};
-    OM::OrderManager om{cm,pm};
-
+    ClientModel* cm;
+    ProductModel* pm;
+    OrderModel* om;
     ServerManager sm{*this};
 };
 
 class MainWindow : public QMainWindow
 {
+    friend class Manager;
     Q_OBJECT
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     Manager* getMgr(){return &mgrs;}
-    bool is_dirty=false;
-
 private slots:
     void save();
     void load();

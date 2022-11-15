@@ -50,6 +50,10 @@ public:
         column_names.removeFirst();//ID 칼럼 삭제
 
     }
+    ~DBManager(){
+        db.close();
+    }
+
     QSqlQuery getSize() const{
         return QSqlQuery{QString("select count(id) from ")+QString(table_name),db};
     }

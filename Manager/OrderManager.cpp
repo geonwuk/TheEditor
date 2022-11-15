@@ -72,22 +72,19 @@ const Order OrderManager::findOrder(const Order_ID order_id) const {
 }
 static std::ofstream& operator<< (std::ofstream& out, tm p) {
     out << std::put_time(&p, "%D %T");
-	return out;
+    return out;
 }
 
 
-std::ofstream& OM::OrderManager::saveOrders(std::ofstream& out) const
+std::ofstream& OM::operator<<(std::ofstream& out, const Order& order)
 {
-    for (const auto& o : orders) {
-        const Order& order = o.second;
-        out << order.getID() << ',';
-        out << order.getClient().getId() << ',';
-        out << order.getDate()<<',';
-        out << order.getProducts().size()<<','<<endl;
-        for(const auto& product_info : order.getProducts()){
-            out<<product_info.product<<','<<product_info.qty<<','<<endl;
-        }
-	}
+    out << order.getID() << ',';
+    out << order.getClient().getId() << ',';
+    out << order.getDate()<<',';
+    out << order.getProducts().size()<<','<<endl;
+    for(const auto& product_info : order.getProducts()){
+        out<<product_info.product<<','<<product_info.qty;
+    }
 	return out;
 }
 static vector<string> split(const string& str){

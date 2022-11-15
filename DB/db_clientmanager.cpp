@@ -12,7 +12,6 @@ using namespace DBM;
 using std::string;
 //QSqlDatabase ClientManager::db {};
 
-
 unsigned int ClientManager::getSize() const{
     auto query = DBManager::getSize();
     query.exec();

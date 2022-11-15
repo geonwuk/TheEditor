@@ -94,7 +94,7 @@ public:
     Order(){}
     const Order_ID getID() const {return order_id;}
     const Client& getClient() const {return client;}
-    const std::tm getDate() const {return date;}
+    std::tm getDate() const {return date;}
     vector<OrderedProduct> getProducts() const;
 };
 

@@ -30,7 +30,7 @@ std::ofstream& operator<< (std::ofstream& out, tm p) {
 
 std::ofstream& PM::operator<<(std::ofstream& out, const Product& p){
 	out << p.getId() << ',' << p.getName() << ',' << p.getPrice() << ',' << p.getQty()<<',';
-    out << p.getDate()<<',';
+    out << p.getDate();
 	return out;
 }
 
@@ -99,14 +99,6 @@ const Product ProductManager::findProduct(const PID id) const{
     else {
         return it->second;
     }
-}
-
-
-ofstream& PM::ProductManager::saveProducts(ofstream& out) const{
-	for (const auto& p : products) {
-        out << p.second << endl;
-	}
-	return out;
 }
 
 std::ifstream& PM::ProductManager::loadProducts(ifstream& in, const unsigned int lines){

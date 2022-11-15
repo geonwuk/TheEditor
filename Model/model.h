@@ -25,6 +25,7 @@ struct IteratorPTR : private std::unique_ptr<ITR>{
 };
 class ClientModel{
 public:
+    virtual ~ClientModel(){}
     virtual unsigned int getSize() const = 0;
     virtual const CM::Client findClient(const CM::CID) const =0;
     virtual bool addClient(std::string, std::string, std::string, std::string) = 0;
@@ -38,6 +39,7 @@ public:
 
 class ProductModel{
 public:
+    virtual ~ProductModel(){}
     virtual bool addProduct(const std::string name, const unsigned int price, const unsigned int qty)=0;
     virtual bool modifyProduct(const PM::PID id, const PM::Product new_product)=0;
     virtual bool eraseProduct(const PM::PID id)=0;
@@ -56,7 +58,7 @@ public:
         unsigned int qty;
         bill(PM::PID id,unsigned int qty):id{id},qty{qty}{}
     };
-
+    virtual ~OrderModel(){}
     virtual std::pair<const OM::Order_ID, bool> addOrder(const CM::CID client_id, std::vector<bill>)=0;
     virtual const OM::Order findOrder(const OM::Order_ID order_id) const=0;
     virtual const size_t getSize() const =0;

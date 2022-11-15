@@ -79,95 +79,120 @@ void MainWindow::onRadioButtonDBClicked(){
 void MainWindow::onRadioButtonMemoryClicked(){
 
 }
+
+static int createListDialog(QWidget* parent, QStringList ls){
+    QDialog* dialog = new QDialog(parent);
+    dialog->setModal(true);
+    QListWidget* list = new QListWidget(dialog);
+    for(auto e : ls){
+        list->addItem(e);
+    }
+    QPushButton* ok= new QPushButton("OK",dialog);
+    QPushButton* cancel = new QPushButton("cancel",dialog);
+    QVBoxLayout* v_layout = new QVBoxLayout;
+    v_layout->addWidget(list);
+    v_layout->addWidget(ok);
+    v_layout->addWidget(cancel);
+    dialog->setLayout(v_layout);
+    QObject::connect(ok,SIGNAL(clicked()),dialog,SLOT(accept()));
+    QObject::connect(cancel,SIGNAL(clicked()),dialog,SLOT(rejected()));
+    dialog->exec();
+    int result = list->currentIndex().row();
+    delete dialog;
+    return result;
+}
+
 void MainWindow::save(){                                                //파일을 sqlite DB로 저장하는 함수로 QAction과 연결되어 있다
     QString file_name = QFileDialog::getSaveFileName(this);
-   // std::ofstream out(file_name.toStdString());
     if(file_name.size()==0){
-        //return;
+        return;
     }
+    int mode = createListDialog(this,{"DB","CSV"});
 
-    QDialog* dialog = new QDialog(this);
-    dialog->setModal(true);
-
-    QListWidget* list = new QListWidget(dialog);
-    list->addItem("a");
-    list->addItem("b");
-    QPushButton* accept = new QPushButton("OK",dialog);
-    QVBoxLayout* v_layout = new QVBoxLayout;
-    v_layout->addWidget(list);
-    v_layout->addWidget(accept);
-
-    dialog->setLayout(v_layout);
-    connect(accept,SIGNAL(clicked()),dialog,SLOT(accept()));
-    dialog->exec();
-
-
-
-qDebug()<<"ee"<<file_name<<list->currentItem()->text();
-return;
-
-QString mode = list->currentItem()->text();
-if(mode=="db"){
-    try{
-        DBM::ClientManager save_client{"save_client",file_name};
-        for(const auto& c : mgrs.getCM()){
-            bool re = save_client.addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
-            if(!re)
-                throw -1;
-        }
-        DBM::ProductManager save_product{"save_product",file_name};
-        for(const auto& p : mgrs.getPM()){
-            save_product.addProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
-        }
-        DBM::OrderManager save_order{mgrs.getCM(),mgrs.getPM(),"save_order",file_name};
-        for(const auto& o : mgrs.getOM()){
-            std::vector<OrderModel::bill> bills;
-            for(const auto& ordered_product : o.getProducts()){
-                bills.emplace_back(ordered_product.product.getId(),ordered_product.qty);
+    qDebug()<<"ee"<<file_name<<mode;
+    if(mode==0){ //DB
+        try{
+            DBM::ClientManager save_client{"save_client",file_name};
+            for(const auto& c : mgrs.getCM()){
+                bool re = save_client.addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
+                if(!re)
+                    throw -1;
             }
-            save_order.addOrder(o.getClient().getId(),bills);
+            DBM::ProductManager save_product{"save_product",file_name};
+            for(const auto& p : mgrs.getPM()){
+                save_product.addProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
+            }
+            DBM::OrderManager save_order{mgrs.getCM(),mgrs.getPM(),"save_order",file_name};
+            for(const auto& o : mgrs.getOM()){
+                std::vector<OrderModel::bill> bills;
+                for(const auto& ordered_product : o.getProducts()){
+                    bills.emplace_back(ordered_product.product.getId(),ordered_product.qty);
+                }
+                save_order.addOrder(o.getClient().getId(),bills);
+            }
+        }
+        catch(...){
+
         }
     }
-    catch(...){
+    else if(mode==1){ //CSV
+        try{
+            std::ofstream out(file_name.toStdString());
+            int mode = createListDialog(this,{"client","product","order"});
+            switch(mode){
+            case 0://client CSV로 export
+                out<<"client id,"<<"name,"<<"phone number,"<<"address"<<','<<endl;
+                for (const auto& c : mgrs.getCM()) {
+                    out << c <<',' << endl;
+                }
+                break;
+            case 1://product CSV로 export
+                out<<"product id,"<<"name,"<<"qty,"<<"date"<<','<<endl;
+                for (const auto& p : mgrs.getPM()){
+                    out << p <<',' << endl;
+                }
+                break;
+            case 2://order CSV로 export
+                out<<"order id,"<<"buyer,"<<"date,"<<"product id,"<<"product name,"<<"product qty"<<"product date,"<<endl;
+                for (const auto& o : mgrs.getOM()){
+                    out << o <<',' << endl;
+                }
+                break;
+            default://있을 수 없는 경우
+                assert(false);
+                break;
+            };
+        }
+        catch(...){
+
+        }
 
     }
+
+
+
+
 }
-else if(mode=="CSV"){
-    QDialog* dialog = new QDialog(this);
-    dialog->setModal(true);
+void MainWindow::load(){
+    //저장된 파일을 불러오는 함수로 QAction과 연결되어 있다
+    QString file_name = QFileDialog::getSaveFileName(this);
+    if(file_name.size()==0){
+        return;
+    }
+    int mode = createListDialog(this,{"DB","CSV"});
 
-    QListWidget* list = new QListWidget(dialog);
-    list->addItem("client");
-    list->addItem("product");
-    list->addItem("order");
-    QPushButton* accept = new QPushButton("OK",dialog);
-    QVBoxLayout* v_layout = new QVBoxLayout;
-    v_layout->addWidget(list);
-    v_layout->addWidget(accept);
-
-    dialog->setLayout(v_layout);
-    connect(accept,SIGNAL(clicked()),dialog,SLOT(accept()));
-    dialog->exec();
-
-    switch(list->currentIndex().row()){
-    case 0://client CSV로 export
-
-
-
+    switch(mode){
+    case 0://DB로부터 데이터 로드
+        mgrs.getCM().loadClients(file_name);
         break;
-    };
-}
+    case 1://CSV로부터 데이터 로드
 
-
-
-
-delete dialog;
-}
-void MainWindow::load(){                                                        //CSV 포맷으로 저장된 파일을 불러오는 함수로 QAction과 연결되어 있다
-    if(is_dirty){
-
-
+    default:
+        assert(false);
+        break;
     }
+
+
     try {                                                                       //try-catch를 써서 로딩 중에 프로그램이 죽지 않고 로딩 실패가 되도록 로직코드를 감싸준다
         QString filename = QFileDialog::getOpenFileName(this);
         ifstream in(filename.toStdString());
@@ -192,6 +217,34 @@ MainWindow::~MainWindow()
 
 void Manager::attachObserver(View* o){
     observers.emplace_back(o);
+}
+void Manager::detachObserver(View* o){
+    observers.remove(o);
+}
+void Manager::reset(){
+    if(mw.dash_board->radioButtonDB->isChecked()){
+        changeToDB();
+    }
+    else{
+        changeToMemory();
+    }
+}
+
+void Manager::changeToDB(){
+    delete cm;
+    delete pm;
+    delete om;
+    cm = new DBM::ClientManager{"client"};
+    pm = new DBM::ProductManager{"product"};
+    om = new DBM::OrderManager{*cm,*pm,"orders"};
+}
+void Manager::changeToMemory(){
+    delete cm;
+    delete pm;
+    delete om;
+    cm = new CM::ClientManager;
+    pm = new PM::ProductManager;
+    om = new OM::OrderManager{*cm,*pm};
 }
 
 static const unsigned int parseTitle(ifstream& in, const string title, const unsigned int line ){
