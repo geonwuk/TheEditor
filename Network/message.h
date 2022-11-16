@@ -35,7 +35,7 @@ private:
 
 class QProgressDialog;
 class QFile;
-class FileMessage{                                                                  //
+class FileMessage{      //파일 전송할 시 보내는 메시지
 public:
     FileMessage(QFile*, QProgressDialog* progress_dialog, QString sender_name);
     operator const QByteArray() const;

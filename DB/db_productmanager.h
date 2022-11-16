@@ -13,7 +13,7 @@ public:
     ProductManager(QString connection_name):DBManager{connection_name} {}
     ProductManager(QString connection_name, QString file_name):DBManager{connection_name, file_name} {}
     bool addProduct(const std::string name, const unsigned int price, const unsigned int qty) override;
-    bool addProduct(const std::string id, const std::string name, const unsigned int price, const unsigned int qty, std::tm);
+    bool loadProduct(const std::string id, const std::string name, const unsigned int price, const unsigned int qty, std::tm) noexcept(false) override;
     bool modifyProduct(const PM::PID id, const PM::Product new_product) override;
     bool eraseProduct(const PM::PID id) override;
     const PM::Product findProduct(const PM::PID id) const override;

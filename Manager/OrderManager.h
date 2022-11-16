@@ -21,8 +21,7 @@ namespace OM {
 
     class OrderManager : public OrderModel{
 	public:
-        OrderManager(ClientModel& cm, ProductModel& pm) :cm{ cm }, pm{ pm }{}
-        ;									
+        OrderManager(ClientModel& cm, ProductModel& pm) :cm{ cm }, pm{ pm }{}	
         std::ifstream& loadOrders(std::ifstream&, unsigned int lines);
         std::pair<const Order_ID, bool> addOrder(const Client_ID client_id, vector<bill>) override;
         const Order findOrder(const Order_ID order_id) const override;
@@ -32,8 +31,8 @@ namespace OM {
 
 	private:
         std::pair<const Order_ID, bool> addOrder(const Order_ID oid, const Client_ID client_id, vector<bill>, tm time);
-        bool loadOrder(const Order_ID oid, const Client_ID client_id,  vector<Product> products, vector<unsigned int> qty, tm time);
-		unsigned int order_id = 0;								
+        bool loadOrder(const Order_ID oid, const Client_ID client_id,  vector<Product> products, vector<unsigned int> qty, tm time) override;
+        unsigned int order_id = 1;
         std::map<Order_ID, Order> orders;
         const ClientModel& cm;
         ProductModel& pm;

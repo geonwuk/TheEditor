@@ -17,14 +17,14 @@ public:
 
 private:
     void fillContents();
-    bool is_edit_mode =false;
+    bool is_edit_mode =false;       //읽기 수정 모드 설정 변수
     Ui::showClient ui{};
     QTableWidget* table;
     QCheckBox* editBox;
     QLineEdit* searchLineEdit;
     bool eraseClient(int row);
     const int id_col=0;
-    QShortcut* shortcut;
+    QShortcut* shortcut;            //delete키를 누르면 그행이 삭제되는 단축키
 
 private slots:
     void cellChanged(int,int);
@@ -44,11 +44,12 @@ private:
     UI_PRODUCT ui {};
     QTableWidget* table;
     QCheckBox* editBox;
-    bool is_edit_mode =false;
+    bool is_edit_mode =false;       //읽기 수정 모드 설정 변수
     QLineEdit* searchLineEdit;
     bool eraseProduct(int row);
     void fillContents();
     const int id_col=0;
+    QShortcut* shortcut;            //delete키를 누르면 그행이 삭제되는 단축키
 private slots:
     void cellChanged(int,int);
     void returnPressed();

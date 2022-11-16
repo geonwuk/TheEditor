@@ -14,17 +14,17 @@ void ServerManager::addClient(const Client& c)
 }
 
 void ServerManager::login(const QTcpSocket* const socket, const QString& id){
-    auto nc_itr = net_clients.find(id.toStdString());
-    if(nc_itr==net_clients.end()){
-        server->sendMessage(socket,Message{"NO_ID",Chat_Login});
+    auto nc_itr = net_clients.find(id.toStdString());                               //로그인할 id로 고객 정보를 찾습니다
+    if(nc_itr==net_clients.end()){                                                  //만약 addChatView에서 고객을 채팅 참여자로 설정하지 않았다면 net_clients에 추가가 안되었다는 의미입니다
+        server->sendMessage(socket,Message{"NO_ID",Chat_Login});                    //로그인을 시도한 클라이언트에게 해당 ID로는 채팅에 참여할 수 없다고 메시지를 보냅니다
         return;
     }
-    auto nc = nc_itr->second;
+    auto nc = nc_itr->second;       //map에서 net_client를 찾습니다
     nc.is_online=true;
     nc.socket=socket;
     socket_to_nclient.insert(socket, &nc);
-    notify();       //chat_view만 업데이트
-    server->sendMessage(socket,Message{"SUCCESS",Chat_Login});
+    notify();                                                           //chat_view만 업데이트
+    server->sendMessage(socket,Message{"SUCCESS",Chat_Login});          //로그인 성공 메시지를 클라이언트에게 보냅니다
 }
 
 void ServerManager::logOut(const QTcpSocket* const socket){
@@ -43,19 +43,18 @@ void ServerManager::logOut(const QTcpSocket* const socket){
 }
 
 void ServerManager::dropClient(QString id){
-    auto it = net_clients.find(id.toStdString());
-    assert(it!=net_clients.end());
+    auto it = net_clients.find(id.toStdString());                   //채팅방 참여자의 id로 고객정보를 찾습니다
+    assert(it!=net_clients.end());                                  //채팅방 참여자에서 drop을한다는 것은 이미 net_clients에 id가 있도록 GUI를 구성했으므로 못 찾는 경우는 코드 오류입니다
     auto socket = it->second.socket;
-    //온라인이면 메시지 보내고
-    if(it->second.isOnline()){
-        server->sendMessage(socket, Message{"",Chat_KickOut});
+    if(it->second.isOnline()){                                      //온라인이면 메시지 보내기
+        server->sendMessage(socket, Message{"",Chat_KickOut});      //강퇴 됐다는 메시지 보내기
     }
     else{
        // 오프라인이면
     }
-    socket_to_nclient.remove(socket);
-    net_clients.erase(it);
-    notify();
+    socket_to_nclient.remove(socket);                               //강퇴한 클라이언트와 소통하던 소켓을 삭제한다
+    net_clients.erase(it);                                          //강퇴한 클라이언트 정보를 삭제하고 채팅 참여자 리스트에서 제외시킨다
+    notify();                                                       //
 }
 
 void ServerManager::chatTalk(const QTcpSocket * const socket, const QByteArray& data){

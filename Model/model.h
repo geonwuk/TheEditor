@@ -32,7 +32,6 @@ public:
     virtual bool modifyClient(const CM::CID, const CM::Client) = 0;
     virtual bool eraseClient(const CM::CID) = 0;
     virtual CM::Client copyClient(const CM::CID) const = 0;
-    virtual void loadClients(QString file_name) noexcept(false) = 0;
     virtual IteratorPTR<CM::Client> begin() const = 0;
     virtual IteratorPTR<CM::Client> end() const = 0;
 };
@@ -41,6 +40,7 @@ class ProductModel{
 public:
     virtual ~ProductModel(){}
     virtual bool addProduct(const std::string name, const unsigned int price, const unsigned int qty)=0;
+    virtual bool loadProduct(const std::string id, const std::string name, const unsigned int price, const unsigned int qty, std::tm) noexcept(false) =0 ;
     virtual bool modifyProduct(const PM::PID id, const PM::Product new_product)=0;
     virtual bool eraseProduct(const PM::PID id)=0;
     virtual const PM::Product findProduct(const PM::PID id) const=0;
@@ -60,6 +60,7 @@ public:
     };
     virtual ~OrderModel(){}
     virtual std::pair<const OM::Order_ID, bool> addOrder(const CM::CID client_id, std::vector<bill>)=0;
+    virtual bool loadOrder(const OM::Order_ID oid, const CM::CID client_id, std::vector<PM::Product> products, std::vector<unsigned int> qty, tm time) noexcept(false) =0;
     virtual const OM::Order findOrder(const OM::Order_ID order_id) const=0;
     virtual const size_t getSize() const =0;
     virtual IteratorPTR<OM::Order> begin()=0;

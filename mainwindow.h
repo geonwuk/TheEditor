@@ -75,8 +75,7 @@ public:
 private slots:
     void save();
     void load();
-    void onRadioButtonDBClicked();
-    void onRadioButtonMemoryClicked();
+    void onGroupBoxToggled();
 
 private:
     Ui::MainWindow *ui;

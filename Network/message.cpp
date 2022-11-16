@@ -44,7 +44,7 @@ FileMessage::FileMessage(QFile* file, QProgressDialog* progress_dialog, QString 
     qint64 bytes_read=0;
     file_size = file->size();
     if(file_size==0)
-        throw -1;
+        throw -1;                                   //Todo: -1 대신 클래스를 던지도록 수정
 
     QDataStream stream (&data, QIODevice::WriteOnly);
     QFileInfo file_info{file->fileName()};
@@ -53,25 +53,25 @@ FileMessage::FileMessage(QFile* file, QProgressDialog* progress_dialog, QString 
 
     quint64 data_size = sizeof(char)+file_size+file_name.size()+sender_name_.size()+2;
     stream<<data_size;
-    stream<<static_cast<char>(Chat_FileTransmission);
+    stream<<static_cast<char>(Chat_FileTransmission);   //네트워크 포맷에서 char만큼 사용하도록 안전하게 static_cast
     for(auto e : file_name){                        //파일 이름 추가
-        stream<<e;
+        stream<<e;                                  //파일 이름의 char모음에서 char 한개씩 스트림에 추가
     }
     stream<<'\0';                                   //null문자 삽입
     for(auto e : sender_name_){                     //보낸 ID 추가
-        stream<<e;
+        stream<<e;                                  //ID의 char모음에서 char 한개씩 스트림에 추가
     }
     stream<<'\0';                                   //null문자 삽입
 
     while(bytes_read<file_size){
         progress_dialog->setValue(10);              //progress_dialog의 50%는 파일을 읽을 떄, 나머지 50%는 서버에 업로드할 때 갱신
-        auto data_read = file->read(file_size);     //Todo: 파일이 읽힌느 도중에 progress_dialog가 에상 외로 바뀌지 않음 (수정 필요)
-        data.append(data_read);
+        auto data_read = file->read(file_size);     //파일로부터 데이터를 읽는다
+        data.append(data_read);                     //읽은 데이터를 추가한다
         if(data_read.size()==0){                    //파일 읽기 중 오류가 나면 예외 처리
-            throw -1;
+            throw -1;                               //Todo: 클래스를 던지도록 수정
         }
-        bytes_read += data_read.size();             //읽으 데이터 값에 추가
-        progress_dialog->setValue(bytes_read);
+        bytes_read += data_read.size();             //로딩 바의 값에 읽은 데이터 바이트 만큼 추가한다
+        progress_dialog->setValue(bytes_read);      //로딩 바 업데이트
     }
 }
 

@@ -21,16 +21,15 @@ public:
     void removeFromTree();
 protected:
     View(Manager& mgr, Tree& tree, const QIcon& icon=QPixmap(), const QString label=QString());
-    bool is_update=false;
+    bool is_update=false;                               //현재 쓰지않지만 나중을 위해 만들어놓은 변수
     Manager& mgr;
     template<typename T>
     void notify(){
         mgr.notify([=](View* o){
            T* self;
-           if((self=dynamic_cast<T*>(o))!=nullptr){
-               if(self!=(T*)(this))
-                   o->update();
-                //qDebug()<<o->label <<"notify";
+           if((self=dynamic_cast<T*>(o))!=nullptr){     //만약 옵저버가 같은 타입의 뷰라면 업데이트를 실행한다
+               if(self!=(T*)(this))                     //만약 옵저버가 자기 자신이라면 자기 자신에 대해서는 업데이트를 하지 않는다
+                   o->update();                         //업데이트
            }
         });
     }
@@ -39,23 +38,17 @@ protected:
     enum Role {id = Qt::UserRole};
     QTableWidgetItem* ceateTableItem(const QString id, QString title);
 private:
-    Tree& tree;
-    FocusTabItem* tab=nullptr;
+    Tree& tree;                 //화면 왼쪽에 있는 트리
+    FocusTabItem* tab=nullptr;  //화면 왼쪽에 있는 트리에서 Tabs항목에서 현재 뷰에 대한 Tabs 아이템
 
 };
 
 class CView : public View {
 public:
     CView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString()) : View{mgr, tabs, icon,label} {}
-    void addClient(const QString ID, const QString name, const QString phone_number = "NONE", const QString address = "NONE") {
-        mgr.getCM().addClient(ID.toStdString(), name.toStdString(),phone_number.toStdString(),address.toStdString());
-        notify<CView>();
-        notify<OView>();
-        notify<NView>();
-    }
+    void addClient(const QString ID, const QString name, const QString phone_number = "NONE", const QString address = "NONE");
     bool eraseClient(const QString id);
     bool modifyClient(const QString id, const QList<QString> client_info);
-
     const CM::Client findClient(const CM::CID id) const{
         return mgr.getCM().findClient(id);
     }
@@ -81,7 +74,7 @@ public:
     std::pair<const unsigned int, bool> addOrder(const QString client_id, std::vector<OM::OrderManager::bill>);
     const size_t getSize() const;
 protected:
-    static bool is_order_moified;
+   // static bool is_order_moified;
 };
 
 class NView : public View {

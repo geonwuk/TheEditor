@@ -11,7 +11,7 @@ using namespace OM;
 using namespace PM;
 
 std::pair<const Order_ID, bool> OrderManager::addOrder(const Client_ID client_id, vector<bill> products){
-    time_t base_time = time(nullptr);
+    time_t base_time = time(nullptr);                               //주문 ID는 숫자이며 1부터 시작해서 1씩 증가합니다
     tm local_time;
     localtime_s(&local_time, &base_time);
     return addOrder(order_id, client_id, products, local_time);
@@ -24,11 +24,11 @@ std::pair<const Order_ID, bool> OrderManager::addOrder(const Order_ID oid, const
     Order order;
     order.date = time;
 
-    for (const auto &product : products) {
-        Product found = pm.findProduct(product.id);
+    for (const auto &product : products) {              //vector<bill> 주문서에 있는 구매하고자 하는 상품 목록을 모두 검사합니다.
+        Product found = pm.findProduct(product.id);     //bill 주문서에 있는 상품을 찾습니다
         if (found == no_product)
-            return { oid, false };
-        if (found.getQty()<product.qty)
+            return { oid, false };                      //만약의 경우에 상품을 못 찾는 경우 거짓을 리턴합니다
+        if (found.getQty()<product.qty)                 //상품 재고량 보다 구매하고자 하는 개수가 많은 경우 구매할 수 없습니다
             return { oid, false };
     }
     int i=0;
@@ -152,15 +152,13 @@ std::ifstream& OM::OrderManager::loadOrders(ifstream& in, unsigned int lines)
 
 
 IteratorPTR<OM::Order> OrderManager::begin(){
-    return IteratorPTR<Order>(new OIterator{orders.begin()});
+    return IteratorPTR<Order>(new OIterator{orders.begin()});       //map의 begin을 IteratorPTR에 감쌉니다.
 }
 IteratorPTR<OM::Order> OrderManager::end(){
-     return IteratorPTR<Order>(new OIterator{orders.end()});
+     return IteratorPTR<Order>(new OIterator{orders.end()});        //map의 end를 IteratorPTR에 감쌉니다.
 }
-
-
 const Order OrderManager::OIterator::operator*() const {
-    return ptr->second;
+    return ptr->second;                                             //
 }
 void OrderManager::OIterator::operator++(){
     ++ptr;

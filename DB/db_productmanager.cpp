@@ -27,10 +27,10 @@ bool ProductManager::addProduct(const std::string name, const unsigned int price
     tm local_time;
     localtime_s(&local_time, &base_time);
     string id = generateRandID(local_time);
-    return addProduct(id,name,price,qty,local_time);
+    return ProductManager::loadProduct(id,name,price,qty,local_time);
 }
 
-bool ProductManager::addProduct(const std::string id, const std::string name, const unsigned int price, const unsigned int qty, std::tm time){
+bool ProductManager::loadProduct(const std::string id, const std::string name, const unsigned int price, const unsigned int qty, std::tm time){
     ostringstream ss;
     ss<<put_time(&time, "%D %T");
     auto query = add(id.c_str(), name.c_str(), price, qty, ss.str().c_str());

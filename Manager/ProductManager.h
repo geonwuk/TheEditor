@@ -23,7 +23,7 @@ namespace PM {
     class ProductManager : public ProductModel{
 	public:
         bool addProduct(const string name, const unsigned int price, const unsigned int qty) override;
-        bool addProduct(const string id, const string name, const unsigned int price, const unsigned int qty, std::tm);
+        bool loadProduct(const string id, const string name, const unsigned int price, const unsigned int qty, std::tm) override;
         bool modifyProduct(const PID id, const Product new_product) override;
         bool eraseProduct(const PID id) override;
         const Product findProduct(const PID id) const override;

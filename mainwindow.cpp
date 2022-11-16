@@ -13,6 +13,7 @@
 #include <QDialog>
 #include <QPushButton>
 #include <QListWidget>
+#include<QMessageBox>
 using namespace std;
 static const unsigned int parseTitle(ifstream& in, const string title, const unsigned int line );
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 탭 화면을 스플리터로 나누는 함수
@@ -61,6 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(dash_board->radioButtonDB, SIGNAL(clicked()), this, SLOT(onRadioButtonDBClicked()));
     connect(dash_board->radioButtonMemory, SIGNAL(clicked()), this, SLOT(onRadioButtonMemoryClicked()));
+    connect(dash_board->groupBox, SIGNAL(toggled()), this, SLOT(onGroupBoxToggled()));
 
 
 }
@@ -72,19 +74,16 @@ void Manager::updateAll(){          //파일을 불러오기한 경우 모두 �
     }
 }
 
-void MainWindow::onRadioButtonDBClicked(){
+void MainWindow::onGroupBoxToggled(){
 
 
 }
-void MainWindow::onRadioButtonMemoryClicked(){
 
-}
-
-static int createListDialog(QWidget* parent, QStringList ls){
-    QDialog* dialog = new QDialog(parent);
+static QMessageBox* createListDialog(QWidget* parent, QStringList ls){       //저장이나 불러오기를 할 때 DB, CSV에서 사용자가 선택할 수 있게 다이어로그를 만드는 함수입니다
+    QMessageBox* dialog = new QMessageBox(parent);
     dialog->setModal(true);
     QListWidget* list = new QListWidget(dialog);
-    for(auto e : ls){
+    for(const auto& e : ls){
         list->addItem(e);
     }
     QPushButton* ok= new QPushButton("OK",dialog);
@@ -98,7 +97,7 @@ static int createListDialog(QWidget* parent, QStringList ls){
     QObject::connect(cancel,SIGNAL(clicked()),dialog,SLOT(rejected()));
     dialog->exec();
     int result = list->currentIndex().row();
-    delete dialog;
+
     return result;
 }
 
@@ -120,7 +119,7 @@ void MainWindow::save(){                                                //파일
             }
             DBM::ProductManager save_product{"save_product",file_name};
             for(const auto& p : mgrs.getPM()){
-                save_product.addProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
+                save_product.loadProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
             }
             DBM::OrderManager save_order{mgrs.getCM(),mgrs.getPM(),"save_order",file_name};
             for(const auto& o : mgrs.getOM()){
@@ -175,6 +174,9 @@ void MainWindow::save(){                                                //파일
 }
 void MainWindow::load(){
     //저장된 파일을 불러오는 함수로 QAction과 연결되어 있다
+    try{
+
+
     QString file_name = QFileDialog::getSaveFileName(this);
     if(file_name.size()==0){
         return;
@@ -183,30 +185,58 @@ void MainWindow::load(){
 
     switch(mode){
     case 0://DB로부터 데이터 로드
-        mgrs.getCM().loadClients(file_name);
+       { DBM::ClientManager load_client{"load_client",file_name};
+        for(const auto& c : load_client){
+            bool re = mgrs.getCM().addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
+            if(!re)
+                throw -1;
+        }
+        DBM::ProductManager load_product{"load_product",file_name};
+        for(const auto& p : load_product){
+            bool re = mgrs.getPM().loadProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
+            if(!re)
+                throw -1;
+        }
+        DBM::OrderManager load_order{load_client,load_product,"load_order",file_name};
+        for(const auto& o : mgrs.getOM()){
+            std::vector<OrderModel::bill> bills;
+            for(const auto& ordered_product : o.getProducts()){
+                bills.emplace_back(ordered_product.product.getId(),ordered_product.qty);
+            }
+            load_order.addOrder(o.getClient().getId(),bills);
+        }
+
+
+
+    }
+       // mgrs.getCM().loadClients(file_name);
+       // mgrs.getPM().loadClients(file_name);
+       // mgrs.getOM().loadClients(file_name);
         break;
     case 1://CSV로부터 데이터 로드
+    {int csv_mode = createListDialog(this,{"Client","Product","Order"});
+        switch(csv_mode){
+        case 0:
 
+            break;
+        case 1:
+            break;
+        case 2:
+            //OrderManager의 order_id를 로드할려는 주문 번호 중에 가장 큰 번호 + 1로 설정해야 합니다
+            break;
+
+        }
+    }
     default:
-        assert(false);
+        assert(false);      //있을 수 없는 경우에 대하여 assert
         break;
     }
-
-
-    try {                                                                       //try-catch를 써서 로딩 중에 프로그램이 죽지 않고 로딩 실패가 되도록 로직코드를 감싸준다
-        QString filename = QFileDialog::getOpenFileName(this);
-        ifstream in(filename.toStdString());
-        unsigned int line=0;
-        line = parseTitle(in,"[Clients]",line);
-        //mgrs.getCM().loadClients(in, line);
-        line = parseTitle(in,"[Products]",line);
-        //mgrs.getPM().loadProducts(in, line);
-        line = parseTitle(in,"[Orders]",line);
-        //mgrs.getOM().loadOrders(in, line);
-        mgrs.updateAll();
-    } catch (...) {
+}
+catch(...){
         QMessageBox::critical(this, tr("FAIL LOADING"), tr("FAIL LOADING"));
-    }
+}
+
+mgrs.updateAll();//로드한 후 모든 뷰(탭)를 갱신합니다
 }
 
 MainWindow::~MainWindow()
@@ -246,26 +276,3 @@ void Manager::changeToMemory(){
     pm = new PM::ProductManager;
     om = new OM::OrderManager{*cm,*pm};
 }
-
-static const unsigned int parseTitle(ifstream& in, const string title, const unsigned int line ){
-    //[Clients],[Products],[Orders] 옆에는 몇개의 데이터가 있는지 표시하도록 되어 있으므로
-    //몇개의 데이터를 불러오기 해야하는지 추출하는 함수입니다
-    try{
-        string str;
-        if(!getline(in, str, ',')){     //파일에서 [Clients] 또는 [Products] 또는 [Orders] 스트링 데이터를 추출합니다
-            throw line;
-        }
-        if(str!=title){                 //만약 저장된 스트링이 [Clients],[Products],[Orders]가 아니라면 원하는 포맷의 파일이 아니므로 예외처리 합니다
-            throw line;
-        }
-        getline(in, str, ',');          //[Clients],[Products],[Orders] 다음에는 불러와야 할 데이터 수가 저장되어 있으므로 그 수를 추출합니다.
-        string temp;
-        getline(in,temp);               //라인에서 필요없는 , 를 추출합니다.
-        return stoul(str);              //가져와야할 데이터 수를 리턴해서 그만큼 데이터를 불러오도록 할 예정입니다
-    }
-    catch(...){
-        throw;                          //예외가 발생하면 rethrow
-    }
-}
-
-

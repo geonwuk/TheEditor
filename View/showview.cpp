@@ -7,85 +7,92 @@
 #include <QDateTimeEdit>
 #include <QFileDialog>
 #include "Manager/ClientManager.h"
+#include <QMessageBox>
 ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : CView{mgr, tabs,icon,label}
 {
     ui.setupUi(this);
     table=ui.tableWidget;
     editBox=ui.checkBox;
     searchLineEdit=ui.lineEdit;
-    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    QList<QString> header_labels {tr("ID"),tr("Name"),tr("Phone Number"),tr("Address")};
+    table->setEditTriggers(QAbstractItemView::NoEditTriggers);                              //읽기모드 활성화
+    QList<QString> header_labels {tr("ID"),tr("Name"),tr("Phone Number"),tr("Address")};    //테이블의 헤더 필드 설정
     table->setColumnCount(header_labels.size());
     table->setHorizontalHeaderLabels(header_labels);
-    fillContents();
-    connect(ui.checkBox,&QCheckBox::stateChanged, [=](int status){
+    fillContents();                                                                         //테이블 내용을 채운다
+    connect(ui.checkBox,&QCheckBox::stateChanged, [=](int status){  //읽기모드 수정모드 변환 시그널 연결
        is_edit_mode=status;
        using ET = QAbstractItemView::EditTrigger;
        is_edit_mode ? table->setEditTriggers(ET(ET::AllEditTriggers & ~ET::SelectedClicked &~ET::CurrentChanged)) : table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+       //
     });
     connect(table,SIGNAL(cellChanged(int,int)),SLOT(cellChanged(int,int)));
     connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed()));          //엔터키를 신호 연결
-    shortcut = new QShortcut(Qt::Key_Delete, table, table, [this](){                //항목을 삭제할 때
-        if(!is_edit_mode) return;
-        eraseClient(table->currentRow());
+    shortcut =new QShortcut(Qt::Key_Delete, table, table, [this](){                //항목을 삭제할 때
+        if(!is_edit_mode) return;               //읽기모드이면 바로 리턴한다
+        eraseClient(table->currentRow());       //행을 지우기
     });
 }
 ShowClientView::~ShowClientView(){
-    delete shortcut;
+    delete shortcut;        //delete 단축키 삭제
 }
 
 void ShowClientView::fillContents(){
-    table->blockSignals(true);
-    table->clearContents();
-    table->setRowCount(getSize());
+    table->blockSignals(true);          //시그널을 막는다
+    table->clearContents();             //모든 항목을 지운다
+    table->setRowCount(getSize());      //고객 수 만큼 행 크기를 설정한다
     int i=0;
-    auto& cm = mgr.getCM();
-    for(IteratorPTR<CM::Client> begin = cm.begin(); begin!=cm.end(); ++begin ){
-        const auto client = *begin;
-        int j=0;
-        table->setItem(i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()));
-        table->setItem(i,j++,new QTableWidgetItem(client.getName().c_str()));
-        table->setItem(i,j++,new QTableWidgetItem(client.getPhoneNumber().c_str()));
-        table->setItem(i,j++,new QTableWidgetItem(client.getAddress().c_str()));
+    for(const auto& client : mgr.getCM()){  //모든 고객에 대해 반복
+        int j=0;    //행의 위치를 결정
+        table->setItem(i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()));       //고객 ID
+        table->setItem(i,j++,new QTableWidgetItem(client.getName().c_str()));                       //고객 이름
+        table->setItem(i,j++,new QTableWidgetItem(client.getPhoneNumber().c_str()));                //고객 전화번호
+        table->setItem(i,j++,new QTableWidgetItem(client.getAddress().c_str()));                    //고객 주소
         i++;
     }
-    table->resizeColumnsToContents();
-    table->resizeRowsToContents();
+    table->resizeColumnsToContents();       //열의 크기를 알맞게 조절
+    table->resizeRowsToContents();          //행의 크기를 알맞게 조절
     table->blockSignals(false);
 }
 
 void ShowClientView::update(){
     fillContents();
 }
-void ShowClientView::cellChanged(int row, int col){
-    if(is_edit_mode){
-        auto id_item = table->item(row,0);
-        QString id = id_item->data(Role::id).value<QString>();
 
+void ShowClientView::cellChanged(int row, int col){
+    if(col==0){
+        table->blockSignals(true);
+        QMessageBox::information(this, tr("Clinet Show"), tr("ID can't be changed")); //id는 바꿀 수 없음
+        auto id_item = table->item(row,0);
+        QString id = id_item->data(Role::id).value<QString>();      //id가 들어있는 열로부터 id값을 얻는다
+        table->setItem(row,0,ceateTableItem(id.toStdString().c_str(),id.toStdString().c_str())); //수정된 ID를 다시 원복한다
+        table->blockSignals(true);
+    }
+    if(is_edit_mode){                                               //읽기모드인 경우 아무것도 하지 않는다
+        auto id_item = table->item(row,0);
+        QString id = id_item->data(Role::id).value<QString>();      //id가 들어있는 열로부터 id값을 얻는다
         QList<QString> ls;
         int d = table->columnCount();
-        for(int i=1; i<d; i++){
+        for(int i=1; i<d; i++){ //id를 제외한 이름,전화번호,주소를 리스트에 추가한다
             ls<<table->item(row, i)->text();
         }
         table->blockSignals(true);
-        modifyClient(id,ls);
+        modifyClient(id,ls);    //id를 제외한 나머지 필드 값으로 고객 정보를 수정한다
         table->blockSignals(false);
     }
 }
-void ShowClientView::returnPressed(){
-    fillContents();
-    QString str = searchLineEdit->text();
+void ShowClientView::returnPressed(){                       //엔터를 칠 경우 슬롯 함수(검색한 경우 엔터 입력)
+    fillContents();                                         //정보를 다시 채운 후
+    QString str = searchLineEdit->text();                   //사용자가 입력한 검색 텍스트를 저장한다
     QList<int> rows_to_delete;
-    for(int row=0; row<table->rowCount(); row++){
+    for(int row=0; row<table->rowCount(); row++){           //테이블의 모든 행에 대해
         QStringList ls;
-        for(int col=0; col<table->columnCount(); col++){
+        for(int col=0; col<table->columnCount(); col++){    //열에 사용자가 입력한 데이터가 있는지 확인한다
             ls<<table->item(row,col)->text();
         }
-        for(const auto &e : ls){
-            if(e.contains(str)) goto end;
+        for(const auto &e : ls){                            //열에 있는 모든 데이터에 대해
+            if(e.contains(str)) continue;                   //만약 있다면 지우는 행 목록에 추가히지 않고 반복문을 진행한다.
         }
-        rows_to_delete<<row;
-        end:;
+        rows_to_delete<<row;                                //사용자가 입력한 값이 열에 없으므로 그 행을 지워야 하므로 삭제 리스트에 추가한다
     }
     int compensation=0;
     for(auto row:rows_to_delete){
@@ -139,7 +146,7 @@ ShowProductView::ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon, con
     });
     connect(table,SIGNAL(cellChanged(int,int)),SLOT(cellChanged(int,int)));
     connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed()));
-    auto shortcut = new QShortcut(Qt::Key_Delete, table, table, [this](){
+    shortcut = new QShortcut(Qt::Key_Delete, table, table, [this](){
         if(!is_edit_mode) return;
         eraseProduct(table->currentRow());
     });
@@ -232,7 +239,9 @@ bool ShowProductView::eraseProduct(int row){
     return result;
 }
 
-ShowProductView::~ShowProductView(){}
+ShowProductView::~ShowProductView(){
+    delete shortcut;
+}
 
 //ORDER-------------------------------------------------------------------------------------------------------
 ShowOrderView::ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : OView{mgr, tabs,icon,label} {

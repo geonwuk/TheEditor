@@ -10,6 +10,7 @@ public:
     OrderManager(ClientModel& cm, ProductModel& pm, QString connection_name, QString file_name);
     OrderManager(ClientModel& cm, ProductModel& pm, QString connection_name);
     std::pair<const OM::Order_ID, bool> addOrder(const CM::CID client_id, std::vector<bill>) override;
+    bool loadOrder(const OM::Order_ID oid, const CM::CID client_id, std::vector<PM::Product> products, std::vector<unsigned int> qty, tm time) noexcept(false) override;
     const OM::Order findOrder(const OM::Order_ID order_id) const override;
     const size_t getSize() const override;
     IteratorPTR<OM::Order> begin() override;

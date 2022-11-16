@@ -55,7 +55,7 @@ bool ProductManager::addProduct(const string name, const unsigned int price, con
     return success;
 }
 
-bool ProductManager::addProduct(const string id, const string name, const unsigned int price, const unsigned int qty, tm time)
+bool ProductManager::loadProduct(const string id, const string name, const unsigned int price, const unsigned int qty, tm time)
 {
     bool success;
     tie(ignore, success) = products.emplace(id, Product(id, name, price, qty, time));
@@ -127,7 +127,7 @@ std::ifstream& PM::ProductManager::loadProducts(ifstream& in, const unsigned int
             istringstream ss{ time_string };
             ss >> std::get_time(&time, "%D %T");
 
-            if(!addProduct(id,name,price,qty,time)){
+            if(!loadProduct(id,name,price,qty,time)){
                 throw -1;
             }
 

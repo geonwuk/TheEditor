@@ -19,39 +19,44 @@ void View::removeFromTree(){
 }
 
 
-QWidget* View::getCheckBoxWidget(QWidget* parent) { //주문관리에서 구매자와 구맿라 물건 체크하는 용도
+QWidget* View::getCheckBoxWidget(QWidget* parent) { //체크박스 위젯을 테이블위젯에서 쓸 경우 가운데 정렬이 되도록 하는 함수
     QWidget* checkBoxWidget = new QWidget(parent);  //아이템에 Property를 추가하고 가운데 정렬이 되도록 함
-    auto check_box = new QCheckBox(checkBoxWidget);
+    auto check_box = new QCheckBox(checkBoxWidget);                     //읽기/수정모드 체크하는 체크박스
     QHBoxLayout *layoutCheckBox = new QHBoxLayout(checkBoxWidget);
     layoutCheckBox->addWidget(check_box);
-    layoutCheckBox->setAlignment(Qt::AlignCenter);
-    layoutCheckBox->setContentsMargins(0,0,0,0);
-    checkBoxWidget->setProperty("CB", QVariant::fromValue(check_box));
+    layoutCheckBox->setAlignment(Qt::AlignCenter);                      //위젯 안에서 가운데 정렬을 해야만 가운데 정렬이 됩니다
+    layoutCheckBox->setContentsMargins(0,0,0,0);                        //마진을 없앱니다
+    checkBoxWidget->setProperty("CB", QVariant::fromValue(check_box));  //CB에 체크박스 설정
     return checkBoxWidget;
 }
-QDateTimeEdit* View::getDateTimeEditWidget(const QDateTime &datetime, QWidget* parent) {        //Product 조회에서 QDateTimeEdit으로
+QDateTimeEdit* View::getDateTimeEditWidget(const QDateTime &datetime, QWidget* parent) {    //product 조회 뷰에서 쓸 dateTimeEdit 위젯 생성하는 함수
     auto dt = new QDateTimeEdit(datetime, parent);
     dt->setReadOnly(true);
     return dt;
 }
 
-QTableWidgetItem* View::ceateTableItem(const QString id, QString title){                //아이템에 ID데이터를 추가하기
+QTableWidgetItem* View::ceateTableItem(const QString id, QString title){ //아이템에 ID데이터를 추가하기
     auto item = new QTableWidgetItem(title);
     item->setData(Role::id, id);
     return item;
 }
+void CView::addClient(const QString ID, const QString name, const QString phone_number, const QString address){
+    mgr.getCM().addClient(ID.toStdString(), name.toStdString(),phone_number.toStdString(),address.toStdString());
+    notify<CView>();        //모든 뷰에 대해 고객 관리에 관련된 뷰라면 업데이트 한다
+    notify<OView>();        //모든 뷰에 대해 주문 관리에 관련된 뷰라면 업데이트 한다 (구매 가능한 고객 목록 업데이트)
+    notify<NView>();        //모든 뷰에 대해 채팅과 관련된 뷰라면 업데이트 한다 (채팅 참여자 목록에 추가가 가능하도록 업데이트)
+}
 
 bool CView::modifyClient(const QString id, const QList<QString> ls){
-    bool re = mgr.getCM().modifyClient(id.toStdString(), CM::Client{id.toStdString(), ls[0].toStdString(),ls[1].toStdString(),ls[2].toStdString()});
-    notify<CView>();
-    notify<OView>();
+    bool re = mgr.getCM().modifyClient(id.toStdString(), CM::Client{id.toStdString(), ls[0].toStdString(),ls[1].toStdString(),ls[2].toStdString()});    //id는 바꾸지 않고 나머지 항목들에 대해 업데이트 한다(list로부터 값을 획득)
+    notify<CView>();        //모든 뷰에 대해 고객 관리에 관련된 뷰라면 업데이트 한다
+    notify<OView>();        //모든 뷰에 대해 주문 관리에 관련된 뷰라면 업데이트 한다
     return re;
 }
-bool CView::eraseClient(const QString id)
-{
-    bool result =  mgr.getCM().eraseClient(id.toStdString());
-    notify<CView>();
-    notify<OView>();
+bool CView::eraseClient(const QString id){
+    bool result =  mgr.getCM().eraseClient(id.toStdString());       //고객 정보 삭제
+    notify<CView>();        //모든 뷰에 대해 고객 관리에 관련된 뷰라면 업데이트 한다
+    notify<OView>();        //모든 뷰에 대해 주문 관리에 관련된 뷰라면 업데이트 한다
     return result;
 }
 
@@ -84,14 +89,14 @@ const unsigned int PView::getSize() const{
 }
 
 //OVIEW-----------------------------------------------------------------------------------
-bool OView::is_order_moified {false};
+//bool OView::is_order_moified {false};
 const OM::Order OView::findOrder(const OM::Order_ID order_id) const{
     return mgr.getOM().findOrder(order_id);
 }
 std::pair<const unsigned int, bool> OView::addOrder(const QString client_id, std::vector<OM::OrderManager::bill> products){
     auto result = mgr.getOM().addOrder(client_id.toStdString(),products);
-    notify<OView>();
-    notify<PView>();
+    notify<OView>();    //PView를 상속 받는 View 업데이트 (물품)
+    notify<PView>();    //OView 상속 받는 View 업데이트 (주문)
     return result;
 }
 const size_t OView::getSize() const{

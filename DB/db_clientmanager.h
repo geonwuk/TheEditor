@@ -18,8 +18,6 @@ public:
     bool modifyClient(const CM::CID, const CM::Client ) override;
     bool eraseClient(const CM::CID) override;
     CM::Client copyClient(const CM::CID) const override;
-
-    void loadClients(QString file_name) noexcept(false) override;
     IteratorPTR<CM::Client> begin() const override;
     IteratorPTR<CM::Client> end() const override;
 private:

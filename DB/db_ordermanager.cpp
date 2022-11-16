@@ -25,12 +25,6 @@ OrderManager::OrderManager(ClientModel& cm, ProductModel& pm, QString connection
 OrderManager::OrderManager(ClientModel& cm, ProductModel& pm, QString connection_name) : DBManager(connection_name), cm{cm}, pm{pm}{
     createTable(":/DB/Queries/createOrderListTable.txt");
     createTable(":/DB/Queries/createOrderedProductTable.txt");
-
-
-//    QSqlQuery query{"select id from Orders order by id desc;", db};
-//    assert(query.exec());
-//    query.next();
-//    order_id+=query.value("id").toUInt();
 }
 
 std::pair<const OM::Order_ID, bool> OrderManager::addOrder(const CM::CID client_id, std::vector<bill> bills){
@@ -105,6 +99,10 @@ std::pair<const OM::Order_ID, bool> OrderManager::addOrder(const CM::CID client_
     }
 
     return {0,true};
+}
+
+bool loadOrder(const OM::Order_ID oid, const CM::CID client_id, std::vector<PM::Product> products, std::vector<unsigned int> qty, tm time) noexcept(false){
+
 }
 #include <QSqlQueryModel>
 #include <QTableView>
