@@ -8,20 +8,18 @@ template<typename T>
 class Iterator{
 public:
     virtual const T operator*() const =0;
-    //virtual Iterator& operator= (Iterator&)=0;
     virtual void operator++() =0;
     virtual bool operator!=(Iterator& )=0;
     virtual bool operator==(Iterator& )=0;
     virtual ~Iterator(){};
 };
 template<typename T, typename ITR=Iterator<T>>
-struct IteratorPTR : private std::unique_ptr<ITR>{
+struct IteratorPTR : private std::unique_ptr<ITR>{                      //unique_ptr을 씀으로써 리소스 관리를 수월하게 합니다
     explicit IteratorPTR( ITR* itr) : std::unique_ptr<ITR>{itr} {}
     const T operator*() const{return **std::unique_ptr<ITR>::get();}
     void operator++(){ ++*std::unique_ptr<ITR>::get();}
     bool operator!=(const IteratorPTR& rhs){return *std::unique_ptr<ITR>::get()!=*rhs.get();}
     bool operator==(const IteratorPTR& rhs){return *std::unique_ptr<ITR>::get()==*rhs.get();}
-//    T* operator->() const {return std::unique_ptr<ITR>::get()->operator->();}
 };
 class ClientModel{
 public:
@@ -49,8 +47,6 @@ public:
     virtual IteratorPTR<PM::Product> begin()=0;
     virtual IteratorPTR<PM::Product> end()=0;
 };
-
-
 class OrderModel{
 public:
     struct bill{

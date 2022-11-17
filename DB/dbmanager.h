@@ -14,6 +14,8 @@
 enum AddMode{
     EXPLICIT_FIELD_NAME
 };
+
+//Manager클래스에서 DB에 필요한 쿼리를 제공하는 클래스 입니다. 기본적인 데이터 추가,삭제,조회,크기 등 Manager에서 필요한 기능을 제공합니다
 template<const char* table_name>
 class DBManager
 {
@@ -55,7 +57,7 @@ public:
     }
 
     QSqlQuery getSize() const{
-        return QSqlQuery{QString("select count(id) from ")+QString(table_name),db};
+        return QSqlQuery{QString("select count(id) from ")+QString(table_name),db}; //Client, Product, Order테이블 모두 id필드를 갖으므로 id개수로 사이즈를 알 수 있습니다
     }
     QSqlQuery find(const QString id) const {
         QSqlQuery query{db};
@@ -171,7 +173,7 @@ public:
             return getPtr()==it.getPtr();
         }
         const T operator*() const override{
-            assert(false); //이 메소드는 무조건 오버라이드 되어야 합니다.
+            assert(false);                  //이 메소드는 무조건 오버라이드 되어야 합니다.
             return T();
         }
         QSqlRecord getPtr() const{

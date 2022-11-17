@@ -60,6 +60,7 @@ private:
     QTableWidget productTab;
     QTableWidget* infoTab;
     QTreeWidget* orderTree;
+    QShortcut* shortcut;
     void fillClientTab();
     void fillProductTab();
     void fillClientInfoTab(QList<QString>);
@@ -79,6 +80,7 @@ private:
     Ui::addParticipantView ui;
     void fillContents();
     void initUI();
+
 
 private slots:
     void addParticipant();

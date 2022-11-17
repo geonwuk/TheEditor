@@ -7,14 +7,14 @@
 #include <QMessageBox>
 AddClientView::AddClientView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : CView{mgr,tabs,icon,label} {
     ui.setupUi(this);
-    connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addClient()));
+    connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addClient())); //고객 추가 버튼과 고객 추가 메소드를 시그널&슬롯으로 연결합니다
 }
 
-void AddClientView::addClient(){
-    QString ID = ui.IDLineEdit->text();
-    QString name = ui.NameEdit->text();
-    QString phone_number = ui.PhoneNumberEdit->text();
-    QString address = ui.AddressEdit->text();
+void AddClientView::addClient(){                                //고객 추가 UI에 있는 QLineEdit으로부터 스트링 데이터를 얻어서 Manager클래스의 Map에 추가합니다.
+    QString ID = ui.IDLineEdit->text();                         //ID 스트링 데이터를 QLineEdit으로부터 얻습니다
+    QString name = ui.NameEdit->text();                         //name 스트링 데이터를 QLineEdit으로부터 얻습니다
+    QString phone_number = ui.PhoneNumberEdit->text();          //전화번호 스트링 데이터를 QLineEdit으로부터 얻습니다
+    QString address = ui.AddressEdit->text();                   //주소 스트링 데이터를 QLineEdit으로부터 얻습니다
     CView::addClient(ID,name,phone_number,address);
 }
 
@@ -26,14 +26,14 @@ AddClientView::~AddClientView(){
 //Product
 AddProductView::AddProductView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : PView{mgr,tabs,icon,label}  {
     ui.setupUi(this);
-    connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addProduct()));
+    connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addProduct()));    //고객 추가 버튼과 고객 추가 메소드를 시그널&슬롯으로 연결합니다
 }
 
-void AddProductView::addProduct(){
-    QString name = ui.NameEdit->text();
-    QString price = ui.PriceEdit->text();
-    QString qty = ui.QuantityEdit->text();
-    PView::addProduct(name,price,qty);
+void AddProductView::addProduct(){              //상품 추가 UI에 있는 QLineEdit으로부터 스트링 데이터를 얻어서 Manager클래스의 Map에 추가합니다.(상품의 경우 ID는 자동으로 생성합니다)
+    QString name = ui.NameEdit->text();         //상품 이름 스트링 데이터를 QLineEdit으로부터 얻습니다
+    QString price = ui.PriceEdit->text();       //상품 가격 데이터를 QLineEdit으로부터 얻습니다
+    QString qty = ui.QuantityEdit->text();      //상품 구매 개수 데이터를 QLineEdit으로부터 얻습니다
+    PView::addProduct(name,price,qty);          //Map에 상품을 추가합니다
 }
 
 
@@ -45,13 +45,13 @@ AddProductView::~AddProductView(){
 //Order================================================================================
 AddOrderView::AddOrderView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : OView{mgr,tabs,icon,label} {
     ui.setupUi(this);
-    CPTab=ui.CPTab;
-    infoTab=ui.infoTable;
-    orderTree=ui.orderTree;
-    QList<QString> oderTable_labels {tr("Client"),tr("Product Name"),tr("Qty")};
-    orderTree->setColumnCount(oderTable_labels.size());
+    CPTab=ui.CPTab;             //고객과 상품을 선택할 수 있게 하는 QTabWidget
+    infoTab=ui.infoTable;       //CPTab에서 마우스로 아이템을 선택하는 경우 그 아이템에 대한 정보를 보여주는 QTableWidget
+    orderTree=ui.orderTree;     //구매자와 구매 물품을 선택하고 Commit버튼을 누르면 선택한 고객의 ID와 상품ID가 OrderTree로 이동합니다. 그 후 사용자는 구매할 수량을 결정할 수 있습니다
+    QList<QString> oderTable_labels {tr("Client"),tr("Product Name"),tr("Qty")};    //주문
+    orderTree->setColumnCount(oderTable_labels.size());     //열의 갯수를 위의 orderTable_labels에 있는 갯수만큼 설정
     orderTree->setHeaderLabels(oderTable_labels);
-    auto shortcut = new QShortcut(Qt::Key_Delete, orderTree, orderTree, [this](){
+    shortcut = new QShortcut(Qt::Key_Delete, orderTree, orderTree, [this](){
         delete orderTree->currentItem();
         orderTree->update();
     });
@@ -265,7 +265,7 @@ void AddOrderView::addOrder(){
 
 
 AddOrderView::~AddOrderView(){
-
+    delete shortcut;
 }
 
 
@@ -354,14 +354,16 @@ void AddParticipantView::dropParticipant(){
 }
 #include <memory>
 void AddParticipantView::fillContents(){
+    //고객 리스트로부터 채팅방 참여자를 결정할 수 있습니다.
+    //ClientManager와 ServerManager 모두 고객 ID를 맵으로 저장하고 있기 때문에 고객 ID가 정렬되어 있습니다. 서로 정렬된 ID를 비교해서 채팅방 참여자인지 아닌지 O(n)의 시간 복잡도로 결정할 수 있습니다
     ui.clientList->clearContents();
     ui.clientList->setRowCount(mgr.getCM().getSize());
 
     int i=0;
     auto& cm = mgr.getCM();
     auto participants = mgr.getSM().begin();
-    for(auto client_iter = cm.begin(); client_iter!=cm.end(); ++client_iter){
-        while(participants!=mgr.getSM().end() && client_iter!=cm.end() && ((*client_iter).getId()==participants->second.getClient().getId())){
+    for(auto client_iter = cm.begin(); client_iter!=cm.end(); ++client_iter){   //두개 리스트 모두 고객 ID로 정렬된 상태에서 ClientManager가 갖고있는 고객 ID를 기준으로 채팅방 참여자가 아닌 고객 ID에 한하여 QListWidget에 그 ID로 추가합니다
+        while(participants!=mgr.getSM().end() && client_iter!=cm.end() && ((*client_iter).getId()==participants->second.getClient().getId())){ //만약 고객 id와 참여자 id가 같다면 이는 고객을 보여주는 QListWidget에 아이템을 추가하지 않고 넘어가야 합니다(채팅방 참여자로 추가해야 하므로)
             ++client_iter;
             ++participants;
             continue;
@@ -369,18 +371,18 @@ void AddParticipantView::fillContents(){
         if(client_iter == cm.end())
             break;
         int j=0;
-        const Client client = *client_iter;
-        ui.clientList->setItem(i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()) );
-        ui.clientList->setItem(i,j++,new QTableWidgetItem(client.getName().c_str()));
+        const Client client = *client_iter; //채팅 참여자리스트가 아닌 참여가능한 고객리스트에 추가할 고객 정보를 얻습니다.
+        ui.clientList->setItem(i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()) );  //ID정보를 갖는 셀을 생성합니다.
+        ui.clientList->setItem(i,j++,new QTableWidgetItem(client.getName().c_str()));   //이름 정보를 갖는 셀을 생성합니다.
         i++;
     }
-    ui.clientList->setRowCount(i);
-    ui.clientList->resizeColumnsToContents();
-    ui.clientList->resizeRowsToContents();
+    ui.clientList->setRowCount(i);      //고객리스트 행을 설정합니다
+    ui.clientList->resizeColumnsToContents();   //크기조절
+    ui.clientList->resizeRowsToContents();      //크기조절
 
     ui.participantList->setRowCount(mgr.getSM().getSize());
     int p_i=0;
-    for(auto& participant : mgr.getSM()){
+    for(auto& participant : mgr.getSM()){   //고객리스트는 이전에 이미 출력했으므로 채팅방 참여자 리스트만
         int j=0;
         auto& client = participant.second.getClient();
         ui.participantList->setItem(p_i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()) );

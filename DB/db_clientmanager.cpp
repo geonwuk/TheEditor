@@ -118,13 +118,13 @@ const CM::Client ClientManager::CIterator::operator*() const {
 //}
 
 IteratorPTR<CM::Client> ClientManager::begin() const{
-    return IteratorPTR<CM::Client>{ new CIterator{0} };
+    return IteratorPTR<CM::Client>{ new CIterator{0} };     //쿼리문의 첫번째 index는 0부터 시작하므로 0으로 초기화합니다
 }
 IteratorPTR<CM::Client> ClientManager::end() const{
-  QSqlQuery query{QString("select count(id) from ") + name2, db};
+  QSqlQuery query{QString("select count(id) from ") + name2, db};               //id 레코드 개수를 알기 위한 쿼리를 실행합니다
   if (query.next()) {
-    return IteratorPTR<CM::Client>{new CIterator{query.value(0).toInt()}};
+    return IteratorPTR<CM::Client>{new CIterator{query.value(0).toInt()}};      //레코드 개수 만큼 end로 설정합니다
   } else {
-    return IteratorPTR<CM::Client>{new CIterator{0}};
+    return IteratorPTR<CM::Client>{new CIterator{0}};                           //만약 쿼리 결과 레코드가 하나도 없다면 0입니다
   }
 }

@@ -15,10 +15,10 @@ class Tree;
 class TabWidget;
 class ViewFactory {
 protected:
-     const QString title;
-     const QIcon icon;
+    const QString title;
+    const QIcon icon;
 public:
-     ViewFactory(const QIcon& icon, const QString title) : title{title}, icon{icon} {}
+    ViewFactory(const QIcon& icon, const QString title) : title{title}, icon{icon} {}
     virtual View* make(Tree*)=0;
     const QString getTitle(){
         return title;

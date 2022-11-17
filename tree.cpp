@@ -75,10 +75,10 @@ ManagementTree::ManagementTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,3} {
         expandItem(elem);                       //트리 펼치기
         auto title = elem->text(0).split(" ");  //title[0]에는 Cleint, Product, Order 셋 중에 하나
 
-        QTreeWidgetItem* add = new ToTabItem(add_views[i],*this, add_views[i]->getIcon(), {tr("%1 Add").arg(title[0])} );   //ToTabItem: 더블클릭하면 생성한다
+        QTreeWidgetItem* add = new ToTabItem(add_views[i],*this, add_views[i]->getIcon(), {tr("%1 Add").arg(title[0])} );   //ToTabItem: 더블클릭하면 QTabWidget에 View를 추가합니다
         elem->addChild(add);
 
-        QTreeWidgetItem* show = new ToTabItem(show_views[i], *this, show_views[i]->getIcon(), {tr("%1 Show / Find / Erase").arg(title[0])} );   //ToTabItem: 더블클릭하면 생성한다
+        QTreeWidgetItem* show = new ToTabItem(show_views[i], *this, show_views[i]->getIcon(), {tr("%1 Show / Find / Erase").arg(title[0])} );   //ToTabItem: 더블클릭하면 QTabWidget에 View를 추가합니다
         elem->addChild(show);
 
         i++;

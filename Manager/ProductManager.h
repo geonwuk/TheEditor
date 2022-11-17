@@ -31,9 +31,9 @@ namespace PM {
         ifstream& loadProducts(ifstream&, unsigned int);
         const unsigned int getSize() const override;
     private:
-        static unsigned int product_id;
-        map < std::string, Product > products;
-        string generateRandID(tm time);
+        static unsigned int product_id;                                     //랜덤 ID를 생성할 때 쓰는 seed격 상수입니다
+        map < std::string, Product > products;                              //상품들을
+        string generateRandID(tm time);                                     //상품 ID는 자동으로 랜덤하게 생성하며 product_id와 시각 정보를 합쳐 랜덤 ID를 생성하기 위한 SEED로 씁니다
         class PIterator : public Iterator<Product>{
         public:
             using Itr_type = decltype(products)::const_iterator;

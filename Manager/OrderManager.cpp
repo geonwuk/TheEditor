@@ -11,7 +11,7 @@ using namespace OM;
 using namespace PM;
 
 std::pair<const Order_ID, bool> OrderManager::addOrder(const Client_ID client_id, vector<bill> products){
-    time_t base_time = time(nullptr);                               //주문 ID는 숫자이며 1부터 시작해서 1씩 증가합니다
+    time_t base_time = time(nullptr);
     tm local_time;
     localtime_s(&local_time, &base_time);
     return addOrder(order_id, client_id, products, local_time);
@@ -32,16 +32,16 @@ std::pair<const Order_ID, bool> OrderManager::addOrder(const Order_ID oid, const
             return { oid, false };
     }
     int i=0;
-    for (auto product : products) {
-        order.products.emplace_back(pm.findProduct(product.id), product.qty);
-        assert(pm.buyProduct(product.id, product.qty));
+    for (auto product : products) {                                                 //구매할 물건에 대해
+        order.products.emplace_back(pm.findProduct(product.id), product.qty);       //주문에 구매한 상품들을 추가합니다
+        assert(pm.buyProduct(product.id, product.qty));                             //GUI 상에서 주문 가능한 물품만 선택할 수 있도록 하였으므로 못 구매하는 것은 프로그램 오류입니다
         i++;
     }
-    order.order_id = oid;
-    assert(!(cm.findClient(client_id)==no_client));
-    order.client = cm.findClient(client_id);
-    auto inserted_order = orders.emplace(order_id, order);
-    return {order_id++, true};
+    order.order_id = oid;                                   //오더에 새로 추가할 id를 입력합니다
+    assert(!(cm.findClient(client_id)==no_client));         //GUI 상에서 주문 가능한 고객만 선택할 수 있도록 하였으므로 못 찾는 것은 프로그램 오류입니다
+    order.client = cm.findClient(client_id);                //고객ID로 고객정보를 추출합니다
+    auto inserted_order = orders.emplace(order_id, order);  //주문 목록에 주문을 추가합니다
+    return {order_id++, true};                              //오더 카운트 증가를 한 후 리턴합니다
 }
 
 bool OrderManager::loadOrder(const Order_ID oid, const Client_ID client_id, vector<Product> products, vector<unsigned int> qty, tm time){
@@ -53,7 +53,9 @@ bool OrderManager::loadOrder(const Order_ID oid, const Client_ID client_id, vect
         order.products.emplace_back(product, qty.at(i++));
     }
     order.order_id = oid;
-    assert(!(cm.findClient(client_id)==no_client));//to do throw
+    if(!(cm.findClient(client_id)==no_client)){                 //
+        throw ERROR_WHILE_LOADING{oid};
+    }
     order.client = cm.findClient(client_id);
     orders.emplace(order_id, order);
     order_id = (oid>order_id ? oid : order_id);
