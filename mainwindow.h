@@ -37,18 +37,10 @@ public:
         }
     }
     void updateAll();
-    ClientModel& getCM(){
-        return *cm;
-    }
-    ProductModel& getPM(){
-        return *pm;
-    }
-    OrderModel& getOM(){
-        return *om;
-    }
-    ServerManager& getSM(){
-        return sm;
-    }
+    ClientModel& getCM() { return *cm; }
+    ProductModel& getPM() { return *pm; }
+    OrderModel& getOM() { return *om; }
+    ServerManager& getSM() { return sm; }
     void attachObserver(View* o);
     void detachObserver(View* o);
     void changeToDB();

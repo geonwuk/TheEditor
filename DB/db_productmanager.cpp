@@ -9,6 +9,18 @@ using std::string;
 
 unsigned int ProductManager::product_id=0;
 
+ProductManager::ProductManager(QString connection_name) : DBManager{connection_name} {
+    QString create_query = "Create TABLE IF NOT EXISTS Product("
+                            "id varchar(20) PRIMARY KEY,"
+                            "name varchar(20),"
+                            "price INTEGER,"
+                            "qty INTEGER,"
+                            "date TEXT);";
+    auto query_result = db.exec(create_query);
+    if(query_result.lastError().isValid())
+        throw ERROR_WHILE_LOADING{"Product"};
+}
+
 template<typename T>
 PM::Product makeProductFromDB(T record){
     string id = record.value("id").toString().toStdString();

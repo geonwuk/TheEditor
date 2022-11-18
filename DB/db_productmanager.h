@@ -5,12 +5,11 @@
 #include <QString>
 #include "DB/dbmanager.h"
 extern const char PRODUCT_TABLE_NAME[];
-namespace DBM{
-
+namespace DBM{//데이터베이스와 관련된 클래스가 속한 네임스페이스입니다
 class ProductManager : public ProductModel, public DBManager<PRODUCT_TABLE_NAME>
 {
 public:
-    ProductManager(QString connection_name):DBManager{connection_name} {}
+    ProductManager(QString connection_name);
     ProductManager(QString connection_name, QString file_name):DBManager{connection_name, file_name} {}
     bool addProduct(const std::string name, const unsigned int price, const unsigned int qty) override;
     bool loadProduct(const std::string id, const std::string name, const unsigned int price, const unsigned int qty, std::tm) noexcept(false) override;

@@ -12,6 +12,17 @@ using namespace DBM;
 using std::string;
 //QSqlDatabase ClientManager::db {};
 
+ClientManager::ClientManager(QString connection_name) : DBManager{connection_name} {
+    QString create_query = "Create TABLE IF NOT EXISTS Client("
+                           "id varchar(20) PRIMARY KEY,"
+                           "name varchar(20),"
+                           "phone_number varchar(20),"
+                           "address varchar(50));";
+    auto query_result = db.exec(create_query);
+    if(query_result.lastError().isValid())
+        throw ERROR_WHILE_LOADING{"Client"};
+}
+
 unsigned int ClientManager::getSize() const{
     auto query = DBManager::getSize();
     query.exec();

@@ -3,7 +3,7 @@
 #include "Model/model.h"
 #include "DB/dbmanager.h"
 extern const char ORDER_TABLE_NAME[];
-namespace DBM {
+namespace DBM {//데이터베이스와 관련된 클래스가 속한 네임스페이스입니다
 class OrderManager : public OrderModel, public DBManager<ORDER_TABLE_NAME>
 {
 public:
@@ -20,6 +20,7 @@ private:
     const ClientModel& cm;
     ProductModel& pm;
     void createTable(QString file_name);
+    void initTable();
 
 public:
     struct OIterator : public DBIterator<OM::Order> {

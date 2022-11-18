@@ -46,7 +46,7 @@ View* Tree::makeView(ViewFactory* factory){
 FocusTabItem::FocusTabItem(View* view, Tree& tree, const QIcon& icon, QString title):TreeItem{tree,icon,title},view{view}{}
 
 
-void FocusTabItem::doubleClicked(){     //더블 클리하면 기존의 아이템
+void FocusTabItem::doubleClicked(){     //더블 클릭하면 QTabWidget에서 열려진 기존의 Tab을 현재 위젯으로 설정합니다
     tree.tw->setCurrentWidget(view);
 }
 

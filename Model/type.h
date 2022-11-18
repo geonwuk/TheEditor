@@ -71,10 +71,10 @@ bool operator== (const Product& p, const NoProduct&);
 namespace OM {
 using std::string;
 using std::vector;
-using Order_ID = unsigned int;
+using Order_ID = unsigned int;          //주문의 경우 1부터 시작하는 정수 ID를 갖습니다
 using namespace CM;
 using namespace PM;
-struct OrderedProduct{
+struct OrderedProduct{                  //Order 클래스에서 주문한 상품
     const Product product;
     unsigned int qty;
     OrderedProduct(const Product product, unsigned int qty):product{product},qty{qty}{}
@@ -85,10 +85,10 @@ public:
     using qty = unsigned int;
 private:
     friend class OrderManager;
-    Order_ID order_id;
-    Client client;
-    std::tm date;
-    vector<std::pair<Product,qty>> products;
+    Order_ID order_id;                          //주문번호 (1부터 시작)
+    Client client;                              //구매자
+    std::tm date;                               //구매날짜
+    vector<std::pair<Product,qty>> products;    //구매한 물품들
 public:
     Order(Order_ID id, Client c, std::tm t, decltype(products) p) : order_id{id}, client{c}, date{t}, products{p} {}
     Order(){}

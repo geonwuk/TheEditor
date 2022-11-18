@@ -15,6 +15,10 @@ enum AddMode{
     EXPLICIT_FIELD_NAME
 };
 
+struct ERROR_WHILE_LOADING{
+    std::string db_name;
+};
+
 //Manager클래스에서 DB에 필요한 쿼리를 제공하는 클래스 입니다. 기본적인 데이터 추가,삭제,조회,크기 등 Manager에서 필요한 기능을 제공합니다
 template<const char* table_name>
 class DBManager
@@ -26,20 +30,6 @@ public:
         if(!db.open()){
             qDebug()<<"not open";
         }
-        QString file_name2{":/DB/Queries/create"};
-        file_name2+=(QString(table_name)+QString("Table.txt"));
-        qDebug()<<"filename"<<file_name2;
-        QFile create_query_file{file_name2};
-        if(!create_query_file.open(QIODevice::ReadOnly|QIODevice::Text))
-            throw -1;// todo
-
-        QString create_query = create_query_file.readAll();
-        create_query.remove('\n');
-        qDebug()<<create_query;
-        auto query_result = db.exec(create_query);
-        if(query_result.lastError().isValid())
-            throw -1;
-
 
 //        QSqlQuery countColumn {QString("SELECT count(*) FROM PRAGMA_TABLE_INFO('")+table_name+"')",db};
 //        int num_of_columns = countColumn.next() ? countColumn.value(0).toInt() : 0;
@@ -50,16 +40,14 @@ public:
             column_names<<columnNamesQuery.value(0).toString();
         }
         column_names.removeFirst();//ID 칼럼 삭제
-
     }
     ~DBManager(){
         db.close();
     }
-
     QSqlQuery getSize() const{
         return QSqlQuery{QString("select count(id) from ")+QString(table_name),db}; //Client, Product, Order테이블 모두 id필드를 갖으므로 id개수로 사이즈를 알 수 있습니다
     }
-    QSqlQuery find(const QString id) const {
+    QSqlQuery find(const QString id) const {    //ID로
         QSqlQuery query{db};
         query.prepare(QString("select * from ")+QString(table_name)+QString(" where id = :id;"));
         query.bindValue(":id",id);
@@ -162,22 +150,22 @@ public:
         using Itr_type = int;
         DBIterator(Itr_type p) : ptr{ p } {}
         void operator++() override final {
-            ++ptr;
+            ++ptr;                                          //레코드 인덱스를 증가시킵니다
         }
         bool operator!=(Iterator<T>& rhs) override final {
             auto it = static_cast<DBIterator&>(rhs);
-            return getPtr()!=it.getPtr();
+            return getPtr()!=it.getPtr();                   //서로 다른 레코드를 가리키는지 결과를 리턴합니다
         }
         bool operator==(Iterator<T>& rhs) override final {
             auto it = static_cast<DBIterator&>(rhs);
-            return getPtr()==it.getPtr();
+            return getPtr()==it.getPtr();                   //서로 같은 레코드를 가리키는지 결과를 리턴합니다
         }
         const T operator*() const override{
             assert(false);                  //이 메소드는 무조건 오버라이드 되어야 합니다.
             return T();
         }
         QSqlRecord getPtr() const{
-            QSqlQuery query{QString("select * from ")+table_name+" order by id;",db};
+            QSqlQuery query{QString("select * from ")+table_name+" order by id;",db};       //현재 DB가 가리키는 레코드를 리턴합니다
             query.seek(ptr);
             return query.record();
         }
@@ -187,7 +175,7 @@ public:
 
 protected:
     QString DBType{"QSQLITE"};
-    static QSqlDatabase db;
+    QSqlDatabase db;
     QStringList column_names;
     QString file_name;
     QString connection_name;
@@ -216,7 +204,6 @@ private:
     }
 };
 
-template <const char* table_name>
-QSqlDatabase DBManager<table_name>::db {};
+
 
 #endif // DBMANAGER_H
