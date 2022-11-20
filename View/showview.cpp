@@ -248,6 +248,8 @@ ShowOrderView::ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon, const Q
     ui.setupUi(this);
     orderTable=ui.orderTable;
     orderInfoTable=ui.orderInfoTable;
+    orderTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    orderInfoTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     QList<QString> ls {tr("Order ID"),tr("Client"),tr("Price"),tr("Date")};
     orderTable->setColumnCount(ls.size());
     orderTable->setHorizontalHeaderLabels(ls);
@@ -267,7 +269,7 @@ ShowOrderView::ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon, const Q
 void ShowOrderView::fillContents() {
 
     orderTable->clearContents();
-    orderTable->setRowCount(getSize());
+    orderTable->setRowCount((int)getSize());
 
     int i=0;
     for(const auto& order : mgr.getOM()){
@@ -308,7 +310,7 @@ void ShowOrderView::orderItemSelectionChanged_(){
     auto order = findOrder(order_id);
     assert(order!=OM::no_order);
     const auto& product_data = order.getProducts();
-    orderInfoTable->setRowCount(product_data.size());
+    orderInfoTable->setRowCount((int)product_data.size());
     int i=0;
     for(auto pd : product_data){
         int j=0;
@@ -408,7 +410,6 @@ void ShowChatView::addLog(const ServerManager::ChatMessage& msg ){
 void ShowChatView::fillclientTree(){
     ui.clientTreeWidget->clear();
     for(auto participant : smgr){
-        int j=0;
         auto client = participant.second.getClient();
         auto icon = participant.second.isOnline() ? QStyle::SP_DialogYesButton : QStyle::SP_DialogNoButton;
         auto online_string = participant.second.isOnline() ? "online" : "offline";

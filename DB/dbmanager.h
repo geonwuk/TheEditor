@@ -11,10 +11,7 @@
 #include <QSqlRecord>
 #include <initializer_list>
 #include <sstream>
-enum AddMode{
-    EXPLICIT_FIELD_NAME
-};
-
+namespace DBM {
 struct ERROR_WHILE_LOADING{
     std::string db_name;
 };
@@ -24,25 +21,23 @@ template<const char* table_name>
 class DBManager
 {
 public:
-    DBManager(QString connection_name, QString file_name="test.txt") : file_name{file_name}, connection_name{connection_name}{
+    DBManager(QString connection_name, QString file_name) : file_name{file_name}, connection_name{connection_name}{
         DBManager::db = QSqlDatabase::addDatabase(DBType,connection_name);
         db.setDatabaseName(file_name);
         if(!db.open()){
             qDebug()<<"not open";
+            db.close();
+            db=QSqlDatabase();
+            QSqlDatabase::removeDatabase(connection_name);
+            throw ERROR_WHILE_LOADING{"NOT OPEN"};
         }
-
-//        QSqlQuery countColumn {QString("SELECT count(*) FROM PRAGMA_TABLE_INFO('")+table_name+"')",db};
-//        int num_of_columns = countColumn.next() ? countColumn.value(0).toInt() : 0;
-
-        QSqlQuery columnNamesQuery {QString("SELECT name FROM PRAGMA_TABLE_INFO('")+table_name+"');",db};
-        while(columnNamesQuery.next()){
-            qDebug()<<columnNamesQuery.value(0).toString();
-            column_names<<columnNamesQuery.value(0).toString();
-        }
-        column_names.removeFirst();//ID 칼럼 삭제
+        //QSqlQuery countColumn {QString("SELECT count(*) FROM PRAGMA_TABLE_INFO('")+table_name+"')",db};
+        //int num_of_columns = countColumn.next() ? countColumn.value(0).toInt() : 0;
     }
     ~DBManager(){
         db.close();
+        db=QSqlDatabase();
+        QSqlDatabase::removeDatabase(connection_name);
     }
     QSqlQuery getSize() const{
         return QSqlQuery{QString("select count(id) from ")+QString(table_name),db}; //Client, Product, Order테이블 모두 id필드를 갖으므로 id개수로 사이즈를 알 수 있습니다
@@ -59,7 +54,6 @@ public:
         query.bindValue(":id",id);
         return query;
     }
-
     template <typename... Args>
     QSqlQuery add(Args... args) {
         QString query_string ((QString("insert into ")+table_name+" values ("));
@@ -78,9 +72,43 @@ public:
         query.prepare(query_string);
         return bindValue(query, args...);
     }
-
+    template <typename... Fields>
+    QSqlQuery modify(QString id,Fields... args){
+        QString query_string ((QString("update ")+table_name+" set "));
+        for(const auto& name : column_names){
+            query_string+=name;
+            query_string+="=?,";
+        }
+        query_string.chop(1);
+        query_string+=" where id=?;";
+        QSqlQuery query{db};
+        query.prepare(query_string);
+        query = bindValue(query, args...);
+        query.addBindValue(id);
+        qDebug()<<"modify query: "<<query.lastQuery();
+        qDebug()<<"err"<<query.lastError().text();
+        return query;
+    }
+    QSqlQuery erase(QString id){
+        QSqlQuery query{db};
+        query.prepare(QString("delete from ")+table_name+" where id=:id;");
+        query.bindValue(":id",id);
+        return query;
+    }
+    static std::tm getDate(QString dt){
+        std::string date = dt.toStdString();
+        tm time;
+        std::istringstream ss{ date };
+        ss >> std::get_time(&time, "%D %T");
+        return time;
+    }
+    static QString tmToString(std::tm dt){
+        std::ostringstream ss;
+        ss<<std::put_time(&dt, "%D %T");
+        return ss.str().c_str();
+    }
     struct ExplicitAdd {
-        ExplicitAdd(QString tb_name) : tb_name{tb_name} {}
+        ExplicitAdd(QSqlDatabase& db, QString tb_name) : tb_name{tb_name}, db{db} {}
         QSqlQuery add(std::initializer_list<std::initializer_list<QString>> args) {
             QString query_string ((QString("insert into ")+tb_name+" ("));
             for(const auto& field : args){
@@ -104,51 +132,12 @@ public:
         }
     private:
         QString tb_name;
+        QSqlDatabase& db;
     };
-
-    template <typename... Fields>
-    QSqlQuery modify(QString id,Fields... args){
-        QString query_string ((QString("update ")+table_name+" set "));
-        for(const auto& name : column_names){
-            query_string+=name;
-            query_string+="=?,";
-        }
-        query_string.chop(1);
-        query_string+=" where id=?;";
-        QSqlQuery query{db};
-        query.prepare(query_string);
-        query = bindValue(query, args...);
-        query.addBindValue(id);
-        qDebug()<<"modify query: "<<query.lastQuery();
-        qDebug()<<"err"<<query.lastError().text();
-        return query;
-    }
-
-    QSqlQuery erase(QString id){
-        QSqlQuery query{db};
-        query.prepare(QString("delete from ")+table_name+" where id=:id;");
-        query.bindValue(":id",id);
-        return query;
-    }
-
-    static std::tm getDate(QString dt){
-        std::string date = dt.toStdString();
-        tm time;
-        std::istringstream ss{ date };
-        ss >> std::get_time(&time, "%D %T");
-        return time;
-    }
-
-    static QString getDate(std::tm dt){
-        std::ostringstream ss;
-        ss<<std::put_time(&dt, "%D %T");
-        return ss.str().c_str();
-    }
-
     template<typename T>
     struct DBIterator : public Iterator<T>{
         using Itr_type = int;
-        DBIterator(Itr_type p) : ptr{ p } {}
+        DBIterator(Itr_type p, const QSqlDatabase& db) : ptr{ p }, db{db} {}
         void operator++() override final {
             ++ptr;                                          //레코드 인덱스를 증가시킵니다
         }
@@ -171,6 +160,7 @@ public:
         }
     private:
         Itr_type ptr;
+        const QSqlDatabase& db;
     };
 
 protected:
@@ -179,8 +169,18 @@ protected:
     QStringList column_names;
     QString file_name;
     QString connection_name;
-private:
 
+    unsigned int getQuerySize(QSqlQuery& query){
+        unsigned int siz =0;
+        auto saved = query.at();
+        query.seek(-1);
+        while(query.next()){    //sqlite는 size()함수를 지원하지 않아서 직접 세어야 합니다.
+            ++siz;
+        }
+        query.seek(saved);          //개수를 다 센 후 다시 이전 레코드로
+        return siz;
+    }
+private:
     template <typename T>
     static QSqlQuery bindValue(QSqlQuery query, T arg) {
         query.addBindValue(arg);
@@ -204,6 +204,6 @@ private:
     }
 };
 
-
+}
 
 #endif // DBMANAGER_H

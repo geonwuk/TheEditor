@@ -6,7 +6,7 @@
 #include <ctime>
 #include <random>
 #include <functional>
-#include "DB/db_clientmanager.h"
+//#include "DB/db_clientmanager.h"
 using namespace std;
 using namespace CM;
 unsigned int ClientManager::client_id = 0; 
@@ -18,6 +18,17 @@ bool ClientManager::addClient(const string id, const string name, const string p
 
 	client_id++;
 	return success;
+}
+
+
+void ClientManager::loadClient(const std::vector<CM::Client>& clients_to_add) {
+    unsigned int line=0;
+    for(const auto& c : clients_to_add){
+        if(!addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress())){
+            throw ERROR_WHILE_LOADING{line};
+        }
+        ++line;
+    }
 }
 
 bool ClientManager::modifyClient(const CID id, const Client new_client){
@@ -58,50 +69,18 @@ ofstream& CM::operator<<(std::ofstream& out, const Client& c){
 	return out;
 }
 
-
-
-//void ClientManager::saveClients(QString file_name, const ClientModel& data_owner) const noexcept(false) {
-////	for (const auto& c : clients) {
-////        out << *c.second.get()<<',' << endl;
-////	}
-////	return out;
-//}
-
-void ClientManager::loadClients(QString file_name){
-
+void ClientManager::checkSafeToLoad(const std::vector<CM::Client>& clients_to_load){
+    unsigned int line=0;
+    for(const auto& c : clients_to_load){
+        if(clients.find(c.getId())!=clients.end()){     //만약 파일(DB, CSV)로부터 추가하려는 상품 ID가 이미 중복된 경우 로딩 불가입니다
+            throw ERROR_WHILE_LOADING{line};            //어느 라인에서 로딩하다가 에러가 났는지 예외를 던집니다.
+        }
+        ++line;
+    }
 }
 
-//std::ifstream& ClientManager::loadClients(std::ifstream& in, const unsigned int lines) {
-//    unsigned int line =0;
-//    try{
-//        string str;
-//        while (line++<lines && getline(in, str)) {
-//            vector<string> tmp;
-//            auto beg = str.find_first_not_of(',');
-//            while (beg != string::npos) {
-//                auto endIdx = str.find_first_of(',', beg);
-//                if (endIdx == string::npos) {
-//                    endIdx = str.length();
-//                }
-//                tmp.emplace_back(str.substr(beg, endIdx - beg));
-//                beg = str.find_first_not_of(',', endIdx);
-//            }
-//            string address = tmp.at(3);
-//            string phone_number = tmp.at(2);
-//            string name = tmp.at(1);
-//            string id = tmp.at(0);
-//            addClient(id, name, phone_number, address);
-//        }
-//        return in;
-//    }
-//    catch(...){
-//        throw ERROR_WHILE_LOADING{line};
-//    }
-
-//}
-
 unsigned int ClientManager::getSize() const{
-    return clients.size();
+    return (unsigned int)clients.size();
 }
 
 bool CM::operator==(const Client& c, const NoClient&){

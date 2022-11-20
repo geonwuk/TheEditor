@@ -46,7 +46,7 @@ void Server::readData(){
     }
 
     recv_data.data.append(socket->read(recv_data.target_size));
-    if(recv_data.data.size()<recv_data.target_size){
+    if((quint64)recv_data.data.size()<recv_data.target_size){
         sendMessage(socket,Message{QString::number(recv_data.data.size()),Chat_FileTransmission});      //파일 전송 progress_dialog의 값을 업데이트 하도록 출력
         return;
     }

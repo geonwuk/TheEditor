@@ -26,9 +26,9 @@ class Manager {
     friend class MainWindow;
 public:
     Manager(MainWindow& mw) : mw{mw} {
-        cm = new DBM::ClientManager{"client"};
-        pm = new DBM::ProductManager{"product"};
-        om = new DBM::OrderManager{*cm,*pm,"orders"};
+        cm = new CM::ClientManager;
+        pm = new PM::ProductManager;
+        om = new OM::OrderManager{*cm,*pm};
     }
     template<typename F>
     void notify(F notify_){
@@ -43,8 +43,6 @@ public:
     ServerManager& getSM() { return sm; }
     void attachObserver(View* o);
     void detachObserver(View* o);
-    void changeToDB();
-    void changeToMemory();
     void reset();
 
 private:
@@ -67,7 +65,8 @@ public:
 private slots:
     void save();
     void load();
-    void onGroupBoxToggled();
+    void onRadioButtonDBClicked();
+    void onRadioMemoryButtonClicked();
 
 private:
     Ui::MainWindow *ui;

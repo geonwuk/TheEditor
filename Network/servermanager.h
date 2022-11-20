@@ -75,7 +75,7 @@ public:
     decltype(net_clients)::const_iterator end() const{
         return net_clients.cend();
     }
-    const unsigned int getSize() const{
+    const size_t getSize() const{
         return net_clients.size();
     }
 

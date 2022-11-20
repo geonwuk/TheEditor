@@ -49,10 +49,7 @@ bool ProductManager::addProduct(const string name, const unsigned int price, con
     tm local_time;
     localtime_s(&local_time, &base_time);
     string ID = generateRandID(local_time);
-    bool success;
-    tie(ignore, success) = products.emplace(ID, Product(ID, name, price, qty, local_time));
-    product_id++;
-    return success;
+    return loadProduct(ID, name, price, qty, local_time);
 }
 
 bool ProductManager::loadProduct(const string id, const string name, const unsigned int price, const unsigned int qty, tm time)
@@ -61,6 +58,25 @@ bool ProductManager::loadProduct(const string id, const string name, const unsig
     tie(ignore, success) = products.emplace(id, Product(id, name, price, qty, time));
     product_id++;
     return success;
+}
+
+void ProductManager::loadProduct(const std::vector<PM::Product>& products_to_load){
+    unsigned int line=0;
+    for(const auto& p : products_to_load){
+        if(!loadProduct(p.id,p.name,p.getPrice(),p.qty,p.registered_date))
+            throw ERROR_WHILE_LOADING{line};
+        ++line;
+    }
+}
+
+void ProductManager::checkSafeToLoad(const vector<Product>& products_to_add) {
+    unsigned int line=0;
+    for(const auto& p : products_to_add){
+        if(products.find(p.getId())!=products.end()){   //만약 파일(DB, CSV)로부터 추가하려는 상품 ID가 이미 중복된 경우 로딩 불가입니다
+            throw ERROR_WHILE_LOADING{line};            //어느 라인에서 로딩하다가 에러가 났는지 예외를 던집니다.
+        }
+        ++line;
+    }
 }
 
 bool ProductManager::modifyProduct(const PID id, const Product new_product){
@@ -101,44 +117,6 @@ const Product ProductManager::findProduct(const PID id) const{
     }
 }
 
-std::ifstream& PM::ProductManager::loadProducts(ifstream& in, const unsigned int lines){
-    unsigned int line=0;
-    try{
-        string str;
-        while (line++<lines && getline(in, str)){
-            vector<string> tmp;
-            auto begIdx = str.find_first_not_of(',');
-            while (begIdx != string::npos) {
-                auto endIdx = str.find_first_of(',', begIdx);
-                if (endIdx == string::npos) {
-                    endIdx = str.length();
-                }
-                tmp.emplace_back(str.substr(begIdx, endIdx - begIdx));
-                begIdx = str.find_first_not_of(',', endIdx);
-            }
-
-            string time_string = tmp.at(4);
-            unsigned int qty = stoul(tmp.at(3));
-            unsigned int price = stoul(tmp.at(2));
-            string name = tmp.at(1);
-            string id = tmp.at(0);
-
-            tm time;
-            istringstream ss{ time_string };
-            ss >> std::get_time(&time, "%D %T");
-
-            if(!loadProduct(id,name,price,qty,time)){
-                throw -1;
-            }
-
-        }
-        return  in;
-    }
-    catch(...){
-        throw ERROR_WHILE_LOADING{line};
-    }
-}
-
 const unsigned int ProductManager::getSize() const{
-    return products.size();
+    return (unsigned int)products.size();
 }

@@ -8,7 +8,7 @@ extern const char ORDER_TABLE_NAME[]="Orders";
 void OrderManager::createTable(QString create_query){           //주문의 경우 DB 테이블이 3개가 필요해서 테이블을 만드는 함수를 만들었습니다
     auto query_result = db.exec(create_query);
     if(query_result.lastError().isValid())
-        throw ERROR_WHILE_LOADING{create_query.toStdString()};
+        throw DBM::ERROR_WHILE_LOADING{create_query.toStdString()};
 }
 
 void OrderManager::initTable(){                                     //DB에서 테이블 3개를 만드는 작업을 합니다
@@ -38,16 +38,20 @@ void OrderManager::initTable(){                                     //DB에서 �
     createTable(create_query);
     createTable(create_order_list);
     createTable(create_ordered_product);
+    auto query_result = db.exec(create_query);
+    if(query_result.lastError().isValid())
+        throw DBM::ERROR_WHILE_LOADING{"Product"};
+    QSqlQuery columnNamesQuery {QString("SELECT name FROM PRAGMA_TABLE_INFO('")+ORDER_TABLE_NAME+"');",db};
+    while(columnNamesQuery.next()){
+        column_names<<columnNamesQuery.value(0).toString();
+    }
+    column_names.removeFirst();//ID 칼럼 삭제
 }
 
 OrderManager::OrderManager(ClientModel& cm, ProductModel& pm, QString connection_name, QString file_name) : DBManager{connection_name, file_name}, cm{cm}, pm{pm} {
     initTable();
-}
 
-OrderManager::OrderManager(ClientModel& cm, ProductModel& pm, QString connection_name) : DBManager(connection_name), cm{cm}, pm{pm}{
-    initTable();
 }
-
 std::pair<const OM::Order_ID, bool> OrderManager::addOrder(const CM::CID client_id, std::vector<bill> bills){
     time_t base_time = time(nullptr);
     tm local_time;
@@ -70,7 +74,7 @@ std::pair<const OM::Order_ID, bool> OrderManager::addOrder(const CM::CID client_
             const auto& product = pm.findProduct(bill.id);
             total_price += product.getPrice()*bill.qty;
         }
-        ExplicitAdd explicit_add{"Orders"};
+        ExplicitAdd explicit_add{db, "Orders"};         //DB에서 order_id는 primary key autoincrement이므로 primary 키 부분을 뺀 나머지 필드에 대해서 insert를 해야합니다
         QSqlQuery query = explicit_add.add({{"client_id",client_id.c_str()},{"price",QString::number(total_price)},{"date",ss.str().c_str()}});
         assert(query.exec());
         order_id = query.lastInsertId().toUInt();
@@ -91,6 +95,7 @@ std::pair<const OM::Order_ID, bool> OrderManager::addOrder(const CM::CID client_
         query2.bindValue(":id",id);     //상품 아이디를 바인드합니다
         query2.exec();                  //쿼리를 실행합니다
         query2.seek(0);                 //첫번째 레코드를 가져옵니다
+        unsigned int siz = getQuerySize(query2);
 
         qDebug()<<"ordered_product find "<<query2.lastQuery()<<query2.lastError();
         auto record = query2.record();
@@ -103,13 +108,13 @@ std::pair<const OM::Order_ID, bool> OrderManager::addOrder(const CM::CID client_
         qDebug()<<"n3"<<n3;
 
         auto seq = record.value("product_history_seq").toUInt();
-        if(!(n1&&n2&&n3)){                                                      //상품 조건 3가지가 모두 같지 않으면 새로운 상품이므로 새롭게 추가하고 seq를 증가시켜 새로운 상품으로 주문에 추가하도록 합니다
+        if(siz==0 || !(n1&&n2&&n3)){                                                      //상품 조건 3가지가 모두 같지 않으면 새로운 상품이므로 새롭게 추가하고 seq를 증가시켜 새로운 상품으로 주문에 추가하도록 합니다
             auto query = add(QString("Ordered_Product"),id,++seq,name,price,date);
             assert(query.exec());
             qDebug()<<"Ordered_Product insert "<<query.lastQuery()<<query.lastError();
         }
 
-        ExplicitAdd order_list{"order_list"};
+        ExplicitAdd order_list{db,"order_list"};
         auto order_list_insert = order_list.add({{"order_id",QString::number(order_id)},{"product_id",id},
                                                  {"product_history_seq",QString::number(seq)},{"qty",QString::number(bill.qty)}});
         assert(order_list_insert.exec());
@@ -121,10 +126,74 @@ std::pair<const OM::Order_ID, bool> OrderManager::addOrder(const CM::CID client_
     return {0,true};
 }
 
-bool loadOrder(const OM::Order_ID oid, const CM::CID client_id, std::vector<PM::Product> products, std::vector<unsigned int> qty, tm time) noexcept(false){
+void OrderManager::loadOrder(const std::vector<OM::Order>& orders_to_add){
+    for(const auto& o : orders_to_add){
+        unsigned int order_id=0;
+        {
+            unsigned int total_price = 0;
+            for(const auto& p : o.getProducts()){
+                const auto& product = p.product;
+                total_price += product.getPrice()*p.qty;
+            }
+            ExplicitAdd explicit_add{db, "Orders"};
+            QSqlQuery query = explicit_add.add({{"client_id",o.getClient().getId().c_str()},{"price",QString::number(total_price)},{"date",tmToString(o.getDate())}});
+            assert(query.exec());
+            order_id = query.lastInsertId().toUInt();
+        }
+        for(const auto& p : o.getProducts()){
+            const auto& product = p.product;
+            QString pid = product.getId().c_str();
+            QString name = product.getName().c_str();
+            auto price = product.getPrice();
+            auto date = product.getDate();
 
+            QSqlQuery ordered_product_query{db};
+            ordered_product_query.prepare("select * from Ordered_Product where product_id = :id");
+            ordered_product_query.bindValue(":id",pid);
+            ordered_product_query.exec();
+            unsigned int siz = getQuerySize(ordered_product_query);
+            int seq=0;
+            qDebug()<<pid<<siz;
+            if(siz == 0){
+                assert(add(QString("Ordered_Product"),pid,seq,name,price,tmToString(date)).exec());
+            }
+            else{
+                while(ordered_product_query.next()){
+                    auto n1 = ordered_product_query.value("name").toString()==name;                        //상품 중복 조건 첫번째
+                    qDebug()<<"n1"<<n1;
+                    auto n2 = ordered_product_query.value("price").toString()==QString::number(price);     //상품 중복 조건 두번째
+                    qDebug()<<"n2"<<n2;
+                    auto n3 = ordered_product_query.value("date").toString()==tmToString(date);                        //상품 중복 조건 세번째
+                    qDebug()<<"n3"<<n3;
+                    if((n1&&n2&&n3)){
+                        qDebug()<<"found";
+                        goto found;
+                    }
+                    ++seq;
+                }
+                //while을 끝까지 돌았다는 의미는 새로 추가해줘야 한다는 의미입니다.
+                assert(add(QString("Ordered_Product"),pid,seq,name,price,tmToString(date)).exec());
+            }
+            found:
+            ExplicitAdd order_list{db,"order_list"};
+            auto order_list_insert = order_list.add({{"order_id",QString::number(order_id)},{"product_id",pid},
+                                                     {"product_history_seq",QString::number(seq)},{"qty",QString::number(p.qty)}});
+            assert(order_list_insert.exec());
+            qDebug()<<"orderlist err"<<order_list_insert.lastError();
+        }
+    }
 
 }
+void OrderManager::checkSafeToLoad(const std::vector<OM::Order>& orders_to_add) {
+    int line=0;
+    for(const auto& o : orders_to_add ){
+        if(findOrder(o.getID())==OM::no_order){
+            throw ERROR_WHILE_LOADING{line};
+        }
+        ++line;
+    }
+}
+
 #include <QSqlQueryModel>
 #include <QTableView>
 const OM::Order OrderManager::findOrder(const OM::Order_ID oid) const{
@@ -137,6 +206,8 @@ const OM::Order OrderManager::findOrder(const OM::Order_ID oid) const{
     while(query.next()){    //sqlite는 size()함수를 지원하지 않아서 직접 세어야 합니다.
         ++siz;
     }
+    if(siz == 0)
+        return OM::no_order;
     query.seek(0);          //개수를 다 센 후 다시 첫번째 레코드로
     qDebug()<<"size"<<siz;
 
@@ -192,14 +263,14 @@ const size_t OrderManager::getSize() const{
     return query.next() ? query.value(0).toUInt() : 0;
 }
 IteratorPTR<OM::Order> OrderManager::begin(){
-    return IteratorPTR<OM::Order>{ new OIterator{0, *this} };       //쿼리문의 첫번째 index는 0부터 시작하므로 0으로 초기화합니다
+    return IteratorPTR<OM::Order>{ new OIterator{0,*this,db} };       //쿼리문의 첫번째 index는 0부터 시작하므로 0으로 초기화합니다
 }
 IteratorPTR<OM::Order> OrderManager::end(){
     QSqlQuery query{QString("select count(id) from ") + ORDER_TABLE_NAME, db};              //id 레코드 개수를 알기 위한 쿼리를 실행합니다
     if (query.next()) {
-        return IteratorPTR<OM::Order>{new OIterator{query.value(0).toInt(), *this}};        //레코드 개수 만큼 end로 설정합니다
+        return IteratorPTR<OM::Order>{new OIterator{query.value(0).toInt(),*this,db}};        //레코드 개수 만큼 end로 설정합니다
     } else {
-        return IteratorPTR<OM::Order>{new OIterator{0, *this}};                             //만약 쿼리 결과 레코드가 하나도 없다면 0입니다
+        return IteratorPTR<OM::Order>{new OIterator{0,*this,db}};                             //만약 쿼리 결과 레코드가 하나도 없다면 0입니다
     }
 }
 const OM::Order OrderManager::OIterator::operator*() const {

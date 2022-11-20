@@ -9,7 +9,7 @@ using std::string;
 
 unsigned int ProductManager::product_id=0;
 
-ProductManager::ProductManager(QString connection_name) : DBManager{connection_name} {
+ProductManager::ProductManager(QString connection_name, QString file_name):DBManager{connection_name, file_name}{
     QString create_query = "Create TABLE IF NOT EXISTS Product("
                             "id varchar(20) PRIMARY KEY,"
                             "name varchar(20),"
@@ -18,9 +18,13 @@ ProductManager::ProductManager(QString connection_name) : DBManager{connection_n
                             "date TEXT);";
     auto query_result = db.exec(create_query);
     if(query_result.lastError().isValid())
-        throw ERROR_WHILE_LOADING{"Product"};
+        throw DBM::ERROR_WHILE_LOADING{"Product"};
+    QSqlQuery columnNamesQuery {QString("SELECT name FROM PRAGMA_TABLE_INFO('")+PRODUCT_TABLE_NAME+"');",db};
+    while(columnNamesQuery.next()){
+        column_names<<columnNamesQuery.value(0).toString();
+    }
+    column_names.removeFirst();//ID 칼럼 삭제
 }
-
 template<typename T>
 PM::Product makeProductFromDB(T record){
     string id = record.value("id").toString().toStdString();
@@ -39,7 +43,26 @@ bool ProductManager::addProduct(const std::string name, const unsigned int price
     tm local_time;
     localtime_s(&local_time, &base_time);
     string id = generateRandID(local_time);
-    return ProductManager::loadProduct(id,name,price,qty,local_time);
+    return loadProduct(id,name,price,qty,local_time);
+}
+
+void ProductManager::checkSafeToLoad(const std::vector<PM::Product>& products_to_add){
+    unsigned int line=0;
+    for(const auto& p : products_to_add){
+        if(findProduct(p.getId())==PM::no_product){     //만약 파일(DB, CSV)로부터 추가하려는 상품 ID가 이미 중복된 경우 로딩 불가입니다
+            throw ERROR_WHILE_LOADING{line};            //어느 라인에서 로딩하다가 에러가 났는지 예외를 던집니다.
+        }
+        ++line;
+    }
+}
+void ProductManager::loadProduct(const std::vector<PM::Product>& products_to_add){
+    unsigned int line=0;
+    for(const auto& p : products_to_add){
+        bool re = loadProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
+        if(!re)
+            throw ERROR_WHILE_LOADING{line};
+        ++line;
+    }
 }
 
 bool ProductManager::loadProduct(const std::string id, const std::string name, const unsigned int price, const unsigned int qty, std::tm time){
@@ -99,14 +122,14 @@ const unsigned int ProductManager::getSize() const {
 }
 
 IteratorPTR<PM::Product> ProductManager::begin(){
-    return IteratorPTR<PM::Product>{ new PIterator{0} };
+    return IteratorPTR<PM::Product>{ new PIterator{0,db} };
 }
 IteratorPTR<PM::Product> ProductManager::end() {
   QSqlQuery query{QString("select count(id) from ") + PRODUCT_TABLE_NAME, db};
   if (query.next()) {
-    return IteratorPTR<PM::Product>{new PIterator{query.value(0).toInt()}};
+    return IteratorPTR<PM::Product>{new PIterator{query.value(0).toInt(),db}};
   } else {
-    return IteratorPTR<PM::Product>{new PIterator{0}};
+    return IteratorPTR<PM::Product>{new PIterator{0,db}};
   }
 }
 

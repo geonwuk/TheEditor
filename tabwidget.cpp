@@ -16,7 +16,7 @@ void TabWidget::tabCurrentChanged(int index){
 }
 
 
-void TabWidget::tabInserted(int index){
+void TabWidget::tabInserted(int){
 }
 
 TabWidget::TabWidget(MainWindow* parent) : parent(parent) {

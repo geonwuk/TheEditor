@@ -11,7 +11,6 @@
 namespace CM {
 	using std::map;
     using std::string;
-    struct ERROR_WHILE_LOADING {unsigned int line;};
 
     std::ofstream& operator<<(std::ofstream& out, const Client& c);
 
@@ -19,15 +18,14 @@ namespace CM {
 	public:
         class const_iterator;
         bool addClient(const CID id, const string name, const string phone_number = "NONE", const string address = "NONE") override;
+        void loadClient(const std::vector<CM::Client>&) override;
         bool modifyClient(const CID id, const Client client) override;
         bool eraseClient(const CID id)override;
         const Client findClient(const CID id) const override;
         Client copyClient(const CID) const override;
-
-        void loadClients(QString file_name) noexcept(false) override;
-
         unsigned int getSize() const override;
-	private:
+        void checkSafeToLoad(const std::vector<CM::Client>&) noexcept(false) override;
+    private:
 		static unsigned int client_id;
         map< CID, std::shared_ptr<Client> > clients;
     private:
@@ -43,19 +41,12 @@ namespace CM {
             void operator++() override {
                 ++ptr;
             }
-//            CIterator& operator= (Iterator& rhs) override{
-//                ptr = static_cast<CIterator&>(rhs).ptr;
-//                return *this;
-//            }
             bool operator!=(Iterator& b) override {
                 return (ptr != static_cast<CIterator&>(b).ptr ? true : false);
             }
             bool operator==(Iterator& b) override {
                 return ptr == static_cast<CIterator&>(b).ptr ? true : false;
             }
-//            Client operator->() override{
-//                return *ptr->second.get();
-//            }
         private:
             Itr_type ptr;
         };

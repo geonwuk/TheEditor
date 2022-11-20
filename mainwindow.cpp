@@ -15,7 +15,7 @@
 #include <QListWidget>
 #include<QMessageBox>
 using namespace std;
-static const unsigned int parseTitle(ifstream& in, const string title, const unsigned int line );
+
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 탭 화면을 스플리터로 나누는 함수
     QSplitter* splitter = new QSplitter;
     splitter->setChildrenCollapsible(false);
@@ -61,10 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle(tr("Program"));
 
     connect(dash_board->radioButtonDB, SIGNAL(clicked()), this, SLOT(onRadioButtonDBClicked()));
-    connect(dash_board->radioButtonMemory, SIGNAL(clicked()), this, SLOT(onRadioButtonMemoryClicked()));
-    connect(dash_board->groupBox, SIGNAL(toggled()), this, SLOT(onGroupBoxToggled()));
-
-
+    connect(dash_board->radioButtonMemory, SIGNAL(clicked()), this, SLOT(onRadioMemoryButtonClicked()));
 }
 
 
@@ -74,30 +71,119 @@ void Manager::updateAll(){          //파일을 불러오기한 경우 모두 �
     }
 }
 
-void MainWindow::onGroupBoxToggled(){
+void MainWindow::onRadioButtonDBClicked(){
+    try{
+        QString file_name = QFileDialog::getSaveFileName(this,tr("Select New DB File"));
+        if(file_name.size()==0){
+            dash_board->groupBox->blockSignals(true);
+            dash_board->radioButtonMemory->click();
+            dash_board->groupBox->blockSignals(false);
+            return;
+        }
+        try{
+            DBM::ClientManager save_client{"save_client",file_name};
+            for(const auto& c : mgrs.getCM()){
+                bool re = save_client.addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
+                if(!re)
+                    throw ClientModel::ERROR_WHILE_LOADING{};
+            }
+            DBM::ProductManager save_product{"save_product",file_name};
+            for(const auto& p : mgrs.getPM()){
+                save_product.loadProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
+            }
+            DBM::OrderManager save_order{mgrs.getCM(),mgrs.getPM(),"save_order",file_name};
+            vector<OM::Order> orders;
+            for(const auto& o : mgrs.getOM()){
+                orders.emplace_back(o);
+            }
+            save_order.loadOrder(orders);
+        }
+        catch(...){
+            QMessageBox::critical(this, tr("ERROR WHILE MAKING DB Memory"), tr("Can't change memory model to DB"));
+            dash_board->groupBox->blockSignals(true);
+            dash_board->radioButtonMemory->click();
+            dash_board->groupBox->blockSignals(false);
+            return;
+        }
+        auto dbcm = new DBM::ClientManager{"client",file_name};
+        auto dbpm = new DBM::ProductManager {"product",file_name};
+        auto dbom = new DBM::OrderManager {*dbcm,*dbpm,"order",file_name};
+        mgrs.reset();
+        mgrs.cm = dbcm;
+        mgrs.pm = dbpm;
+        mgrs.om = dbom;
+        auto db_path_item = dash_board->tableWidgetDB->item(2,0);
+        db_path_item->setText(file_name);
+        QFileInfo fi{file_name};
+        dash_board->tableWidgetDB->item(1,0)->setText(fi.fileName());
+        dash_board->tableWidgetDB->item(0,0)->setText("SQLite");
+    }
+    catch(...){
+        QMessageBox::critical(this, tr("FAIL"), tr("Can't change memory model to DB"));
+        dash_board->groupBox->blockSignals(true);
+        dash_board->radioButtonMemory->click();
+        dash_board->groupBox->blockSignals(false);
+    }
+    mgrs.updateAll();//로드한 후 모든 뷰(탭)를 갱신합니다. 디버깅 용도입니다
+}
+void MainWindow::onRadioMemoryButtonClicked(){
+    try{
+        auto mcm = new CM::ClientManager;
+        auto mpm = new PM::ProductManager;
+        auto mom = new OM::OrderManager{*mcm, *mpm};
 
+        for(const auto& c : mgrs.getCM()){
+            bool re = mcm->addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
+            if(!re)
+                throw ClientModel::ERROR_WHILE_LOADING{};
+        }
+        for(const auto& p : mgrs.getPM()){
+            bool re = mpm->loadProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
+            if(!re)
+                throw ProductModel::ERROR_WHILE_LOADING{};
+        }
+        vector<OM::Order> orders;
+        for(const auto& o : mgrs.getOM()){
+            orders.emplace_back(o);
+        }
+        mom->loadOrder(orders);
 
+        mgrs.reset();
+        mgrs.cm = mcm;
+        mgrs.pm = mpm;
+        mgrs.om = mom;
+        auto db_path_item = dash_board->tableWidgetDB->item(2,0);
+        db_path_item->setText(tr("NONE"));
+        dash_board->tableWidgetDB->item(1,0)->setText(tr("NONE"));
+        dash_board->tableWidgetDB->item(0,0)->setText("NONE");
+    }
+    catch(...){
+        QMessageBox::critical(this, tr("FAIL"), tr("Can't change memory model to memory"));
+        dash_board->groupBox->blockSignals(true);
+        dash_board->radioButtonDB->click();
+        dash_board->groupBox->blockSignals(false);
+    }
+    mgrs.updateAll();//로드한 후 모든 뷰(탭)를 갱신합니다. 디버깅 용도입니다
 }
 
-static QMessageBox* createListDialog(QWidget* parent, QStringList ls){       //저장이나 불러오기를 할 때 DB, CSV에서 사용자가 선택할 수 있게 다이어로그를 만드는 함수입니다
-    QMessageBox* dialog = new QMessageBox(parent);
+static int createListDialog(QWidget* parent, QStringList ls){       //저장이나 불러오기를 할 때 DB, CSV에서 사용자가 선택할 수 있게 다이어로그를 만드는 함수입니다
+    std::unique_ptr<QDialog> dialog {new QDialog(parent)};
     dialog->setModal(true);
-    QListWidget* list = new QListWidget(dialog);
+    QListWidget* list = new QListWidget(dialog.get());
     for(const auto& e : ls){
         list->addItem(e);
     }
-    QPushButton* ok= new QPushButton("OK",dialog);
-    QPushButton* cancel = new QPushButton("cancel",dialog);
+    QPushButton* ok= new QPushButton("OK",dialog.get());
+    QPushButton* cancel = new QPushButton("cancel",dialog.get());
     QVBoxLayout* v_layout = new QVBoxLayout;
     v_layout->addWidget(list);
     v_layout->addWidget(ok);
     v_layout->addWidget(cancel);
     dialog->setLayout(v_layout);
-    QObject::connect(ok,SIGNAL(clicked()),dialog,SLOT(accept()));
-    QObject::connect(cancel,SIGNAL(clicked()),dialog,SLOT(rejected()));
+    QObject::connect(ok,SIGNAL(clicked()),dialog.get(),SLOT(accept()));
+    QObject::connect(cancel,SIGNAL(clicked()),dialog.get(),SLOT(reject()));
     dialog->exec();
-    int result = list->currentIndex().row();
-
+    int result = dialog->result()!=QDialog::Accepted ? -1 : list->currentRow();
     return result;
 }
 
@@ -107,7 +193,6 @@ void MainWindow::save(){                                                //파일
         return;
     }
     int mode = createListDialog(this,{"DB","CSV"});
-
     qDebug()<<"ee"<<file_name<<mode;
     if(mode==0){ //DB
         try{
@@ -122,13 +207,11 @@ void MainWindow::save(){                                                //파일
                 save_product.loadProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
             }
             DBM::OrderManager save_order{mgrs.getCM(),mgrs.getPM(),"save_order",file_name};
+            vector<OM::Order> orders;
             for(const auto& o : mgrs.getOM()){
-                std::vector<OrderModel::bill> bills;
-                for(const auto& ordered_product : o.getProducts()){
-                    bills.emplace_back(ordered_product.product.getId(),ordered_product.qty);
-                }
-                save_order.addOrder(o.getClient().getId(),bills);
+                orders.emplace_back(o);
             }
+            save_order.loadOrder(orders);
         }
         catch(...){
 
@@ -152,13 +235,12 @@ void MainWindow::save(){                                                //파일
                 }
                 break;
             case 2://order CSV로 export
-                out<<"order id,"<<"buyer,"<<"date,"<<"product id,"<<"product name,"<<"product qty"<<"product date,"<<endl;
+                out<<"order id,"<<"buyer,"<<"date,"<<"product id,"<<"product name,"<<"product qty"<<"product date,"<<"..."<<endl;
                 for (const auto& o : mgrs.getOM()){
                     out << o <<',' << endl;
                 }
                 break;
-            default://있을 수 없는 경우
-                assert(false);
+            default:
                 break;
             };
         }
@@ -167,76 +249,69 @@ void MainWindow::save(){                                                //파일
         }
 
     }
-
-
-
-
 }
 void MainWindow::load(){
     //저장된 파일을 불러오는 함수로 QAction과 연결되어 있다
     try{
-
-
-    QString file_name = QFileDialog::getSaveFileName(this);
-    if(file_name.size()==0){
-        return;
-    }
-    int mode = createListDialog(this,{"DB","CSV"});
-
-    switch(mode){
-    case 0://DB로부터 데이터 로드
-       { DBM::ClientManager load_client{"load_client",file_name};
-        for(const auto& c : load_client){
-            bool re = mgrs.getCM().addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
-            if(!re)
-                throw -1;
+        QString file_name = QFileDialog::getSaveFileName(this);
+        if(file_name.size()==0){
+            return;
         }
-        DBM::ProductManager load_product{"load_product",file_name};
-        for(const auto& p : load_product){
-            bool re = mgrs.getPM().loadProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
-            if(!re)
-                throw -1;
-        }
-        DBM::OrderManager load_order{load_client,load_product,"load_order",file_name};
-        for(const auto& o : mgrs.getOM()){
-            std::vector<OrderModel::bill> bills;
-            for(const auto& ordered_product : o.getProducts()){
-                bills.emplace_back(ordered_product.product.getId(),ordered_product.qty);
+        int mode = createListDialog(this,{"DB"});
+
+        switch(mode){
+        case 0://DB로부터 데이터 로드
+        {
+            DBM::ClientManager load_client{"load_client",file_name};
+            DBM::ProductManager load_product{"load_product",file_name};
+            DBM::OrderManager load_order{load_client,load_product,"load_order",file_name};
+            vector<CM::Client> clients;
+            for(const auto& c : load_client){
+                clients.emplace_back(c);
             }
-            load_order.addOrder(o.getClient().getId(),bills);
+            vector<PM::Product> products;
+            for(const auto& p : load_product){
+                products.emplace_back(p);
+            }
+            vector<OM::Order> orders;
+            for(const auto& o : load_order){
+                orders.emplace_back(o);
+            }
+            mgrs.getCM().loadClient(clients);
+            mgrs.getPM().loadProduct(products);
+            mgrs.getOM().loadOrder(orders);
         }
-
-
-
-    }
-       // mgrs.getCM().loadClients(file_name);
-       // mgrs.getPM().loadClients(file_name);
-       // mgrs.getOM().loadClients(file_name);
-        break;
-    case 1://CSV로부터 데이터 로드
-    {int csv_mode = createListDialog(this,{"Client","Product","Order"});
-        switch(csv_mode){
-        case 0:
-
             break;
-        case 1:
+        default:
             break;
-        case 2:
-            //OrderManager의 order_id를 로드할려는 주문 번호 중에 가장 큰 번호 + 1로 설정해야 합니다
-            break;
-
         }
     }
-    default:
-        assert(false);      //있을 수 없는 경우에 대하여 assert
-        break;
+    catch(DBM::ERROR_WHILE_LOADING err){
+        QString msg{"Please select correct DB file"};
+        msg+=QString(err.db_name.c_str());
+        QMessageBox::critical(this, tr("FAIL LOADING"), tr(msg.toStdString().c_str()));
     }
-}
-catch(...){
+    catch(ClientModel::ERROR_WHILE_LOADING err){
+        QString msg{"Duplicate ID found while loading client data at line number of "};
+        msg+=QString::number(err.line);
+        QMessageBox::critical(this, tr("FAIL LOADING"), tr(msg.toStdString().c_str()));
+    }
+    catch(ProductModel::ERROR_WHILE_LOADING err){
+        QString msg{"Duplicate ID found while loading product data at line number of "};
+        msg+=QString::number(err.line);
+        QMessageBox::critical(this, tr("FAIL LOADING"), tr(msg.toStdString().c_str()));
+    }
+    catch(OrderModel::ERROR_WHILE_LOADING err){
+        QString msg{"Duplicate ID found while loading order data at line number of "};
+        msg+=QString::number(err.line);
+        QMessageBox::critical(this, tr("FAIL LOADING"), tr(msg.toStdString().c_str()));
+    }
+
+    catch(...){
         QMessageBox::critical(this, tr("FAIL LOADING"), tr("FAIL LOADING"));
-}
+    }
 
-mgrs.updateAll();//로드한 후 모든 뷰(탭)를 갱신합니다
+    mgrs.updateAll();//로드한 후 모든 뷰(탭)를 갱신합니다
 }
 
 MainWindow::~MainWindow()
@@ -252,27 +327,7 @@ void Manager::detachObserver(View* o){
     observers.remove(o);
 }
 void Manager::reset(){
-    if(mw.dash_board->radioButtonDB->isChecked()){
-        changeToDB();
-    }
-    else{
-        changeToMemory();
-    }
-}
-
-void Manager::changeToDB(){
     delete cm;
     delete pm;
     delete om;
-    cm = new DBM::ClientManager{"client"};
-    pm = new DBM::ProductManager{"product"};
-    om = new DBM::OrderManager{*cm,*pm,"orders"};
-}
-void Manager::changeToMemory(){
-    delete cm;
-    delete pm;
-    delete om;
-    cm = new CM::ClientManager;
-    pm = new PM::ProductManager;
-    om = new OM::OrderManager{*cm,*pm};
 }

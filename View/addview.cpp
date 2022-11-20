@@ -248,7 +248,7 @@ void AddOrderView::addOrder(){
             auto qty_box = static_cast<QSpinBox*>(orderTree->itemWidget(product,2));
             QString pid = product->data(0, Role::id).value<QString>();
             auto target_product = mgr.getPM().findProduct(pid.toStdString());
-            if(target_product.getQty()<qty_box->value()){
+            if(target_product.getQty()<(unsigned int)qty_box->value()){
                 QMessageBox::warning(this, tr("Warning"), tr("%1's total stock is less than %2").arg(QString(target_product.getName().c_str())).arg(qty_box->value()));
                 return;
             }
@@ -380,7 +380,7 @@ void AddParticipantView::fillContents(){
     ui.clientList->resizeColumnsToContents();   //크기조절
     ui.clientList->resizeRowsToContents();      //크기조절
 
-    ui.participantList->setRowCount(mgr.getSM().getSize());
+    ui.participantList->setRowCount((int)mgr.getSM().getSize());
     int p_i=0;
     for(auto& participant : mgr.getSM()){   //고객리스트는 이전에 이미 출력했으므로 채팅방 참여자 리스트만
         int j=0;
