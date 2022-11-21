@@ -22,15 +22,5 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
-
-//    DBManager<name> db;
-//    auto x = db.add("Kag1","Kag2","Kag3","Kag4");
-//    x.exec();
-//    qDebug()<<x.lastError();
-
-//    auto y = db.modify("Kag1","Kag1","a","b","c");
-//    y.exec();
-//    qDebug()<<y.lastError();
-
     return a.exec();
 }

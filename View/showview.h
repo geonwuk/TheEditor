@@ -78,6 +78,7 @@ class QProgressDialog;
 class ServerManager;
 #include "ui_chatRoom.h"
 #include "Network/logthread.h"
+#include "Network/logmanagement.h"
 class ShowChatView : public NView
 {
     Q_OBJECT
@@ -97,9 +98,18 @@ private:
     void fillclientTree();
     ServerManager& smgr;
 
+    QPushButton* addCosumerButton;
+    QPushButton* deleteConsumerButton;
+    QTreeWidget* consumerTreeWidget;
+    std::list<LogConsumer> consumers;
+    LogBroker broker;
+    LogProducer producer{broker};
 private slots:
     void on_clientTreeWidget_customContextMenuRequested(const QPoint &pos);
     void savePressed();
+
+    void addConsumer();
+    void delteConsumer();
 };
 
 #endif // SHOWVIEW_H

@@ -308,7 +308,6 @@ void ShowOrderView::orderItemSelectionChanged_(){
     auto item = orderTable->item(curr_row,0);
     OM::Order_ID order_id = item->data(Role::id).value<OM::Order_ID>();
     auto order = findOrder(order_id);
-    assert(order!=OM::no_order);
     const auto& product_data = order.getProducts();
     orderInfoTable->setRowCount((int)product_data.size());
     int i=0;
@@ -333,7 +332,7 @@ void ShowOrderView::update(){       //옵저버 패턴의 update
     else{
     }
 }
-
+#include <thread>
 ShowOrderView::~ShowOrderView(){}
 //---------------------------------------------------
 
@@ -341,6 +340,12 @@ ShowOrderView::~ShowOrderView(){}
 ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : NView{mgr, tabs,icon,label}, smgr{mgr.getSM()} {
     ui.setupUi(this);
     log_thread=new LogThread(this);
+    addCosumerButton= ui.addButton;
+    deleteConsumerButton = ui.deleteButton;
+    consumerTreeWidget = ui.consumerTreeWidget;
+
+    connect(addCosumerButton, SIGNAL(pressed()), SLOT(addConsumer()));
+    connect(deleteConsumerButton, SIGNAL(pressed()), SLOT(delteConsumer()));
 
     smgr.registerChatView(this);
     //ui.splitter->setSizes({120,500});
@@ -384,7 +389,30 @@ void ShowChatView::savePressed(){
     }
     file.close();
 }
-
+void ShowChatView::addConsumer(){
+    QString file_name = QFileDialog::getSaveFileName(this,tr("Save file"),"",tr("text (*.txt *.text )"));
+    if(file_name.size()==0){
+        return;
+    }
+    consumers.emplace_back(broker, file_name);
+    update();
+}
+void ShowChatView::delteConsumer(){
+    int i = consumerTreeWidget->currentIndex().row();
+    qDebug()<<i;
+    if(i==-1){
+        QMessageBox::warning(this, tr("Can't delete"), tr("Please Select row to delte"));
+        return;
+    }
+    auto itr = std::next(consumers.begin(),i);
+    if(broker.isEmpty()){
+        consumers.erase(itr);
+    }
+    else{
+        QMessageBox::warning(this, tr("Can't delete"), tr("Please Try later"));
+    }
+    update();
+}
 
 ShowChatView::~ShowChatView(){
     mgr.getSM().unregisterChatView(this);
@@ -405,11 +433,20 @@ void ShowChatView::addLog(const ServerManager::ChatMessage& msg ){
         ui.messageTreeWidget->resizeColumnToContents(i);
     }
     log_thread->appendData(item);
+    update();
+
+    ServerManager::ChatMessage m = msg;
+    std::thread t {&LogProducer::produce,&producer,m,consumers.size()};
+    t.detach();                     //데이터 생성을 쓰레드로 한다
+    for(auto& e : consumers){       //consume함수는 쓰레드를 호출하는 함수로 소비가 쓰레드로 이루어진다
+        e.consume(producer.session);
+    }
 }
 
 void ShowChatView::fillclientTree(){
     ui.clientTreeWidget->clear();
-    for(auto participant : smgr){
+    ui.consumerTreeWidget->clear();
+    for(auto& participant : smgr){
         auto client = participant.second.getClient();
         auto icon = participant.second.isOnline() ? QStyle::SP_DialogYesButton : QStyle::SP_DialogNoButton;
         auto online_string = participant.second.isOnline() ? "online" : "offline";
@@ -419,10 +456,13 @@ void ShowChatView::fillclientTree(){
     for(int i=0; i<ui.clientTreeWidget->columnCount(); i++){
         ui.clientTreeWidget->resizeColumnToContents(i);
     }
+    for(auto & e : consumers){
+        new QTreeWidgetItem(consumerTreeWidget, {e.file_name});
+    }
 }
 
 void ShowChatView::on_clientTreeWidget_customContextMenuRequested(const QPoint &pos){
-    auto items = ui.clientTreeWidget->selectedItems();
+    //auto items = ui.clientTreeWidget->selectedItems();
     QPoint globalPos = ui.clientTreeWidget->mapToGlobal(pos);
     menu->exec(globalPos);                                      //컨텍스트 실행
 }

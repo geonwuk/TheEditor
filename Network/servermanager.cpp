@@ -19,7 +19,7 @@ void ServerManager::login(const QTcpSocket* const socket, const QString& id){
         server->sendMessage(socket,Message{"NO_ID",Chat_Login});                    //로그인을 시도한 클라이언트에게 해당 ID로는 채팅에 참여할 수 없다고 메시지를 보냅니다
         return;
     }
-    auto nc = nc_itr->second;       //map에서 net_client를 찾습니다
+    auto& nc = nc_itr->second;       //map에서 net_client를 찾습니다
     nc.is_online=true;
     nc.socket=socket;
     socket_to_nclient.insert(socket, &nc);

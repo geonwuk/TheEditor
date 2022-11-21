@@ -34,12 +34,15 @@ std::pair<const Order_ID, bool> OrderManager::addOrder(const Order_ID oid, const
     int i=0;
     for (auto product : products) {                                                 //구매할 물건에 대해
         order.products.emplace_back(pm.findProduct(product.id), product.qty);       //주문에 구매한 상품들을 추가합니다
-        assert(pm.buyProduct(product.id, product.qty));                             //GUI 상에서 주문 가능한 물품만 선택할 수 있도록 하였으므로 못 구매하는 것은 프로그램 오류입니다
+        pm.buyProduct(product.id, product.qty);                             //GUI 상에서 주문 가능한 물품만 선택할 수 있도록 하였으므로 못 구매하는 것은 프로그램 오류입니다
         i++;
     }
     order_id = order_id<=oid ? oid+1 : order_id;
     order.order_id = oid;                                   //오더에 새로 추가할 id를 입력합니다
-    assert(!(cm.findClient(client_id)==no_client));         //GUI 상에서 주문 가능한 고객만 선택할 수 있도록 하였으므로 못 찾는 것은 프로그램 오류입니다
+    if(cm.findClient(client_id)==no_client){
+        return { order_id, false }; //GUI 상에서 주문 가능한 고객만 선택할 수 있도록 하였으므로 못 찾는 것은 프로그램 오류여서 asser로 대채할 수 있습니다
+    }
+
     order.client = cm.findClient(client_id);                //고객ID로 고객정보를 추출합니다
     auto inserted_order = orders.emplace(oid, order);  //주문 목록에 주문을 추가합니다
     return {order_id++, true};                              //오더 카운트 증가를 한 후 리턴합니다
@@ -87,7 +90,7 @@ std::ofstream& OM::operator<<(std::ofstream& out, const Order& order)
     out << order.getID() << ',';
     out << order.getClient().getId() << ',';
     out << order.getDate()<<',';
-    out << order.getProducts().size()<<','<<endl;
+    out << order.getProducts().size()<<',';
     for(const auto& product_info : order.getProducts()){
         out<<product_info.product<<','<<product_info.qty;
     }

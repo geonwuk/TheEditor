@@ -15,7 +15,7 @@ void LogThread::run()
 {
     Q_FOREVER {
         saveData();
-        sleep(60);      // 1분마다 저장
+        sleep(60);      // 60초마다 저장
     }
 }
 

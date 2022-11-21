@@ -23,9 +23,7 @@ private:
     string phone_number;
     string address;
 };
-struct NoClient : public Client { NoClient() : Client{"","no_client","",""} {
-        qDebug()<<"no_client address: "<<this;
-    } };
+struct NoClient : public Client { NoClient() : Client{"","no_client","",""} {} };
 extern const NoClient no_client;
 bool operator== (const Client& c, const NoClient&);
 }
@@ -59,9 +57,7 @@ private:
     }
 };
 
-struct NoProduct : public Product { NoProduct() : Product{"","no_product",0,0,std::tm()} {
-        qDebug()<<"no_product address: "<<this;
-    } };
+struct NoProduct : public Product { NoProduct() : Product{"","no_product",0,0,std::tm()} {} };
 extern const NoProduct no_product;
 bool operator== (const Product& p, const NoProduct&);
 

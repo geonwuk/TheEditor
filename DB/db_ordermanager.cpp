@@ -62,7 +62,9 @@ std::pair<const OM::Order_ID, bool> OrderManager::addOrder(const CM::CID client_
     int i=0;
     for(const auto& bill : bills){                      //모든 주문에 대해 재고량이 주문량 보다 많은지 확인하고 만약 적다면 주문자체를 취소합니다
         const auto product = pm.findProduct(bill.id);
-        assert(!(product==PM::no_product));
+        if(product==PM::no_product){
+            return {i, false};
+        }
         if(product.getQty()<bill.qty){
             return {i++, false};
         }
@@ -76,7 +78,7 @@ std::pair<const OM::Order_ID, bool> OrderManager::addOrder(const CM::CID client_
         }
         ExplicitAdd explicit_add{db, "Orders"};         //DB에서 order_id는 primary key autoincrement이므로 primary 키 부분을 뺀 나머지 필드에 대해서 insert를 해야합니다
         QSqlQuery query = explicit_add.add({{"client_id",client_id.c_str()},{"price",QString::number(total_price)},{"date",ss.str().c_str()}});
-        assert(query.exec());
+        query.exec();
         order_id = query.lastInsertId().toUInt();
     }
 
@@ -97,28 +99,28 @@ std::pair<const OM::Order_ID, bool> OrderManager::addOrder(const CM::CID client_
         query2.seek(0);                 //첫번째 레코드를 가져옵니다
         unsigned int siz = getQuerySize(query2);
 
-        qDebug()<<"ordered_product find "<<query2.lastQuery()<<query2.lastError();
+        //qDebug()<<"ordered_product find "<<query2.lastQuery()<<query2.lastError();
         auto record = query2.record();
 
         auto n1 = record.value("name").toString()==name;                        //상품 중복 조건 첫번째
-        qDebug()<<"n1"<<n1;
+        //qDebug()<<"n1"<<n1;
         auto n2 = record.value("price").toString()==QString::number(price);     //상품 중복 조건 두번째
-        qDebug()<<"n2"<<n2;
+        //qDebug()<<"n2"<<n2;
         auto n3 = record.value("date").toString()==date;                        //상품 중복 조건 세번째
-        qDebug()<<"n3"<<n3;
+        //qDebug()<<"n3"<<n3;
 
         auto seq = record.value("product_history_seq").toUInt();
         if(siz==0 || !(n1&&n2&&n3)){                                                      //상품 조건 3가지가 모두 같지 않으면 새로운 상품이므로 새롭게 추가하고 seq를 증가시켜 새로운 상품으로 주문에 추가하도록 합니다
             auto query = add(QString("Ordered_Product"),id,++seq,name,price,date);
-            assert(query.exec());
-            qDebug()<<"Ordered_Product insert "<<query.lastQuery()<<query.lastError();
+            query.exec();
+            //qDebug()<<"Ordered_Product insert "<<query.lastQuery()<<query.lastError();
         }
 
         ExplicitAdd order_list{db,"order_list"};
         auto order_list_insert = order_list.add({{"order_id",QString::number(order_id)},{"product_id",id},
                                                  {"product_history_seq",QString::number(seq)},{"qty",QString::number(bill.qty)}});
-        assert(order_list_insert.exec());
-        qDebug()<<"order_list insert"<<order_list_insert.lastQuery()<<order_list_insert.lastError();
+        order_list_insert.exec();
+        //qDebug()<<"order_list insert"<<order_list_insert.lastQuery()<<order_list_insert.lastError();
 
         pm.buyProduct(id.toStdString(),bill.qty);
     }
@@ -137,7 +139,7 @@ void OrderManager::loadOrder(const std::vector<OM::Order>& orders_to_add){
             }
             ExplicitAdd explicit_add{db, "Orders"};
             QSqlQuery query = explicit_add.add({{"client_id",o.getClient().getId().c_str()},{"price",QString::number(total_price)},{"date",tmToString(o.getDate())}});
-            assert(query.exec());
+            query.exec();
             order_id = query.lastInsertId().toUInt();
         }
         for(const auto& p : o.getProducts()){
@@ -153,33 +155,27 @@ void OrderManager::loadOrder(const std::vector<OM::Order>& orders_to_add){
             ordered_product_query.exec();
             unsigned int siz = getQuerySize(ordered_product_query);
             int seq=0;
-            qDebug()<<pid<<siz;
-            if(siz == 0){
-                assert(add(QString("Ordered_Product"),pid,seq,name,price,tmToString(date)).exec());
+            if(siz == 0){   //처음 추가하는 경우 무조건 추가해야 합니다
+                add(QString("Ordered_Product"),pid,seq,name,price,tmToString(date)).exec();
             }
             else{
                 while(ordered_product_query.next()){
                     auto n1 = ordered_product_query.value("name").toString()==name;                        //상품 중복 조건 첫번째
-                    qDebug()<<"n1"<<n1;
                     auto n2 = ordered_product_query.value("price").toString()==QString::number(price);     //상품 중복 조건 두번째
-                    qDebug()<<"n2"<<n2;
-                    auto n3 = ordered_product_query.value("date").toString()==tmToString(date);                        //상품 중복 조건 세번째
-                    qDebug()<<"n3"<<n3;
+                    auto n3 = ordered_product_query.value("date").toString()==tmToString(date);            //상품 중복 조건 세번째
                     if((n1&&n2&&n3)){
-                        qDebug()<<"found";
-                        goto found;
+                        goto found; //이미 ordered_produdct table에 데이터가 저장되어 있으므로 추가를 할 필요가 없다는 의미입니다
                     }
                     ++seq;
                 }
                 //while을 끝까지 돌았다는 의미는 새로 추가해줘야 한다는 의미입니다.
-                assert(add(QString("Ordered_Product"),pid,seq,name,price,tmToString(date)).exec());
+                add(QString("Ordered_Product"),pid,seq,name,price,tmToString(date)).exec();
             }
             found:
             ExplicitAdd order_list{db,"order_list"};
             auto order_list_insert = order_list.add({{"order_id",QString::number(order_id)},{"product_id",pid},
                                                      {"product_history_seq",QString::number(seq)},{"qty",QString::number(p.qty)}});
-            assert(order_list_insert.exec());
-            qDebug()<<"orderlist err"<<order_list_insert.lastError();
+            order_list_insert.exec();
         }
     }
 
@@ -200,7 +196,7 @@ const OM::Order OrderManager::findOrder(const OM::Order_ID oid) const{
     QSqlQuery query{db};
     query.prepare("select * from orders o, order_list ol where o.id=:order_id and o.id = ol.order_id");
     query.bindValue(":order_id",oid);
-    assert(query.exec());
+    query.exec();
 
     unsigned int siz =0;
     while(query.next()){    //sqlite는 size()함수를 지원하지 않아서 직접 세어야 합니다.
@@ -209,15 +205,8 @@ const OM::Order OrderManager::findOrder(const OM::Order_ID oid) const{
     if(siz == 0)
         return OM::no_order;
     query.seek(0);          //개수를 다 센 후 다시 첫번째 레코드로
-    qDebug()<<"size"<<siz;
 
-
-    qDebug()<<"tt";
     QString order_date = query.value("date").toString();
-    qDebug()<<"date"<<order_date;
-
-    qDebug()<<"find orders join"<<query.lastQuery()<<query.lastError();
-
     auto cid = query.value("client_id").toString().toStdString();
     auto client = cm.findClient(cid);
 
@@ -232,29 +221,16 @@ const OM::Order OrderManager::findOrder(const OM::Order_ID oid) const{
         find_query.prepare("select * from Ordered_Product where product_id=:pid and product_history_seq=:seq;");
         find_query.bindValue(":pid",pid.c_str());
         find_query.bindValue(":seq",seq);
-        assert(find_query.exec());
+        find_query.exec();
         find_query.next();
         auto name = find_query.value("name").toString().toStdString();
         auto price =find_query.value("price").toUInt();
         QString date = find_query.value("date").toString();
 
-        qDebug()<<"product"<< name.c_str()<<price<<date<<qty;
+        //qDebug()<<"product"<< name.c_str()<<price<<date<<qty;
         PM::Product p {pid,name,price,qty,DBManager::getDate(date)};
         products.emplace_back(p,qty);
     }
-
-    //    qDebug()<<"oid"<<oid;
-    //    qDebug()<<"client"<<client.getId().c_str();
-    //    for(auto e: products){
-    //        qDebug()<<"product"<<e.first.getId().c_str()<<e.first.getName().c_str();
-    //    }
-
-    //    QSqlQueryModel* queryModel = new QSqlQueryModel;
-    //    queryModel->setQuery((query));
-    //    QTableView* tableView = new QTableView;
-    //    tableView->setModel(queryModel);
-    //    tableView->setWindowTitle(QObject::tr("Query Model"));
-    //    tableView->show();
     return OM::Order{oid,client,DBManager::getDate(order_date),std::move(products)};
 }
 const size_t OrderManager::getSize() const{

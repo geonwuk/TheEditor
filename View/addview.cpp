@@ -257,7 +257,6 @@ void AddOrderView::addOrder(){
         }
         bool result;
         std::tie(std::ignore,result)=OView::addOrder(client_id,std::move(products));
-        assert(result);
     }
     orderTree->clear();
 }

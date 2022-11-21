@@ -96,7 +96,7 @@ bool ProductManager::eraseProduct(const PID id){
 		return false;
 }
 
-bool ProductManager::buyProduct(const PID id, const unsigned int qty) {
+bool ProductManager::buyProduct(const PID id, const unsigned int qty) { //상품을 사는 경우 product의 qty(재고량)에서 감소시켜야 합니다
     auto it = products.find(id);
     Product& product= it->second;
     if (it == products.end()||product.getQty()<qty) {

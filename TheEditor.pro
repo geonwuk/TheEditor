@@ -18,6 +18,7 @@ SOURCES += \
     Manager/ProductManager.cpp \
     Model/model.cpp \
     Model/type.cpp \
+    Network/logmanagement.cpp \
     Network/logthread.cpp \
     Network/message.cpp \
     Network/server.cpp \
@@ -40,6 +41,7 @@ HEADERS += \
     Manager/ProductManager.h \
     Model/model.h \
     Model/type.h \
+    Network/logmanagement.h \
     Network/logthread.h \
     Network/message.h \
     Network/server.h \
@@ -73,5 +75,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    SQLITE_queries.qrc \
     resources.qrc

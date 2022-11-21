@@ -20,12 +20,12 @@ class ServerManager{
 
 public:
     struct ChatMessage{
-        const QString ip;
-        const QString port;
-        const QString id;
-        const QString name;
-        const QString message;
-        const QString time;
+        QString ip;
+        QString port;
+        QString id;
+        QString name;
+        QString message;
+        QString time;
     };
 
 private:

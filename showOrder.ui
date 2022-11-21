@@ -19,6 +19,12 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
+     <property name="opaqueResize">
+      <bool>false</bool>
+     </property>
+     <property name="childrenCollapsible">
+      <bool>false</bool>
+     </property>
      <widget class="QTableWidget" name="orderTable">
       <property name="cornerButtonEnabled">
        <bool>true</bool>

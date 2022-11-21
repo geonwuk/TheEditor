@@ -75,9 +75,9 @@ void MainWindow::onRadioButtonDBClicked(){
     try{
         QString file_name = QFileDialog::getSaveFileName(this,tr("Select New DB File"));
         if(file_name.size()==0){
-            dash_board->groupBox->blockSignals(true);
+            dash_board->radioButtonDB->blockSignals(true);
             dash_board->radioButtonMemory->click();
-            dash_board->groupBox->blockSignals(false);
+            dash_board->radioButtonDB->blockSignals(false);
             return;
         }
         try{
@@ -188,14 +188,13 @@ static int createListDialog(QWidget* parent, QStringList ls){       //저장이�
 }
 
 void MainWindow::save(){                                                //파일을 sqlite DB로 저장하는 함수로 QAction과 연결되어 있다
-    QString file_name = QFileDialog::getSaveFileName(this);
-    if(file_name.size()==0){
-        return;
-    }
     int mode = createListDialog(this,{"DB","CSV"});
-    qDebug()<<"ee"<<file_name<<mode;
     if(mode==0){ //DB
         try{
+            QString file_name = QFileDialog::getSaveFileName(this);
+            if(file_name.size()==0){
+                return;
+            }
             DBM::ClientManager save_client{"save_client",file_name};
             for(const auto& c : mgrs.getCM()){
                 bool re = save_client.addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
@@ -219,6 +218,10 @@ void MainWindow::save(){                                                //파일
     }
     else if(mode==1){ //CSV
         try{
+            QString file_name = QFileDialog::getSaveFileName(this,tr("save CSV file"),"","txt");
+            if(file_name.size()==0){
+                return;
+            }
             std::ofstream out(file_name.toStdString());
             int mode = createListDialog(this,{"client","product","order"});
             switch(mode){
@@ -229,7 +232,7 @@ void MainWindow::save(){                                                //파일
                 }
                 break;
             case 1://product CSV로 export
-                out<<"product id,"<<"name,"<<"qty,"<<"date"<<','<<endl;
+                out<<"product id,"<<"name,"<<"price,"<<"qty,"<<"date"<<','<<endl;
                 for (const auto& p : mgrs.getPM()){
                     out << p <<',' << endl;
                 }
@@ -253,7 +256,7 @@ void MainWindow::save(){                                                //파일
 void MainWindow::load(){
     //저장된 파일을 불러오는 함수로 QAction과 연결되어 있다
     try{
-        QString file_name = QFileDialog::getSaveFileName(this);
+        QString file_name = QFileDialog::getOpenFileName(this);
         if(file_name.size()==0){
             return;
         }

@@ -53,7 +53,7 @@ void Server::readData(){
 
     mgr.processMessage(socket,recv_data.data);
 
-    assert(socket_data.remove(socket));
+    socket_data.remove(socket);
 }
 
 
