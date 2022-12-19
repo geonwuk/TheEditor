@@ -1,9 +1,11 @@
 #ifndef MODEL_H
 #define MODEL_H
-#include "Model/type.h"
+
 #include <memory>
 #include <utility>
-#include <QDebug>
+
+#include "Model/Type.h"
+
 template<typename T>
 class Iterator{                                                         //Iterator 패턴을 위한 클래스입니다
 public:
@@ -68,6 +70,5 @@ public:
     virtual void checkSafeToLoad(const std::vector<OM::Order>&) noexcept(false)=0;
     virtual IteratorPTR<OM::Order> begin()=0;
     virtual IteratorPTR<OM::Order> end()=0;
-
 };
 #endif // MODEL_H

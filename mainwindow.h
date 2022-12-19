@@ -6,10 +6,10 @@
 #include "Manager/ProductManager.h"
 #include "Manager/OrderManager.h"
 #include "tabwidget.h"
-#include "tree.h"
+#include "Tree.h"
 #include <list>
 #include "Network/servermanager.h"
-#include "Model/model.h"
+#include "Model/Model.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow;

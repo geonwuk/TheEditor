@@ -10,48 +10,48 @@ CONFIG += c++17
 
 SOURCES += \
     DB/DB_ClientManager.cpp \
+    DB/DB_Manager.cpp \
     DB/DB_OrderManager.cpp \
     DB/DB_ProductManager.cpp \
-    DB/dbmanager.cpp \
     Manager/ClientManager.cpp \
     Manager/OrderManager.cpp \
     Manager/ProductManager.cpp \
-    Model/model.cpp \
-    Model/type.cpp \
+    Model/Model.cpp \
+    Model/Type.cpp \
     Network/logmanagement.cpp \
     Network/logthread.cpp \
     Network/message.cpp \
     Network/server.cpp \
     Network/servermanager.cpp \
-    View/addview.cpp \
+    Tree.cpp \
+    View/AddView.cpp \
     View/showview.cpp \
     View/view.cpp \
     main.cpp \
     mainwindow.cpp \
-    tabwidget.cpp \
-    tree.cpp
+    tabwidget.cpp
 
 HEADERS += \
     DB/DB_ClientManager.h \
+    DB/DB_Manager.h \
     DB/DB_OrderManager.h \
     DB/DB_ProductManager.h \
-    DB/dbmanager.h \
     Manager/ClientManager.h \
     Manager/OrderManager.h \
     Manager/ProductManager.h \
-    Model/model.h \
-    Model/type.h \
+    Model/Model.h \
+    Model/Type.h \
     Network/logmanagement.h \
     Network/logthread.h \
     Network/message.h \
     Network/server.h \
     Network/servermanager.h \
-    View/addview.h \
+    Tree.h \
+    View/AddView.h \
     View/showview.h \
     View/view.h \
     mainwindow.h \
-    tabwidget.h \
-    tree.h
+    tabwidget.h
 
 FORMS += \
     Network/addParticipantView.ui \

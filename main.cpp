@@ -2,7 +2,7 @@
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
-#include "DB/dbmanager.h"
+#include "DB/DB_Manager.h"
 
 extern const char name[] = "Client";
 int main(int argc, char *argv[])

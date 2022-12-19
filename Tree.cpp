@@ -1,10 +1,10 @@
-#include "tree.h"
+#include "Tree.h"
 
 #include <cassert>
 
 #include <QLabel>
 
-#include "View/addview.h"
+#include "View/AddView.h"
 #include "View/showview.h"
 
 Tree::Tree(MainWindow* mw, TabWidget *tw, int tabs_item_position) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}, tabs{nullptr}, tw{tw}, tabs_item_position{tabs_item_position}
@@ -50,7 +50,7 @@ void FocusTabItem::doubleClicked(){     //더블 클릭하면 QTabWidget에서 �
     tree.tw->setCurrentWidget(view);
 }
 void ToTabItem::doubleClicked(){
-    View* view = tree.makeView(view_factory);           //상태 패턴+팩토리 패턴
+    View* view = tree.makeView(view_factory);           //상태 패턴+팩토리 패턴 (view는 TabWidget에서 삭제)
     tree.tw->addTab(view, view->icon, view->label);     //tree.tw <- QTabWidget을 상속받는 탭 위젯으로 탭에 추가
     tree.tw->setCurrentWidget(view);
 }

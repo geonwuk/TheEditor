@@ -1,5 +1,6 @@
 #include "OrderManager.h"
 
+#include <fstream>
 #include <iomanip>
 
 #include "Manager/ProductManager.h"
@@ -29,18 +30,15 @@ std::pair<const Order_ID, bool> OrderManager::addOrder(const Order_ID oid, const
         if (found.getQty()<product.qty)                 //상품 재고량 보다 구매하고자 하는 개수가 많은 경우 구매할 수 없습니다
             return { order_id, false };
     }
-    int i=0;
     for (auto product : products) {                                                 //구매할 물건에 대해
         order.products.emplace_back(pm.findProduct(product.id), product.qty);       //주문에 구매한 상품들을 추가합니다
         pm.buyProduct(product.id, product.qty);                             //GUI 상에서 주문 가능한 물품만 선택할 수 있도록 하였으므로 못 구매하는 것은 프로그램 오류입니다
-        i++;
     }
     order_id = order_id<=oid ? oid+1 : order_id;
     order.order_id = oid;                                   //오더에 새로 추가할 id를 입력합니다
-    if(cm.findClient(client_id)==no_client){
+    if(cm.findClient(client_id)==CM::no_client){
         return { order_id, false }; //GUI 상에서 주문 가능한 고객만 선택할 수 있도록 하였으므로 못 찾는 것은 프로그램 오류여서 asser로 대채할 수 있습니다
     }
-
     order.client = cm.findClient(client_id);                //고객ID로 고객정보를 추출합니다
     orders.emplace(oid, order);  //주문 목록에 주문을 추가합니다
     return {order_id++, true};                              //오더 카운트 증가를 한 후 리턴합니다
@@ -66,7 +64,6 @@ void OrderManager::checkSafeToLoad(const std::vector<OM::Order>& orders_to_add) 
         ++line;
     }
 }
-
 const Order OrderManager::findOrder(const Order_ID order_id) const {
 	auto o = orders.find(order_id);
 	if (o == orders.end()) {
@@ -80,10 +77,7 @@ static std::ofstream& operator<< (std::ofstream& out, tm p) {
     out << std::put_time(&p, "%D %T");
     return out;
 }
-
-
-std::ofstream& OM::operator<<(std::ofstream& out, const Order& order)
-{
+std::ofstream& OM::operator<<(std::ofstream& out, const Order& order){
     out << order.getID() << ',';
     out << order.getClient().getId() << ',';
     out << order.getDate()<<',';
@@ -93,7 +87,6 @@ std::ofstream& OM::operator<<(std::ofstream& out, const Order& order)
     }
 	return out;
 }
-
 IteratorPTR<OM::Order> OrderManager::begin(){
     return IteratorPTR<Order>(new OIterator{orders.begin()});       //map의 begin을 IteratorPTR에 감쌉니다.
 }

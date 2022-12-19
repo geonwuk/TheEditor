@@ -1,5 +1,6 @@
-#include "type.h"
+#include "Type.h"
 using namespace CM;
+using namespace std;
 extern const NoClient CM::no_client{};
 Client& Client::operator= (const Client& rhs){
     id=rhs.id;
@@ -8,7 +9,6 @@ Client& Client::operator= (const Client& rhs){
     address=rhs.address;
     return *this;
 }
-
 
 using namespace PM;
 extern const NoProduct PM::no_product{};
@@ -20,10 +20,8 @@ Product& Product::operator= (const Product& rhs){
     return *this;
 }
 
-
 using namespace OM;
 extern const NoOrder OM::no_order{};
-
 vector<OrderedProduct> Order::getProducts() const{
     vector<OrderedProduct> v;
     for(const auto& e : products){

@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "Model/type.h"
-#include "Model/model.h"
+#include "Model/Type.h"
+#include "Model/Model.h"
 
 namespace CM {
     std::ofstream& operator<<(std::ofstream& out, const Client& c);
@@ -14,7 +14,7 @@ namespace CM {
     class ClientManager : public ClientModel{
 	public:
         class const_iterator;
-        bool addClient(const CID id, const string name, const string phone_number = "NONE", const string address = "NONE") override;
+        bool addClient(const CID id, const std::string name, const std::string phone_number = "NONE", const std::string address = "NONE") override;
         void loadClient(const std::vector<CM::Client>&) override;
         bool modifyClient(const CID id, const Client client) override;
         bool eraseClient(const CID id)override;

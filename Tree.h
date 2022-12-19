@@ -1,11 +1,7 @@
 #ifndef TREE_H
 #define TREE_H
 #include <QTreeWidget>
-#include <vector>
-#include <functional>
 
-class QTreeWidgetItem;
-class QVariant;
 class MainWindow;
 class View;
 class Manager;
@@ -47,9 +43,6 @@ protected:
     TabWidget* tw;
     int prev_tabs_index=0;      //트리에서 가장 밑에 있는 ToplevleItem의 자식 중에서 현재 선택된
     int tabs_item_position;     //
-//signals:
-//    void treeToTab(QWidget*, const QIcon&, const QString&);
-//    void setTabFocus(QWidget* page);
 public slots:
     void _itemDoubleClicked(QTreeWidgetItem*, int);
     void tabCurrnetChanged(int index);

@@ -9,8 +9,8 @@
 
 #include <QString>
 
-#include "DB/dbmanager.h"
-#include "Model/model.h"
+#include "DB/DB_Manager.h"
+#include "Model/Model.h"
 
 extern const char ORDER_TABLE_NAME[];
 /*

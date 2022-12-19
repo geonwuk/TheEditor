@@ -1,4 +1,4 @@
-#include "addview.h"
+#include "AddView.h"
 #include "mainwindow.h"
 #include <QDate>
 #include <QCheckBox>
