@@ -1,10 +1,12 @@
 #pragma once
+
 #include <map>
 #include <utility>
 #include <string>
 #include <iosfwd>
 #include <vector>
 #include <iostream>
+
 #include "Model/type.h"
 #include "Model/model.h"
 
@@ -58,6 +60,6 @@ namespace CM {
             return IteratorPTR<CM::Client>(new CIterator{clients.end()});
         }
     };
-}
+} //namespace CM
 
 
