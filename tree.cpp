@@ -43,16 +43,12 @@ void Tree::_itemDoubleClicked(QTreeWidgetItem* item, int){
 View* Tree::makeView(ViewFactory* factory){
     View* view = factory->make(this);                       //make: 팩토리 패턴의 생성자 추상화
     mgr.attachObserver(view);                               //옵저버 패턴을 위해 생성 후 관리자에게 등록한다
-    return view;
+    return view;                                            //
 }
-
-FocusTabItem::FocusTabItem(View* view, Tree& tree, const QIcon& icon, QString title):TreeItem{tree,icon,title},view{view}{}
-
 
 void FocusTabItem::doubleClicked(){     //더블 클릭하면 QTabWidget에서 열려진 기존의 Tab을 현재 위젯으로 설정합니다
     tree.tw->setCurrentWidget(view);
 }
-
 void ToTabItem::doubleClicked(){
     View* view = tree.makeView(view_factory);           //상태 패턴+팩토리 패턴
     tree.tw->addTab(view, view->icon, view->label);     //tree.tw <- QTabWidget을 상속받는 탭 위젯으로 탭에 추가

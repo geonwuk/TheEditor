@@ -7,7 +7,7 @@
 #include <QMessageBox>
 AddClientView::AddClientView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : CView{mgr,tabs,icon,label} {
     ui.setupUi(this);
-    connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addClient())); //고객 추가 버튼과 고객 추가 메소드를 시그널&슬롯으로 연결합니다
+    assert(connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addClient()))); //고객 추가 버튼과 고객 추가 메소드를 시그널&슬롯으로 연결합니다
 }
 
 void AddClientView::addClient(){                                //고객 추가 UI에 있는 QLineEdit으로부터 스트링 데이터를 얻어서 Manager클래스의 Map에 추가합니다.
@@ -26,7 +26,7 @@ AddClientView::~AddClientView(){
 //Product
 AddProductView::AddProductView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : PView{mgr,tabs,icon,label}  {
     ui.setupUi(this);
-    connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addProduct()));    //고객 추가 버튼과 고객 추가 메소드를 시그널&슬롯으로 연결합니다
+    assert(connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addProduct())));    //고객 추가 버튼과 고객 추가 메소드를 시그널&슬롯으로 연결합니다
 }
 
 void AddProductView::addProduct(){              //상품 추가 UI에 있는 QLineEdit으로부터 스트링 데이터를 얻어서 Manager클래스의 Map에 추가합니다.(상품의 경우 ID는 자동으로 생성합니다)
@@ -70,10 +70,10 @@ AddOrderView::AddOrderView(Manager& mgr, Tree& tabs, const QIcon icon, const QSt
     clientTab.setCornerButtonEnabled(true);
 
 
-    connect(ui.commitOrderButton,SIGNAL(pressed()),this,SLOT(commitOrder()));
-    connect(ui.addOrderButton,SIGNAL(pressed()),this,SLOT(addOrder()));
-    connect(&clientTab,SIGNAL(itemSelectionChanged()),this,SLOT(itemSelectionChanged_()));
-    connect(&productTab,SIGNAL(itemSelectionChanged()),this,SLOT(itemSelectionChanged_()));
+    assert(connect(ui.commitOrderButton,SIGNAL(pressed()),this,SLOT(commitOrder())));
+    assert(connect(ui.addOrderButton,SIGNAL(pressed()),this,SLOT(addOrder())));
+    assert(connect(&clientTab,SIGNAL(itemSelectionChanged()),this,SLOT(itemSelectionChanged_())));
+    assert(connect(&productTab,SIGNAL(itemSelectionChanged()),this,SLOT(itemSelectionChanged_())));
 
     ui.splitter_2->setSizes({ui.CPTab->sizeHint().width(),ui.orderTree->sizeHint().width()});
 }
@@ -276,8 +276,8 @@ AddParticipantView::AddParticipantView(Manager& mgr, Tree &tabs, const QIcon ico
 
     fillContents();
 
-    connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addParticipant()));
-    connect(ui.dropButton,SIGNAL(pressed()),this,SLOT(dropParticipant()));
+    assert(connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addParticipant())));
+    assert(connect(ui.dropButton,SIGNAL(pressed()),this,SLOT(dropParticipant())));
 }
 void AddParticipantView::initUI(){
     ui.setupUi(this);

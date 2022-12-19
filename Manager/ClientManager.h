@@ -1,19 +1,14 @@
-#pragma once
+#ifndef Manager_ClientManager_H
+#define Manager_ClientManager_H
 
 #include <map>
-#include <utility>
 #include <string>
-#include <iosfwd>
 #include <vector>
-#include <iostream>
 
 #include "Model/type.h"
 #include "Model/model.h"
 
 namespace CM {
-	using std::map;
-    using std::string;
-
     std::ofstream& operator<<(std::ofstream& out, const Client& c);
 
     class ClientManager : public ClientModel{
@@ -29,7 +24,7 @@ namespace CM {
         void checkSafeToLoad(const std::vector<CM::Client>&) noexcept(false) override;
     private:
 		static unsigned int client_id;
-        map< CID, std::shared_ptr<Client> > clients;
+        std::map< CID, std::shared_ptr<Client> > clients;
     private:
         class CIterator : public Iterator<Client> {
         public:
@@ -61,5 +56,5 @@ namespace CM {
         }
     };
 } //namespace CM
-
+#endif // Manager_ClientManager_H
 

@@ -1,16 +1,19 @@
 #ifndef DBMANAGER_H
 #define DBMANAGER_H
 
-#include <QString>
-#include <QSqlDatabase>
-#include <QDebug>
-#include <QFile>
-#include <QSqlQuery>
-#include <QSqlError>
-#include "Model/model.h"
-#include <QSqlRecord>
 #include <initializer_list>
 #include <sstream>
+
+#include <QDebug>
+#include <QFile>
+#include <QString>
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
+#include <QSqlRecord>
+
+#include "Model/model.h"
+
 namespace DBM {
 struct ERROR_WHILE_LOADING{
     std::string db_name;
@@ -168,7 +171,6 @@ protected:
     QStringList column_names;
     QString file_name;
     QString connection_name;
-
     unsigned int getQuerySize(QSqlQuery& query){
         unsigned int siz =0;
         auto saved = query.at();

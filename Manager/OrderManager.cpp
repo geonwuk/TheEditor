@@ -1,11 +1,9 @@
-
 #include "OrderManager.h"
-#include <fstream>
+
 #include <iomanip>
-#include <sstream>
-#include <vector>
-#include <cassert>
+
 #include "Manager/ProductManager.h"
+
 using namespace std;
 using namespace OM;
 using namespace PM;
@@ -44,10 +42,9 @@ std::pair<const Order_ID, bool> OrderManager::addOrder(const Order_ID oid, const
     }
 
     order.client = cm.findClient(client_id);                //고객ID로 고객정보를 추출합니다
-    auto inserted_order = orders.emplace(oid, order);  //주문 목록에 주문을 추가합니다
+    orders.emplace(oid, order);  //주문 목록에 주문을 추가합니다
     return {order_id++, true};                              //오더 카운트 증가를 한 후 리턴합니다
 }
-
 void OrderManager::loadOrder(const std::vector<OM::Order>& orders_to_add){
     int line=0;
     for(const auto& o : orders_to_add){

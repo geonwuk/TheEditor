@@ -6,7 +6,7 @@
 #include <QProgressDialog>
 #include <QDateTimeEdit>
 #include <QFileDialog>
-#include "Manager/ClientManager.h"
+
 #include <QMessageBox>
 ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : CView{mgr, tabs,icon,label}
 {

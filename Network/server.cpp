@@ -2,16 +2,17 @@
 #include<QtGui>
 #include<QtWidgets>
 #include<QtNetwork>
-#include "mainwindow.h"
 #include <algorithm>
 #include <cassert>
+#include "Network/message.h"
+#include "Network/servermanager.h"
 using namespace std;
 
 Server::Server(ServerManager& mgr, QWidget *parent)
     : QWidget(parent), mgr{mgr}
 {
     tcpServer= new QTcpServer(this);
-    connect(tcpServer, SIGNAL(newConnection()),SLOT(clientConnect()));
+    assert(connect(tcpServer, SIGNAL(newConnection()),SLOT(clientConnect())));
     if(!tcpServer->listen(QHostAddress::Any, PORT_NUMBER)){
         QMessageBox::critical(this,tr("Echo Server"),tr("Unable to start the server: %1")
                               .arg(tcpServer->errorString()));
@@ -23,8 +24,8 @@ Server::Server(ServerManager& mgr, QWidget *parent)
 }
 void Server::clientConnect(){
     QTcpSocket* clientConnection = tcpServer->nextPendingConnection();
-    connect(clientConnection, SIGNAL(disconnected()), SLOT(clientDisconnected()));
-    connect(clientConnection,SIGNAL(readyRead()),SLOT(readData()));
+    assert(connect(clientConnection, SIGNAL(disconnected()), SLOT(clientDisconnected())));
+    assert(connect(clientConnection,SIGNAL(readyRead()),SLOT(readData())));
     qDebug()<<QString("new connection is established");
 }
 void Server::clientDisconnected(){
@@ -55,8 +56,6 @@ void Server::readData(){
 
     socket_data.remove(socket);
 }
-
-
 void Server::sendMessage(const QTcpSocket * socket_, const Message& msg){
     auto socket = const_cast<QTcpSocket*>(socket_);
     socket->write(msg);
@@ -67,7 +66,6 @@ void Server::disconnectSocket(const QTcpSocket* socket_){
     auto socket = const_cast<QTcpSocket*>(socket_);
     socket->close();
 }
-
 Server::~Server()
 {
 }

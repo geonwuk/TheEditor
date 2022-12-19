@@ -4,8 +4,6 @@
 #include <vector>
 #include <functional>
 
-
-
 class QTreeWidgetItem;
 class QVariant;
 class MainWindow;
@@ -19,6 +17,7 @@ protected:
     const QIcon icon;
 public:
     ViewFactory(const QIcon& icon, const QString title) : title{title}, icon{icon} {}
+    virtual ~ViewFactory(){}
     virtual View* make(Tree*)=0;                    //ViewFactory 클래스를 상속하는 클래스는 make 함수를 재정의 해야하며 View*를 리턴해야 합니다. 이 View는 QTabWidget에 쓰입니다
     QString getTitle() const { return title; }
     const QIcon& getIcon() const { return icon; }
@@ -28,7 +27,8 @@ class ViewMaker : public ViewFactory{       //addView, ShowView에 있는 클래
     Manager& mgr;
 public:
     ViewMaker(Manager& mgr,const QIcon& icon,QString title) : mgr{mgr}, ViewFactory{icon,title} {}
-    View* make(Tree* tree){ return new T{mgr,*tree,icon,title}; }   //addView, showView 모두 같은 인자로 생성가능 합니다
+    ~ViewMaker() override {}
+    View* make(Tree* tree) override { return new T{mgr,*tree,icon,title}; }   //addView, showView 모두 같은 인자로 생성가능 합니다
 };
 class Tree : public QTreeWidget {
     Q_OBJECT
@@ -68,22 +68,22 @@ protected:
     QString title;
     QIcon icon;
 public:
-    TreeItem(Tree& tree, const QIcon& icon, QString title):QTreeWidgetItem{(QTreeWidget*)nullptr,{title}},tree{tree}{
+    TreeItem(Tree& tree, const QIcon icon, QString title):QTreeWidgetItem{(QTreeWidget*)nullptr,{title}},tree{tree}{
         setIcon(0,icon);
     }
     virtual void doubleClicked(){};
 };
-
 class ToTabItem : public TreeItem{          //이 TreeItem을 클릭하면 새로운 QTabWidgetItem을 생성합니다. (ViewFactory*를 생성자로 갖는 이유)
     ViewFactory* view_factory;
 public:
-    ToTabItem(ViewFactory* view_factory, Tree& tree, const QIcon& icon, QString title):TreeItem{tree,icon,title},view_factory{view_factory}{}
+    ToTabItem(ViewFactory* view_factory, Tree& tree, const QIcon icon, QString title):TreeItem{tree,icon,title},view_factory{view_factory}{}
+    ~ToTabItem(){delete view_factory;}
     void doubleClicked();
 };
 class FocusTabItem : public TreeItem{       //QTreeWidgetItem을 상속하며 이 treeWidgetItem을 클릭하면 열려진 Tab 중을 현재 위젯으로 설정합니다
-    View* view;
+    View* view; //View는 QTabWidget에서 지웁니다
 public:
-    FocusTabItem(View* view, Tree& tree, const QIcon& icon, QString title);
+    FocusTabItem(View* view, Tree& tree, const QIcon icon, QString title):TreeItem{tree,icon,title},view{view}{}
     void doubleClicked();
     ~FocusTabItem(){}
 };

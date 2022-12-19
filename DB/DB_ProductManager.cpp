@@ -1,4 +1,4 @@
-#include "db_productmanager.h"
+#include "DB_ProductManager.h"
 
 #include <random>
 #include <sstream>

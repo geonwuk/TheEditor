@@ -1,19 +1,14 @@
-#pragma once
-#include <ctime>
-#include <vector>
-#include <string>
+#ifndef Manager_OrderManager_H
+#define Manager_OrderManager_H
+
 #include <map>
-#include <memory>
-#include <iostream>
+#include <string>
 #include <utility>
-#include <functional>
+#include <vector>
+
 #include "Model/model.h"
+
 namespace OM {
-	using namespace CM;
-	using namespace PM;
-	using std::string;
-	using std::vector;
-	class OrderIterator;
     using Product_ID = PM::PID;
     using Client_ID = CM::CID;
 
@@ -49,5 +44,5 @@ namespace OM {
             Itr_type ptr;
         };
 	};
-
-}
+} //namespace OM
+#endif // Manager_ClientManager_H

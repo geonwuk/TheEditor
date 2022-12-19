@@ -14,6 +14,9 @@
 #include <QPushButton>
 #include <QListWidget>
 #include<QMessageBox>
+#include "DB/DB_ClientManager.h"
+#include "DB/DB_OrderManager.h"
+#include "DB/DB_ProductManager.h"
 using namespace std;
 
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 탭 화면을 스플리터로 나누는 함수
