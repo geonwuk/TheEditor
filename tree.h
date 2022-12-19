@@ -37,7 +37,7 @@ class Tree : public QTreeWidget {
 public:
     ~Tree();
     Tree(MainWindow* , TabWidget* tw, int tabs_item_position);
-    QTreeWidgetItem& getTabs(){return *tabs;}
+    QTreeWidgetItem& getTabs() const {return *tabs;}
     View* makeView(ViewFactory* factory);
 protected:
     MainWindow* mw;

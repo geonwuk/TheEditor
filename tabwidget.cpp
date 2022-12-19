@@ -1,4 +1,7 @@
 #include "tabwidget.h"
+
+#include <cassert>
+
 #include "View/view.h"
 
 void TabWidget::tabClosed(int index){
@@ -15,13 +18,9 @@ void TabWidget::tabCurrentChanged(int index){
     emit tabCurrentChanged_(index);             //탭이바뀌면 Tree의 Tabs항목의 굵은 글씨도 바껴야 하므로 시그널을 송출
 }
 
-
-void TabWidget::tabInserted(int){
-}
-
 TabWidget::TabWidget(MainWindow* parent) : parent(parent) {
-    connect(this, SIGNAL(tabCloseRequested(int)), this, SLOT(tabClosed(int)));
-    connect(this, SIGNAL(currentChanged(int)), this, SLOT(tabCurrentChanged(int)));
+    assert(connect(this, SIGNAL(tabCloseRequested(int)), this, SLOT(tabClosed(int))));
+    assert(connect(this, SIGNAL(currentChanged(int)), this, SLOT(tabCurrentChanged(int))));
 }
 
 TabWidget::~TabWidget(){

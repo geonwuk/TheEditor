@@ -162,7 +162,6 @@ public:
         Itr_type ptr;
         const QSqlDatabase& db;
     };
-
 protected:
     QString DBType{"QSQLITE"};
     QSqlDatabase db;
@@ -203,7 +202,5 @@ private:
         return query;
     }
 };
-
-}
-
+} //namespace DBM
 #endif // DBMANAGER_H

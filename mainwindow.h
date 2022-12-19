@@ -10,9 +10,7 @@
 #include <list>
 #include "Network/servermanager.h"
 #include "Model/model.h"
-#include "DB/db_clientmanager.h"
-#include "DB/db_productmanager.h"
-#include "DB/db_ordermanager.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow;
              class dashboard;}

@@ -1,14 +1,17 @@
 #include "tree.h"
-#include "View/addview.h"
-#include "View/showview.h"
+
+#include <cassert>
+
 #include <QLabel>
 
+#include "View/addview.h"
+#include "View/showview.h"
 
-Tree::Tree(MainWindow* mw, TabWidget *tw, int tabs_item_position) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}, tw{tw}, tabs_item_position{tabs_item_position}
+Tree::Tree(MainWindow* mw, TabWidget *tw, int tabs_item_position) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}, tabs{nullptr}, tw{tw}, tabs_item_position{tabs_item_position}
 {
     setHeaderHidden(true);
-    connect(this, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)), this, SLOT(_itemDoubleClicked(QTreeWidgetItem*,int)));
-    QObject::connect(tw,SIGNAL(tabCurrentChanged_(int)),SLOT(tabCurrnetChanged(int)));
+    assert(connect(this, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)), this, SLOT(_itemDoubleClicked(QTreeWidgetItem*,int))));
+    assert(connect(tw, SIGNAL(tabCurrentChanged_(int)), SLOT(tabCurrnetChanged(int))));
 }
 
 void Tree::tabCurrnetChanged(int index){
@@ -50,13 +53,11 @@ void FocusTabItem::doubleClicked(){     //더블 클릭하면 QTabWidget에서 �
     tree.tw->setCurrentWidget(view);
 }
 
-
 void ToTabItem::doubleClicked(){
     View* view = tree.makeView(view_factory);           //상태 패턴+팩토리 패턴
     tree.tw->addTab(view, view->icon, view->label);     //tree.tw <- QTabWidget을 상속받는 탭 위젯으로 탭에 추가
     tree.tw->setCurrentWidget(view);
 }
-
 
 ManagementTree::ManagementTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,3} {
     QList<ViewFactory*> add_views { new ViewMaker<AddClientView>{mgr,QIcon(":/Icons/client.png"),tr("Add Client")},new ViewMaker<AddProductView>{mgr,QIcon(":/Icons/product.png"),tr("Add Product")},new ViewMaker<AddOrderView>{mgr,QIcon(":/Icons/order.png"),tr("Add Order")}};
@@ -113,5 +114,4 @@ NetworkTree::NetworkTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,1}{
 }
 
 Tree::~Tree(){
-
 }

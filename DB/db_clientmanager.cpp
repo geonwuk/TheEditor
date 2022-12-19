@@ -1,16 +1,17 @@
 #include "db_clientmanager.h"
-#include <QSqlDatabase>
+
+#include <string>
+
 #include <QFile>
-#include <QSqlQuery>
+#include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQueryModel>
-#include <QSqlRecord>
 #include <QSqlQuery>
-#include <string>
+#include <QSqlRecord>
+
 extern const char CLIENT_TABLE_NAME[] = "Client";
 using namespace DBM;
 using std::string;
-//QSqlDatabase ClientManager::db {};
 
 ClientManager::ClientManager(QString connection_name, QString file_name):DBManager{connection_name,file_name} {
     QString create_query = "Create TABLE IF NOT EXISTS Client("
@@ -74,7 +75,6 @@ bool ClientManager::modifyClient(const CM::CID id, const CM::Client client){
     qDebug()<<query.lastQuery();
     return query.exec();
 }
-
 bool ClientManager::eraseClient(const CM::CID id){
     auto query = erase(id.c_str());
     return query.exec();
@@ -101,7 +101,7 @@ const CM::Client ClientManager::CIterator::operator*() const {
     return CM::Client(id,name,phone_number,address);
 }
 IteratorPTR<CM::Client> ClientManager::begin() const{
-    return IteratorPTR<CM::Client>{ new CIterator{0,db} };     //쿼리문의 첫번째 index는 0부터 시작하므로 0으로 초기화합니다
+    return IteratorPTR<CM::Client>{ new ClientManager::CIterator{0,db} };     //쿼리문의 첫번째 index는 0부터 시작하므로 0으로 초기화합니다
 }
 IteratorPTR<CM::Client> ClientManager::end() const{
   QSqlQuery query{QString("select count(id) from ") + CLIENT_TABLE_NAME, db};               //id 레코드 개수를 알기 위한 쿼리를 실행합니다

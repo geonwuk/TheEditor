@@ -1,9 +1,17 @@
 #ifndef PRODUCTMANAGER_H
 #define PRODUCTMANAGER_H
-#include "Model/model.h"
-#include <QSqlRecord>
+
+#include <ctime>
+
+#include <string>
+#include <utility>
+#include <vector>
+
 #include <QString>
+
 #include "DB/dbmanager.h"
+#include "Model/model.h"
+
 extern const char PRODUCT_TABLE_NAME[];
 /*
 ProductModel 인터페이스를 구현한 클래스로 ProductModel 인터페이스에 필요한 기능을 정의합니다
@@ -23,8 +31,8 @@ public:
     bool buyProduct(const PM::PID id, const unsigned int qty) override;
     const unsigned int getSize() const override;
     void checkSafeToLoad(const std::vector<PM::Product>&) noexcept(false) override;
-    virtual IteratorPTR<PM::Product> begin() override;
-    virtual IteratorPTR<PM::Product> end() override;
+    IteratorPTR<PM::Product> begin() override;
+    IteratorPTR<PM::Product> end() override;
 private:
     std::string generateRandID(tm time);
     static unsigned int product_id;
@@ -35,6 +43,5 @@ private:
         const PM::Product operator*() const override ;
     };
 };
-
-}
+} //namespace DBM
 #endif // PRODUCTMANAGER_H

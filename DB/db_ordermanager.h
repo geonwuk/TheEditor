@@ -1,7 +1,17 @@
 #ifndef ORDERMANAGER_H
 #define ORDERMANAGER_H
-#include "Model/model.h"
+
+#include <cuchar>
+
+#include <string>
+#include <utility>
+#include <vector>
+
+#include <QString>
+
 #include "DB/dbmanager.h"
+#include "Model/model.h"
+
 extern const char ORDER_TABLE_NAME[];
 /*
 OrderModel 인터페이스를 구현한 클래스로 OrderModel 인터페이스에 필요한 기능을 정의합니다
@@ -20,7 +30,6 @@ public:
     IteratorPTR<OM::Order> begin() override;
     IteratorPTR<OM::Order> end() override;
 private:
-    //unsigned int order_id = 1;
     const ClientModel& cm;
     ProductModel& pm;
     void createTable(QString file_name);
@@ -28,11 +37,11 @@ private:
 public:
     struct OIterator : public DBIterator<OM::Order> {
     public:
-        OIterator(Itr_type itr,DBM::OrderManager& om,const QSqlDatabase& db) : DBIterator<OM::Order>(itr,db), om{om} {}
+        OIterator(Itr_type itr, DBM::OrderManager& om, const QSqlDatabase& db) : DBIterator<OM::Order>(itr,db), om{om} {}
         const OM::Order operator*() const override;
     private:
         DBM::OrderManager& om;
     };
 };
-}
+} //namespace DBM
 #endif // ORDERMANAGER_H

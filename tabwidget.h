@@ -5,7 +5,6 @@
 
 class MainWindow;
 
-
 class TabWidget : public QTabWidget
 {
     Q_OBJECT
@@ -17,7 +16,6 @@ public slots:
     void tabCurrentChanged(int index);
 private:
     MainWindow* parent;
-    void tabInserted(int index);
 
 signals:
     void tabCurrentChanged_(int index);
