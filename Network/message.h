@@ -33,29 +33,4 @@ private:
     char type;              //이 메시지의 타입이 무엇인지 저장
 };
 
-class QProgressDialog;
-class QFile;
-class FileMessage{      //파일 전송할 시 보내는 메시지
-public:
-    FileMessage(QFile*, QProgressDialog* progress_dialog, QString sender_name);
-    operator const QByteArray() const;
-    void updateProgress(qint64 bytes_written);
-    QProgressDialog* getProgressDialog(){
-        return progress_dialog;
-    }
-    const qint64 getFileSize() const{
-        return file_size;
-    }
-    void completeProgress();
-
-private:
-    QString sender_name;
-    QByteArray data;
-    qint64 file_size;
-    QFile* file;
-    QProgressDialog* progress_dialog;
-};
-
-
-
 #endif // MESSAGE_H

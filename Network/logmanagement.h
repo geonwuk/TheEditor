@@ -32,13 +32,12 @@ private:
 class LogProducer       //생성자
 {
 public:
-    LogProducer(LogBroker& broker) : broker{broker} {}
+    LogProducer(LogBroker& broker);
     void produce(ChatMessage, int life_time);
-    int session = 0;                                        //데이터 ID로 데이터 생성시마다 ++이 된다. 소비자는 이 session으로 데이터를 구분한다.
+    int session;                                        //데이터 ID로 데이터 생성시마다 ++이 된다. 소비자는 이 session으로 데이터를 구분한다.
 private:
     LogBroker& broker;
 };
-
 
 class LogConsumer{
 public:

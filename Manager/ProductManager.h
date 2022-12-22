@@ -16,7 +16,6 @@ namespace PM {
 	using std::ifstream;
 
     ofstream& operator<<(ofstream& out, const Product& p);
-	
 
     class ProductManager : public ProductModel{
 	public:

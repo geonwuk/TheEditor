@@ -17,6 +17,7 @@
 #include "DB/DB_ClientManager.h"
 #include "DB/DB_OrderManager.h"
 #include "DB/DB_ProductManager.h"
+#include <QStyleFactory>
 using namespace std;
 
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 탭 화면을 스플리터로 나누는 함수
@@ -34,7 +35,7 @@ static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 
     tw.setTabsClosable(true);
     return splitter;
 }
-#include <QStyleFactory>
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), dash_board(new Ui::dashboard)
 {
@@ -57,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->ChatButton, &QToolButton::pressed, this, [=]{ sw->setCurrentIndex(1); });      //네트워크
     connect(ui->memoryButton, &QToolButton::pressed, this, [=]{ sw->setCurrentIndex(2); });      //메모리
 
-    mgrs.getSM().setServer(new Server{mgrs.getSM()});                                   //서버 생성 후 포인터로 설정
+    mgrs.getSM().setServer(new Server{mgrs.getSM()}); //mgrs.sm이 Server delete                                  //서버 생성 후 포인터로 설정
 
     connect(ui->actionSave,SIGNAL(triggered()),SLOT(save()));       //저장
     connect(ui->actionOpen,SIGNAL(triggered()),SLOT(load()));       //불러오기
@@ -72,6 +73,16 @@ void Manager::updateAll(){          //파일을 불러오기한 경우 모두 �
     for (auto o : observers) {
         o->update();
     }
+}
+
+Manager::~Manager(){
+    delete cm;
+    cm=nullptr;
+    delete pm;
+    pm=nullptr;
+    delete om;
+    om=nullptr;
+    observers.clear();
 }
 
 void MainWindow::onRadioButtonDBClicked(){
@@ -323,7 +334,9 @@ void MainWindow::load(){
 MainWindow::~MainWindow()
 {
     delete ui;
+    ui=nullptr;
     delete dash_board;
+    dash_board=nullptr;
 }
 
 void Manager::attachObserver(View* o){
@@ -334,6 +347,9 @@ void Manager::detachObserver(View* o){
 }
 void Manager::reset(){
     delete cm;
+    cm=nullptr;
     delete pm;
+    pm=nullptr;
     delete om;
+    om=nullptr;
 }

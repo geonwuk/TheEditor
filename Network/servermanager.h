@@ -2,7 +2,7 @@
 #define SERVERMANAGER_H
 #include "Model/type.h"
 #include <memory>
-#include <QHash>
+#include <unordered_map>
 #include <map>
 #include "Network/message.h"
 
@@ -51,9 +51,10 @@ private:
     unsigned int log_no=1;
     std::map<const std::string, NetClient> net_clients;
     std::vector<ShowChatView*> chat_views;
-    QHash<const QTcpSocket*, NetClient*> socket_to_nclient;
+    std::unordered_map<const QTcpSocket*, NetClient*> socket_to_nclient;
 public:
     ServerManager(Manager&);
+    ~ServerManager();
     void setServer(Server* server_){server=server_;}
 
     void addClient(const Client& c);

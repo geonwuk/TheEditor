@@ -8,6 +8,9 @@ using namespace std;
 using namespace OM;
 using namespace PM;
 
+OrderManager::OrderManager(ClientModel& cm, ProductModel& pm) :order_id{1}, cm{ cm }, pm{ pm }{
+}
+
 std::pair<const Order_ID, bool> OrderManager::addOrder(const Client_ID client_id, vector<bill> products){
     time_t base_time = time(nullptr);
     tm local_time;

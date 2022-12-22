@@ -40,16 +40,13 @@ public:
     QTreeWidgetItem& getTabs() const {return *tabs;}
     View* makeView(ViewFactory* factory);
 protected:
-    MainWindow* mw;
+    MainWindow* mw;             //Main이 삭제
     void tabCurrnetChanged(int index, int top_level_item_position);
     Manager& mgr;
-    QTreeWidgetItem* tabs;      //트리에서 가장 밑에 있는 ToplevelItem
-    TabWidget* tw;
-    int prev_tabs_index=0;      //트리에서 가장 밑에 있는 ToplevleItem의 자식 중에서 현재 선택된
-    int tabs_item_position;     //
-//signals:
-//    void treeToTab(QWidget*, const QIcon&, const QString&);
-//    void setTabFocus(QWidget* page);
+    QTreeWidgetItem* tabs;      //트리에서 가장 밑에 있는 ToplevelItem 소멸자에서 삭제
+    TabWidget* tw;              //MainWindow에서 삭제함
+    int prev_tabs_index;        //트리에서 가장 밑에 있는 ToplevleItem의 자식 중에서 현재 선택된
+    int tabs_item_position;
 public slots:
     void _itemDoubleClicked(QTreeWidgetItem*, int);
     void tabCurrnetChanged(int index);
@@ -74,14 +71,14 @@ public:
     virtual void doubleClicked(){};
 };
 class ToTabItem : public TreeItem{          //이 TreeItem을 클릭하면 새로운 QTabWidgetItem을 생성합니다. (ViewFactory*를 생성자로 갖는 이유)
-    ViewFactory* view_factory;
+    ViewFactory* view_factory;      //소멸자에서 삭제
 public:
     ToTabItem(ViewFactory* view_factory, Tree& tree, const QIcon icon, QString title):TreeItem{tree,icon,title},view_factory{view_factory}{}
-    ~ToTabItem(){delete view_factory;}
+    ~ToTabItem(){delete view_factory; view_factory = nullptr;}
     void doubleClicked();
 };
 class FocusTabItem : public TreeItem{       //QTreeWidgetItem을 상속하며 이 treeWidgetItem을 클릭하면 열려진 Tab 중을 현재 위젯으로 설정합니다
-    View* view; //View는 QTabWidget에서 지웁니다
+    View* view; //View는 TabWidget에서 삭제
 public:
     FocusTabItem(View* view, Tree& tree, const QIcon icon, QString title):TreeItem{tree,icon,title},view{view}{}
     void doubleClicked();

@@ -8,8 +8,9 @@
 #include <QFileDialog>
 
 #include <QMessageBox>
-ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : CView{mgr, tabs,icon,label}
+ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : CView{mgr, tabs,icon,label}, id_col{0}
 {
+    is_edit_mode=false;
     ui.setupUi(this);
     table=ui.tableWidget;
     editBox=ui.checkBox;
@@ -19,14 +20,14 @@ ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const
     table->setColumnCount(header_labels.size());
     table->setHorizontalHeaderLabels(header_labels);
     fillContents();                                                                         //테이블 내용을 채운다
-    connect(ui.checkBox,&QCheckBox::stateChanged, [=](int status){  //읽기모드 수정모드 변환 시그널 연결
+    assert(connect(ui.checkBox,&QCheckBox::stateChanged, [=](int status){  //읽기모드 수정모드 변환 시그널 연결
        is_edit_mode=status;
        using ET = QAbstractItemView::EditTrigger;
        is_edit_mode ? table->setEditTriggers(ET(ET::AllEditTriggers & ~ET::SelectedClicked &~ET::CurrentChanged)) : table->setEditTriggers(QAbstractItemView::NoEditTriggers);
        //
-    });
-    connect(table,SIGNAL(cellChanged(int,int)),SLOT(cellChanged(int,int)));
-    connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed()));          //엔터키를 신호 연결
+    }));
+    assert(connect(table,SIGNAL(cellChanged(int,int)),SLOT(cellChanged(int,int))));
+    assert(connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed())));          //엔터키를 신호 연결
     shortcut =new QShortcut(Qt::Key_Delete, table, table, [this](){                //항목을 삭제할 때
         if(!is_edit_mode) return;               //읽기모드이면 바로 리턴한다
         eraseClient(table->currentRow());       //행을 지우기
@@ -126,7 +127,7 @@ ShowProductView::ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon, con
     table->setColumnCount(labels.size());
     table->setHorizontalHeaderLabels(labels);
     fillContents();
-    connect(ui.checkBox,&QCheckBox::stateChanged, [=](int status){
+    assert(connect(ui.checkBox,&QCheckBox::stateChanged, [=](int status){
        is_edit_mode=status;
        using ET = QAbstractItemView::EditTrigger;
        is_edit_mode ? table->setEditTriggers(ET(ET::AllEditTriggers & ~ET::SelectedClicked &~ET::CurrentChanged)) : table->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -143,9 +144,9 @@ ShowProductView::ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon, con
            }
        }
 
-    });
-    connect(table,SIGNAL(cellChanged(int,int)),SLOT(cellChanged(int,int)));
-    connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed()));
+    }));
+    assert(connect(table,SIGNAL(cellChanged(int,int)),SLOT(cellChanged(int,int))));
+    assert(connect(searchLineEdit,SIGNAL(returnPressed()),SLOT(returnPressed())));
     shortcut = new QShortcut(Qt::Key_Delete, table, table, [this](){
         if(!is_edit_mode) return;
         eraseProduct(table->currentRow());
@@ -169,9 +170,9 @@ void ShowProductView::fillContents(){
         QTime time {tm.tm_hour,tm.tm_min,tm.tm_sec};
         QDateTime dateTime {date,time};
         QDateTimeEdit* dt = View::getDateTimeEditWidget(dateTime,this);
-        connect(dt,&QDateTimeEdit::dateTimeChanged,[=]{
+        assert(connect(dt,&QDateTimeEdit::dateTimeChanged,[=]{
             cellChanged(i,j);
-        });
+        }));
         table->setCellWidget(i,j++,dt);
         i++;
     }
@@ -256,9 +257,7 @@ ShowOrderView::ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon, const Q
     fillContents();
     //label.append(tr("Show Order"));
 
-    connect(orderTable,SIGNAL(itemSelectionChanged()),this,SLOT(orderItemSelectionChanged_()));
-
-
+    assert(connect(orderTable,SIGNAL(itemSelectionChanged()),this,SLOT(orderItemSelectionChanged_())));
 
     QList<QString> pr_cell_names {tr("Product Name"),tr("Unit Price"),tr("Quantity"),tr("Total Price")};
     orderInfoTable->setColumnCount(pr_cell_names.size());
@@ -337,28 +336,28 @@ ShowOrderView::~ShowOrderView(){}
 //---------------------------------------------------
 
 
-ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : NView{mgr, tabs,icon,label}, smgr{mgr.getSM()} {
+ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : NView{mgr, tabs,icon,label}, smgr{mgr.getSM()}, producer{broker} {
     ui.setupUi(this);
     log_thread=new LogThread(this);
     addCosumerButton= ui.addButton;
     deleteConsumerButton = ui.deleteButton;
     consumerTreeWidget = ui.consumerTreeWidget;
 
-    connect(addCosumerButton, SIGNAL(pressed()), SLOT(addConsumer()));
-    connect(deleteConsumerButton, SIGNAL(pressed()), SLOT(delteConsumer()));
+    assert(connect(addCosumerButton, SIGNAL(pressed()), SLOT(addConsumer())));
+    assert(connect(deleteConsumerButton, SIGNAL(pressed()), SLOT(delteConsumer())));
 
     smgr.registerChatView(this);
     //ui.splitter->setSizes({120,500});
     //ui.clientTreeWidget->selectionMode()
 
-    QAction* removeAction = new QAction(tr("&Kick out"));
-    connect(removeAction, &QAction::triggered, [&]{                         //Kick out 컨텍스트 메뉴를 클릭하면 강퇴하기
+    removeAction = new QAction(tr("&Kick out"));
+    assert(connect(removeAction, &QAction::triggered, [&]{                         //Kick out 컨텍스트 메뉴를 클릭하면 강퇴하기
         for(auto& item : ui.clientTreeWidget->selectedItems()) {
             QString id = item->text(1);
             mgr.getSM().dropClient(id);
         }
         notify<NView>();
-    });
+    }));
     menu = new QMenu;
     menu->addAction(removeAction);
     ui.clientTreeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -369,7 +368,7 @@ ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QSt
 
     fillclientTree();
     log_thread->start();
-    connect(ui.savePushButton, SIGNAL(pressed()), SLOT(savePressed()));
+    assert(connect(ui.savePushButton, SIGNAL(pressed()), SLOT(savePressed())));
 }
 void ShowChatView::savePressed(){
     QString filename = QFileDialog::getSaveFileName(this);
@@ -417,6 +416,14 @@ void ShowChatView::delteConsumer(){
 ShowChatView::~ShowChatView(){
     mgr.getSM().unregisterChatView(this);
     log_thread->terminate();
+    log_thread->deleteLater();
+
+    delete progressDialog;
+    progressDialog=nullptr;
+    delete menu;
+    menu=nullptr;
+    delete removeAction;
+    removeAction=nullptr;
 }
 
 void ShowChatView::clientLogin(){}

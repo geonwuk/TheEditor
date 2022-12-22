@@ -35,6 +35,10 @@ LogBroker::OutputData LogBroker::get(int session){
     }
 }
 
+LogProducer::LogProducer(LogBroker& broker) : broker{broker} {
+    session=0;
+}
+
 void LogProducer::produce(ChatMessage msg, int life_time){  //life_time:데이터가 소비될 수(소비자 수)
     broker.put({session++ ,msg, life_time});
 }
@@ -78,4 +82,5 @@ void LogConsumer::threaded_consume(int session){
 LogConsumer::~LogConsumer(){
     file->close();
     delete file;
+    file=nullptr;
 }

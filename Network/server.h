@@ -1,9 +1,9 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <QWidget>
-#include <QHash>
+#include <unordered_map>
 
+#include <QWidget>
 
 #define PORT_NUMBER 9718
 
@@ -31,10 +31,8 @@ private:
         QByteArray data;
         quint64 target_size=0;
     };
-    QHash<QTcpSocket*, Data> socket_data;
+    std::unordered_map<QTcpSocket*, Data> socket_data;
     ServerManager& mgr;
 };
-
-
 
 #endif // SERVER_H

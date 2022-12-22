@@ -6,7 +6,12 @@
 #include <QDateTime>
 #include <QFile>
 ServerManager::ServerManager(Manager& mgr): mgr{mgr} {}
-
+ServerManager::~ServerManager(){
+    delete server;
+    server = nullptr;
+    chat_views.clear();
+    socket_to_nclient.clear();
+}
 void ServerManager::addClient(const Client& c)
 {
     assert(net_clients.emplace(make_pair(c.getId(),NetClient{c,0})).second);
@@ -20,7 +25,7 @@ void ServerManager::login(const QTcpSocket* const socket, const QString& id){
     auto& nc = nc_itr->second;       //map에서 net_client를 찾습니다
     nc.is_online=true;
     nc.socket=socket;
-    socket_to_nclient.insert(socket, &nc);
+    socket_to_nclient.insert({socket, &nc});
     notify();                                                           //chat_view만 업데이트
     server->sendMessage(socket,Message{"SUCCESS",Chat_Login});          //로그인 성공 메시지를 클라이언트에게 보냅니다
 }
@@ -32,7 +37,7 @@ void ServerManager::logOut(const QTcpSocket* const socket){
         server->sendMessage(socket, Message{"BAD_REQUEST",Chat_LogOut});
         return;
     }
-    auto nc = itr.value();
+    auto nc = itr->second;
     nc->is_online=false;
     nc->socket=nullptr;
     socket_to_nclient.erase(itr);
@@ -48,7 +53,7 @@ void ServerManager::dropClient(QString id){
     else{
        // 오프라인이면
     }
-    socket_to_nclient.remove(socket);                               //강퇴한 클라이언트와 소통하던 소켓을 삭제한다
+    socket_to_nclient.erase(socket);                               //강퇴한 클라이언트와 소통하던 소켓을 삭제한다
     net_clients.erase(it);                                          //강퇴한 클라이언트 정보를 삭제하고 채팅 참여자 리스트에서 제외시킨다
     notify();                                                       //
 }
@@ -58,7 +63,7 @@ void ServerManager::chatTalk(const QTcpSocket * const socket, const QByteArray& 
         server->sendMessage(socket, Message{"BAD_REQUEST",Chat_Talk});  //BAD_REQUEST를 보내고 채팅시도를 차단합니다
         return;
     }
-    auto nc = itr.value();  //소켓으로 채팅방 참여자 정보(net_client)를 획득합니다
+    auto nc = itr->second;  //소켓으로 채팅방 참여자 정보(net_client)를 획득합니다
 
     QString ip = socket->peerAddress().toString();
     QString port = QString::number(socket->peerPort());

@@ -6,18 +6,19 @@
 #include <iomanip>
 #include <sstream>
 #include <QDateTimeEdit>
-//View::View() {}
-View::View(Manager& mgr, Tree& tree, const QIcon &icon, const QString label) : icon{icon}, label{label}, mgr{mgr},tree{tree} {
+
+View::View(Manager& mgr, Tree& tree, const QIcon &icon=QPixmap(), const QString label=QString()) : icon{icon}, label{label}, mgr{mgr},tree{tree} {
+    is_update=false;
     tab = new FocusTabItem{this,tree,icon,label};
     tree.getTabs().addChild(tab);
 }
 View::~View() {
     mgr.detachObserver(this);           //옵저버 패턴: 소멸 시 리스트에서 뺸다
+    delete tab;
 }
 void View::removeFromTree(){
     tree.getTabs().removeChild(tab);   //트리에서 View 삭제
 }
-
 
 QWidget* View::getCheckBoxWidget(QWidget* parent) { //체크박스 위젯을 테이블위젯에서 쓸 경우 가운데 정렬이 되도록 하는 함수
     QWidget* checkBoxWidget = new QWidget(parent);  //아이템에 Property를 추가하고 가운데 정렬이 되도록 함

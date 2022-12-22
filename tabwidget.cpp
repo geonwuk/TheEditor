@@ -22,6 +22,3 @@ TabWidget::TabWidget(MainWindow* parent) : parent(parent) {
     assert(connect(this, SIGNAL(tabCloseRequested(int)), this, SLOT(tabClosed(int))));
     assert(connect(this, SIGNAL(currentChanged(int)), this, SLOT(tabCurrentChanged(int))));
 }
-
-TabWidget::~TabWidget(){
-}

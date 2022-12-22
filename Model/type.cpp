@@ -24,8 +24,8 @@ Product& Product::operator= (const Product& rhs){
 using namespace OM;
 extern const NoOrder OM::no_order{};
 
-vector<OrderedProduct> Order::getProducts() const{
-    vector<OrderedProduct> v;
+std::vector<OrderedProduct> Order::getProducts() const{
+    std::vector<OrderedProduct> v;
     for(const auto& e : products){
         v.emplace_back(e.first, e.second);
     }

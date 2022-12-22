@@ -1,11 +1,12 @@
 #ifndef VIEW_H
 #define VIEW_H
+
 #include <list>
-#include "Manager/ClientManager.h"
-#include "Manager/ProductManager.h"
+
 #include "Manager/OrderManager.h"
 #include "mainwindow.h"
 #include "tree.h"
+
 class OView;
 class QTableWidgetItem;
 class FocusTabItem;
@@ -14,14 +15,13 @@ class QDateTimeEdit;
 class View : public QWidget{
 public:
     virtual ~View();
-    //virtual void show()=0;
     virtual void update()=0;
     QIcon icon;
     QString label;
     void removeFromTree();
 protected:
-    View(Manager& mgr, Tree& tree, const QIcon& icon=QPixmap(), const QString label=QString());
-    bool is_update=false;                               //현재 쓰지않지만 나중을 위해 만들어놓은 변수
+    View(Manager& mgr, Tree& tree, const QIcon& icon, const QString label);
+    bool is_update;                               //현재 쓰지않지만 나중을 위해 만들어놓은 변수
     Manager& mgr;
     template<typename T>
     void notify(){
@@ -39,8 +39,7 @@ protected:
     QTableWidgetItem* ceateTableItem(const QString id, QString title);
 private:
     Tree& tree;                 //화면 왼쪽에 있는 트리
-    FocusTabItem* tab=nullptr;  //화면 왼쪽에 있는 트리에서 Tabs항목에서 현재 뷰에 대한 Tabs 아이템
-
+    FocusTabItem* tab;  //소멸자에서 삭제, 화면 왼쪽에 있는 트리에서 Tabs항목에서 현재 뷰에 대한 Tabs 아이템
 };
 
 class CView : public View {

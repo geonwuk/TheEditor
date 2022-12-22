@@ -18,7 +18,6 @@ QT_END_NAMESPACE
 
 class MainWindow;
 class View;
-class Tree;
 class QStackedWidget;
 class Manager {
     friend class MainWindow;
@@ -28,6 +27,7 @@ public:
         pm = new PM::ProductManager;
         om = new OM::OrderManager{*cm,*pm};
     }
+    ~Manager();
     template<typename F>
     void notify(F notify_){
         for (auto o : observers) {
@@ -67,8 +67,8 @@ private slots:
     void onRadioMemoryButtonClicked();
 
 private:
-    Ui::MainWindow *ui;
-    Ui::dashboard* dash_board;
+    Ui::MainWindow *ui;     //소멸자에서 지움
+    Ui::dashboard* dash_board;      //소멸자에서 지움
     Manager mgrs{*this};
     TabWidget management_tw{this};
     ManagementTree management_tree{this,&management_tw};
@@ -76,11 +76,6 @@ private:
     TabWidget network_tw{this};
     NetworkTree network_tree{this,&network_tw};
 
-    QStackedWidget* sw;
-
-
-
-
-
+    QStackedWidget* sw;     //ui가 자원을 지움
 };
 #endif // MAINWINDOW_H

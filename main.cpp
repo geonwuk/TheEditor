@@ -2,25 +2,23 @@
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
-#include "DB/dbmanager.h"
 
-extern const char name[] = "Client";
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    a.setStyle("Fusion");
+    QApplication app(argc, argv);
+    app.setStyle("Fusion");
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
     for (const QString &locale : uiLanguages) {
         const QString baseName = "TheEditor_" + QLocale(locale).name();
         if (translator.load(":/i18n/" + baseName)) {
-            a.installTranslator(&translator);
+            app.installTranslator(&translator);
             break;
         }
     }
-    MainWindow w;
-    w.show();
+    MainWindow main_window;
+    main_window.show();
 
-    return a.exec();
+    return app.exec();
 }

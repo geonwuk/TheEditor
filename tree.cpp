@@ -1,13 +1,12 @@
 #include "tree.h"
 
 #include <cassert>
-
 #include <QLabel>
 
 #include "View/addview.h"
 #include "View/showview.h"
 
-Tree::Tree(MainWindow* mw, TabWidget *tw, int tabs_item_position) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}, tabs{nullptr}, tw{tw}, tabs_item_position{tabs_item_position}
+Tree::Tree(MainWindow* mw, TabWidget *tw, int tabs_item_position) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}, tabs{nullptr}, tw{tw}, prev_tabs_index{0},  tabs_item_position{tabs_item_position}
 {
     setHeaderHidden(true);
     assert(connect(this, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)), this, SLOT(_itemDoubleClicked(QTreeWidgetItem*,int))));
@@ -110,4 +109,6 @@ NetworkTree::NetworkTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,1}{
 }
 
 Tree::~Tree(){
+    delete tabs;
+    tabs=nullptr;
 }

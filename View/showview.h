@@ -17,13 +17,13 @@ public:
 
 private:
     void fillContents();
-    bool is_edit_mode =false;       //읽기 수정 모드 설정 변수
+    bool is_edit_mode;       //읽기 수정 모드 설정 변수
     Ui::showClient ui{};
-    QTableWidget* table;
-    QCheckBox* editBox;
-    QLineEdit* searchLineEdit;
+    QTableWidget* table;        //ui가 삭제
+    QCheckBox* editBox;         //ui가 삭제
+    QLineEdit* searchLineEdit;  //ui가 삭제
     bool eraseClient(int row);
-    const int id_col=0;
+    const int id_col;
     QShortcut* shortcut;            //delete키를 누르면 그행이 삭제되는 단축키
 
 private slots:
@@ -82,9 +82,7 @@ class ServerManager;
 class ShowChatView : public NView
 {
     Q_OBJECT
-    LogThread* log_thread;
-    QProgressDialog* progressDialog;
-    QMenu* menu;
+
 //    std::vector<std::shared_ptr<NetClient>> participants;
 public:
     ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
@@ -96,14 +94,17 @@ public:
 
 private:
     void fillclientTree();
+    LogThread* log_thread;              //소멸자에서 삭제
+    QProgressDialog* progressDialog;    //소멸자에서 삭제
+    QMenu* menu;                        //소멸자에서 삭제
     ServerManager& smgr;
-
-    QPushButton* addCosumerButton;
-    QPushButton* deleteConsumerButton;
-    QTreeWidget* consumerTreeWidget;
+    QAction* removeAction;              //소멸자에서 삭제
+    QPushButton* addCosumerButton;      //ui에서 삭제
+    QPushButton* deleteConsumerButton;  //ui에서 삭제
+    QTreeWidget* consumerTreeWidget;    //ui에서 삭제
     std::list<LogConsumer> consumers;
     LogBroker broker;
-    LogProducer producer{broker};
+    LogProducer producer;
 private slots:
     void on_clientTreeWidget_customContextMenuRequested(const QPoint &pos);
     void savePressed();

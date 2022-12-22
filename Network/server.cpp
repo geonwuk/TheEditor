@@ -20,7 +20,6 @@ Server::Server(ServerManager& mgr, QWidget *parent)
         return;
     }
     qDebug()<<QString("The server is running on port %1").arg(tcpServer->serverPort());
-
 }
 void Server::clientConnect(){
     QTcpSocket* clientConnection = tcpServer->nextPendingConnection();
@@ -53,20 +52,24 @@ void Server::readData(){
     }
 
     mgr.processMessage(socket,recv_data.data);
-
-    socket_data.remove(socket);
 }
 void Server::sendMessage(const QTcpSocket * socket_, const Message& msg){
     auto socket = const_cast<QTcpSocket*>(socket_);
     socket->write(msg);
     socket->flush();
-
 }
 void Server::disconnectSocket(const QTcpSocket* socket_){
     auto socket = const_cast<QTcpSocket*>(socket_);
+    socket->disconnect();
     socket->close();
+    size_t result = socket_data.erase(socket);
+    assert(result==1);
+    socket->deleteLater();
 }
 Server::~Server()
 {
+    tcpServer->disconnect();
+    delete tcpServer;
+    tcpServer=nullptr;
 }
 
