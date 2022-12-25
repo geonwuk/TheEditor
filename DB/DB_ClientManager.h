@@ -7,8 +7,8 @@
 #include <QString>
 #include <QSqlDatabase>
 
-#include "DB/dbmanager.h"
-#include "Model/model.h"
+#include "DB/DB_Manager.h"
+#include "Model/Model.h"
 
 extern const char CLIENT_TABLE_NAME[];
 /*

@@ -1,11 +1,7 @@
 #ifndef TREE_H
 #define TREE_H
 #include <QTreeWidget>
-#include <vector>
-#include <functional>
 
-class QTreeWidgetItem;
-class QVariant;
 class MainWindow;
 class View;
 class Manager;

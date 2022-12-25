@@ -2,7 +2,7 @@
 #include <QLabel>
 #include <QList>
 #include "ui_mainwindow.h"
-#include "tree.h"
+#include "Tree.h"
 #include "View/view.h"
 #include <QSplitter>
 #include "Network/server.h"

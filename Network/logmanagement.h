@@ -3,18 +3,17 @@
 #include "Network/servermanager.h"
 #include <mutex>
 class QFile;
-using ChatMessage = ServerManager::ChatMessage;
 class LogConsumer;
-class LogBroker{            //생성자와 소비자 사이를 조율하는 브로커
+class LogBroker{            //생산자와 소비자 사이를 조율하는 브로커
 public:
     struct InputData{
         int session;        //데이터 ID
-        ChatMessage msg;    //채팅 메시지
+        ServerManager::ChatMessage msg;    //채팅 메시지
         int life_time;      //소비자의 수(데이터가 소비될 수) 데이터 소비가 life_time만큼 이루어져야 데이터를 지울 수 잇다
     };
     struct OutputData{
         bool is_ready;      //is_ready가 false이면 mutex가 lock 되어있으므로 소비자는 sleep을 한다
-        ChatMessage msg;    //채팅 메시지
+        ServerManager::ChatMessage msg;    //채팅 메시지
     };
     bool put(InputData);    //생성자가 데이터를 생성한 후 브로커에게 전달하는 함수
     OutputData get(int);    //생성된 데이터를 소비하는 함수
@@ -29,7 +28,7 @@ private:
     std::map<int, Data> msgs;
 };
 
-class LogProducer       //생성자
+class LogProducer       //생산자
 {
 public:
     LogProducer(LogBroker& broker);

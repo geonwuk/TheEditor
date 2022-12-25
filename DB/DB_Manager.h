@@ -1,5 +1,5 @@
-#ifndef DBMANAGER_H
-#define DBMANAGER_H
+#ifndef DB_MANAGER_H
+#define DB_MANAGER_H
 
 #include <initializer_list>
 #include <sstream>
@@ -12,7 +12,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 
-#include "Model/model.h"
+#include "Model/Model.h"
 
 namespace DBM {
 struct ERROR_WHILE_LOADING{
@@ -205,4 +205,4 @@ private:
     }
 };
 } //namespace DBM
-#endif // DBMANAGER_H
+#endif // DB_MANAGER_H

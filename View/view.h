@@ -5,7 +5,8 @@
 
 #include "Manager/OrderManager.h"
 #include "mainwindow.h"
-#include "tree.h"
+
+#include "Tree.h"
 
 class OView;
 class QTableWidgetItem;

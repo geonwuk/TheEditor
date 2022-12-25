@@ -1,6 +1,6 @@
 #ifndef SERVERMANAGER_H
 #define SERVERMANAGER_H
-#include "Model/type.h"
+#include "Model/Type.h"
 #include <memory>
 #include <unordered_map>
 #include <map>

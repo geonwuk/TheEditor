@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "Model/model.h"
+#include "Model/Model.h"
 
 namespace OM {
     using Product_ID = PM::PID;

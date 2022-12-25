@@ -1,9 +1,9 @@
 #include "logmanagement.h"
 #include <QFile>
 #include <thread>
-
+#include <QTextStream>
 using namespace std;
-
+using ChatMessage = ServerManager::ChatMessage;
 bool LogBroker::put(InputData data){
     bool re;
     tie(ignore, re) = msgs.emplace(data.session, data);
@@ -48,12 +48,10 @@ LogConsumer::LogConsumer(LogBroker& broker, QString file_name) : file_name{file_
     file = new QFile(file_name);
     file->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append );
 }
-
 void LogConsumer::consume(int session){
     thread t {&LogConsumer::threaded_consume,this,session};     //쓰레드로 데이터를 소비합니다
     t.detach();
 }
-
 static void little_sleep(std::chrono::microseconds us){
     auto start = std::chrono::high_resolution_clock::now();
     auto end = start + us;
@@ -61,7 +59,6 @@ static void little_sleep(std::chrono::microseconds us){
         std::this_thread::yield();
     } while (std::chrono::high_resolution_clock::now() < end);
 }
-
 void LogConsumer::threaded_consume(int session){
     QTextStream out(file);
     bool ready=false;
@@ -78,7 +75,6 @@ void LogConsumer::threaded_consume(int session){
     auto& data = output.msg;
     out<<data.ip<<","<<data.port<<","<<data.id<<","<<data.name<<","<<data.message<<","<<data.time<<"\n";
 }
-
 LogConsumer::~LogConsumer(){
     file->close();
     delete file;

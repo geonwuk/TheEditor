@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "Model/type.h"
-#include "Model/model.h"
+#include "Model/Type.h"
+#include "Model/Model.h"
 
 namespace CM {
     std::ofstream& operator<<(std::ofstream& out, const Client& c);
