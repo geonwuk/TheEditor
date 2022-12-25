@@ -9,7 +9,7 @@ class AddClientView : public CView
 {
     Q_OBJECT
 public: 
-    explicit AddClientView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    explicit AddClientView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~AddClientView();
     void update() {}
 
@@ -24,7 +24,7 @@ class AddProductView : public PView
 {
     Q_OBJECT
 public:
-    explicit AddProductView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    explicit AddProductView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~AddProductView();
     void update() {}
 
@@ -39,7 +39,7 @@ class AddOrderView : public OView
 {
     Q_OBJECT
 public:
-    explicit AddOrderView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    explicit AddOrderView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~AddOrderView();
     void update();
 public slots:
@@ -59,16 +59,16 @@ private:
 
     void fillClientTab();
     void fillProductTab();
-    void fillClientInfoTab(QList<QString>);
-    void fillProductInfoTab(QList<QString>);
-    std::vector<QString> getCheckedIDs(QTableWidget* table);
+    void fillClientInfoTab(QList<std::string>);
+    void fillProductInfoTab(QList<std::string>);
+    std::vector<std::string> getCheckedIDs(QTableWidget* table);
 };
 
 #include "ui_addParticipantView.h"
 class AddParticipantView : public NView{
     Q_OBJECT
 public:
-    explicit AddParticipantView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    explicit AddParticipantView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~AddParticipantView();
     void update();
 private:

@@ -78,11 +78,7 @@ private:
     Order_ID order_id;                          //주문번호 (1부터 시작)
     CM::Client client;                              //구매자
     std::tm date;                               //구매날짜
-<<<<<<< HEAD:Model/type.h
-    std::vector<std::pair<Product,qty>> products;    //구매한 물품들
-=======
     std::vector<std::pair<PM::Product,qty>> products;    //구매한 물품들
->>>>>>> refactoring:Model/Type.h
 public:
     Order(Order_ID id, CM::Client c, std::tm t, decltype(products) p) : order_id{id}, client{c}, date{t}, products{p} {}
     Order(){}

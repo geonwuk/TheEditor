@@ -7,7 +7,7 @@
 #include <sstream>
 #include <QDateTimeEdit>
 
-View::View(Manager& mgr, Tree& tree, const QIcon &icon=QPixmap(), const QString label=QString()) : icon{icon}, label{label}, mgr{mgr},tree{tree} {
+View::View(Manager& mgr, Tree& tree, const QIcon &icon=QPixmap(), const std::string label=std::string()) : icon{icon}, label{label}, mgr{mgr},tree{tree} {
     is_update=false;
     tab = new FocusTabItem{this,tree,icon,label};
     tree.getTabs().addChild(tab);
@@ -36,54 +36,54 @@ QDateTimeEdit* View::getDateTimeEditWidget(const QDateTime &datetime, QWidget* p
     return dt;
 }
 
-QTableWidgetItem* View::ceateTableItem(const QString id, QString title){ //아이템에 ID데이터를 추가하기
-    auto item = new QTableWidgetItem(title);
-    item->setData(Role::id, id);
+QTableWidgetItem* View::ceateTableItem(const std::string id, std::string title){ //아이템에 ID데이터를 추가하기
+    auto item = new QTableWidgetItem(title.c_str());
+    item->setData(Role::id, QString::fromStdString(id));
     return item;
 }
-void CView::addClient(const QString ID, const QString name, const QString phone_number, const QString address){
-    mgr.getCM().addClient(ID.toStdString(), name.toStdString(),phone_number.toStdString(),address.toStdString());
+void CView::addClient(const std::string ID, const std::string name, const std::string phone_number, const std::string address){
+    mgr.getCM().addClient(ID, name, phone_number, address);
     notify<CView>();        //모든 뷰에 대해 고객 관리에 관련된 뷰라면 업데이트 한다
     notify<OView>();        //모든 뷰에 대해 주문 관리에 관련된 뷰라면 업데이트 한다 (구매 가능한 고객 목록 업데이트)
     notify<NView>();        //모든 뷰에 대해 채팅과 관련된 뷰라면 업데이트 한다 (채팅 참여자 목록에 추가가 가능하도록 업데이트)
 }
 
-bool CView::modifyClient(const QString id, const QList<QString> ls){
-    bool re = mgr.getCM().modifyClient(id.toStdString(), CM::Client{id.toStdString(), ls[0].toStdString(),ls[1].toStdString(),ls[2].toStdString()});    //id는 바꾸지 않고 나머지 항목들에 대해 업데이트 한다(list로부터 값을 획득)
+bool CView::modifyClient(const std::string id, const QList<std::string> ls){
+    bool re = mgr.getCM().modifyClient(id, CM::Client{id, ls[0],ls[1], ls[2]});    //id는 바꾸지 않고 나머지 항목들에 대해 업데이트 한다(list로부터 값을 획득)
     notify<CView>();        //모든 뷰에 대해 고객 관리에 관련된 뷰라면 업데이트 한다
     notify<OView>();        //모든 뷰에 대해 주문 관리에 관련된 뷰라면 업데이트 한다
     return re;
 }
-bool CView::eraseClient(const QString id){
-    bool result =  mgr.getCM().eraseClient(id.toStdString());       //고객 정보 삭제
+bool CView::eraseClient(const std::string id){
+    bool result =  mgr.getCM().eraseClient(id);       //고객 정보 삭제
     notify<CView>();        //모든 뷰에 대해 고객 관리에 관련된 뷰라면 업데이트 한다
     notify<OView>();        //모든 뷰에 대해 주문 관리에 관련된 뷰라면 업데이트 한다
     return result;
 }
 
-bool PView::addProduct(const QString name, const QString price, const QString qty){
-    bool result = mgr.getPM().addProduct(name.toStdString(),price.toUInt(),qty.toUInt());
+bool PView::addProduct(const std::string name, const std::string price, const std::string qty){
+    bool result = mgr.getPM().addProduct(name, std::stoul(price), std::stoul(qty));
     notify<PView>();        //PView를 상속 받는 View 업데이트 (물품)
     notify<OView>();        //OView 상속 받는 View 업데이트 (주문)
     return result;
 }
-bool PView::modifyProduct(const QString id, const QList<QString> ls){
+bool PView::modifyProduct(const std::string id, const QList<std::string> ls){
     tm time;
-    std::istringstream ss( ls[3].toStdString() );       //물품 이름, 물품 가격, 물품 재고량, 물품 시각에서 3번째 시각 / Todo: ls[3]을 수정
+    std::istringstream ss( ls[3] );       //물품 이름, 물품 가격, 물품 재고량, 물품 시각에서 3번째 시각 / Todo: ls[3]을 수정
     ss >> std::get_time(&time, "%D %T");                //시각 포맷
-    bool re = mgr.getPM().modifyProduct(id.toStdString(), PM::Product{ls[0].toStdString(),ls[1].toUInt(),ls[2].toUInt(),time});
+    bool re = mgr.getPM().modifyProduct(id, PM::Product{ls[0],std::stoul(ls[1]),std::stoul(ls[2]),time});
     notify<PView>();         //PView를 상속 받는 View 업데이트 (물품)
     notify<OView>();         //OView 상속 받는 View 업데이트 (주문)
     return re;
 }
-bool PView::eraseProduct(const QString id){
-     bool result = mgr.getPM().eraseProduct(id.toStdString());
+bool PView::eraseProduct(const std::string id){
+     bool result = mgr.getPM().eraseProduct(id);
      notify<PView>();       //PView를 상속 받는 View 업데이트 (물품)
      notify<OView>();       //OView 상속 받는 View 업데이트 (주문)
      return result;
 }
-const PM::Product PView::findProduct(const QString id) const{
-    return mgr.getPM().findProduct(id.toStdString());
+const PM::Product PView::findProduct(const std::string id) const{
+    return mgr.getPM().findProduct(id);
 }
 const unsigned int PView::getSize() const{
     return mgr.getPM().getSize();
@@ -94,8 +94,8 @@ const unsigned int PView::getSize() const{
 const OM::Order OView::findOrder(const OM::Order_ID order_id) const{
     return mgr.getOM().findOrder(order_id);
 }
-std::pair<const unsigned int, bool> OView::addOrder(const QString client_id, std::vector<OM::OrderManager::bill> products){
-    auto result = mgr.getOM().addOrder(client_id.toStdString(),products);
+std::pair<const unsigned int, bool> OView::addOrder(const std::string client_id, std::vector<OM::OrderManager::bill> products){
+    auto result = mgr.getOM().addOrder(client_id,products);
     notify<OView>();    //PView를 상속 받는 View 업데이트 (물품)
     notify<PView>();    //OView 상속 받는 View 업데이트 (주문)
     return result;

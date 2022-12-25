@@ -2,6 +2,7 @@
 #define VIEW_H
 
 #include <list>
+#include <string>
 
 #include "Manager/OrderManager.h"
 #include "mainwindow.h"
@@ -18,10 +19,10 @@ public:
     virtual ~View();
     virtual void update()=0;
     QIcon icon;
-    QString label;
+    std::string label;
     void removeFromTree();
 protected:
-    View(Manager& mgr, Tree& tree, const QIcon& icon, const QString label);
+    View(Manager& mgr, Tree& tree, const QIcon& icon, const std::string label);
     bool is_update;                               //현재 쓰지않지만 나중을 위해 만들어놓은 변수
     Manager& mgr;
     template<typename T>
@@ -37,7 +38,7 @@ protected:
     QWidget* getCheckBoxWidget(QWidget* parent);
     QDateTimeEdit* getDateTimeEditWidget(const QDateTime &datetime, QWidget* parent);
     enum Role {id = Qt::UserRole};
-    QTableWidgetItem* ceateTableItem(const QString id, QString title);
+    QTableWidgetItem* ceateTableItem(const std::string id, std::string title);
 private:
     Tree& tree;                 //화면 왼쪽에 있는 트리
     FocusTabItem* tab;  //소멸자에서 삭제, 화면 왼쪽에 있는 트리에서 Tabs항목에서 현재 뷰에 대한 Tabs 아이템
@@ -45,10 +46,10 @@ private:
 
 class CView : public View {
 public:
-    CView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString()) : View{mgr, tabs, icon,label} {}
-    void addClient(const QString ID, const QString name, const QString phone_number = "NONE", const QString address = "NONE");
-    bool eraseClient(const QString id);
-    bool modifyClient(const QString id, const QList<QString> client_info);
+    CView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const std::string label=std::string()) : View{mgr, tabs, icon,label} {}
+    void addClient(const std::string ID, const std::string name, const std::string phone_number = "NONE", const std::string address = "NONE");
+    bool eraseClient(const std::string id);
+    bool modifyClient(const std::string id, const QList<std::string> client_info);
     const CM::Client findClient(const CM::CID id) const{
         return mgr.getCM().findClient(id);
     }
@@ -59,19 +60,19 @@ public:
 
 class PView : public View{
 public:
-    PView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString()) : View{mgr, tabs, icon,label} {}
-    bool addProduct(const QString name, const QString price, const QString qty);
-    bool modifyProduct(const QString id, const QList<QString> ls);
-    bool eraseProduct(const QString id);
-    const PM::Product findProduct(const QString id) const;
+    PView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const std::string label=std::string()) : View{mgr, tabs, icon,label} {}
+    bool addProduct(const std::string name, const std::string price, const std::string qty);
+    bool modifyProduct(const std::string id, const QList<std::string> ls);
+    bool eraseProduct(const std::string id);
+    const PM::Product findProduct(const std::string id) const;
     const unsigned int getSize() const;
 };
 
 class OView : public View {
 public:
-    OView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString()) : View{mgr, tabs, icon,label} {}
+    OView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const std::string label=std::string()) : View{mgr, tabs, icon,label} {}
     const OM::Order findOrder(const OM::Order_ID order_id) const;
-    std::pair<const unsigned int, bool> addOrder(const QString client_id, std::vector<OM::OrderManager::bill>);
+    std::pair<const unsigned int, bool> addOrder(const std::string client_id, std::vector<OM::OrderManager::bill>);
     const size_t getSize() const;
 protected:
    // static bool is_order_moified;
@@ -79,7 +80,7 @@ protected:
 
 class NView : public View {
 public:
-    NView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const QString label=QString()) : View{mgr, tabs, icon,label} {}
+    NView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const std::string label=std::string()) : View{mgr, tabs, icon,label} {}
 };
 
 #endif // VIEW_H

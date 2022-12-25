@@ -5,16 +5,16 @@
 #include <QShortcut>
 #include <QSpinBox>
 #include <QMessageBox>
-AddClientView::AddClientView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : CView{mgr,tabs,icon,label} {
+AddClientView::AddClientView(Manager& mgr, Tree& tabs, const QIcon icon, const std::string label) : CView{mgr,tabs,icon,label} {
     ui.setupUi(this);
     assert(connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addClient()))); //고객 추가 버튼과 고객 추가 메소드를 시그널&슬롯으로 연결합니다
 }
 
 void AddClientView::addClient(){                                //고객 추가 UI에 있는 QLineEdit으로부터 스트링 데이터를 얻어서 Manager클래스의 Map에 추가합니다.
-    QString ID = ui.IDLineEdit->text();                         //ID 스트링 데이터를 QLineEdit으로부터 얻습니다
-    QString name = ui.NameEdit->text();                         //name 스트링 데이터를 QLineEdit으로부터 얻습니다
-    QString phone_number = ui.PhoneNumberEdit->text();          //전화번호 스트링 데이터를 QLineEdit으로부터 얻습니다
-    QString address = ui.AddressEdit->text();                   //주소 스트링 데이터를 QLineEdit으로부터 얻습니다
+    std::string ID = ui.IDLineEdit->text().toStdString();                         //ID 스트링 데이터를 QLineEdit으로부터 얻습니다
+    std::string name = ui.NameEdit->text().toStdString();                         //name 스트링 데이터를 QLineEdit으로부터 얻습니다
+    std::string phone_number = ui.PhoneNumberEdit->text().toStdString();          //전화번호 스트링 데이터를 QLineEdit으로부터 얻습니다
+    std::string address = ui.AddressEdit->text().toStdString();                   //주소 스트링 데이터를 QLineEdit으로부터 얻습니다
     CView::addClient(ID,name,phone_number,address);
 }
 
@@ -24,15 +24,15 @@ AddClientView::~AddClientView(){
 }
 
 //Product
-AddProductView::AddProductView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : PView{mgr,tabs,icon,label}  {
+AddProductView::AddProductView(Manager& mgr, Tree& tabs, const QIcon icon, const std::string label) : PView{mgr,tabs,icon,label}  {
     ui.setupUi(this);
     assert(connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addProduct())));    //고객 추가 버튼과 고객 추가 메소드를 시그널&슬롯으로 연결합니다
 }
 
 void AddProductView::addProduct(){              //상품 추가 UI에 있는 QLineEdit으로부터 스트링 데이터를 얻어서 Manager클래스의 Map에 추가합니다.(상품의 경우 ID는 자동으로 생성합니다)
-    QString name = ui.NameEdit->text();         //상품 이름 스트링 데이터를 QLineEdit으로부터 얻습니다
-    QString price = ui.PriceEdit->text();       //상품 가격 데이터를 QLineEdit으로부터 얻습니다
-    QString qty = ui.QuantityEdit->text();      //상품 구매 개수 데이터를 QLineEdit으로부터 얻습니다
+    std::string name = ui.NameEdit->text().toStdString();         //상품 이름 스트링 데이터를 QLineEdit으로부터 얻습니다
+    std::string price = ui.PriceEdit->text().toStdString();       //상품 가격 데이터를 QLineEdit으로부터 얻습니다
+    std::string qty = ui.QuantityEdit->text().toStdString();      //상품 구매 개수 데이터를 QLineEdit으로부터 얻습니다
     PView::addProduct(name,price,qty);          //Map에 상품을 추가합니다
 }
 
@@ -43,7 +43,7 @@ AddProductView::~AddProductView(){
 
 
 //Order================================================================================
-AddOrderView::AddOrderView(Manager& mgr, Tree& tabs, const QIcon icon, const QString label) : OView{mgr,tabs,icon,label} {
+AddOrderView::AddOrderView(Manager& mgr, Tree& tabs, const QIcon icon, const std::string label) : OView{mgr,tabs,icon,label} {
     ui.setupUi(this);
     CPTab=ui.CPTab;             //고객과 상품을 선택할 수 있게 하는 QTabWidget
     infoTab=ui.infoTable;       //CPTab에서 마우스로 아이템을 선택하는 경우 그 아이템에 대한 정보를 보여주는 QTableWidget
@@ -101,7 +101,7 @@ void AddOrderView::itemSelectionChanged_(){
     auto tab = qobject_cast<QTableWidget*>(sender());
     if(tab==nullptr)
         return;
-    QList<QString> ids;
+    QList<std::string> ids;
     auto ranges = tab->selectedRanges();
     if(ranges.empty()){
         infoTab->clear();
@@ -114,7 +114,7 @@ void AddOrderView::itemSelectionChanged_(){
     for(auto range : ranges){
         for(int top = range.topRow(); top<= range.bottomRow(); top++){
             auto item = tab->item(top,1);
-            ids.emplace_back(item->data(Role::id).value<QString>());
+            ids.emplace_back(item->data(Role::id).value<std::string>());
         }
     }
     if(tab->objectName()=="clientTab"){
@@ -126,7 +126,7 @@ void AddOrderView::itemSelectionChanged_(){
 
 }
 
-void AddOrderView::fillClientInfoTab(QList<QString> clients_ids){
+void AddOrderView::fillClientInfoTab(QList<std::string> clients_ids){
     infoTab->clear();
     infoTab->setRowCount(clients_ids.size());
     infoTab->setColumnCount(4);
@@ -144,7 +144,7 @@ void AddOrderView::fillClientInfoTab(QList<QString> clients_ids){
     infoTab->resizeRowsToContents();
 }
 
-void AddOrderView::fillProductInfoTab(QList<QString> product_ids){
+void AddOrderView::fillProductInfoTab(QList<std::string> product_ids){
     infoTab->clear();
     infoTab->setRowCount(product_ids.size());
     infoTab->setColumnCount(5);
@@ -154,8 +154,8 @@ void AddOrderView::fillProductInfoTab(QList<QString> product_ids){
         const auto product = mgr.getPM().findProduct(product_id.toStdString());
         infoTab->setItem(i,0, new QTableWidgetItem(product.getId().c_str()));
         infoTab->setItem(i,1, new QTableWidgetItem(product.getName().c_str()));
-        infoTab->setItem(i,2,new QTableWidgetItem(QString::number(product.getPrice())));
-        infoTab->setItem(i,3,new QTableWidgetItem(QString::number(product.getQty())));
+        infoTab->setItem(i,2,new QTableWidgetItem(std::string::number(product.getPrice())));
+        infoTab->setItem(i,3,new QTableWidgetItem(std::string::number(product.getQty())));
         auto tm = product.getDate();
         QDate date {tm.tm_year+1900,tm.tm_mon+1,tm.tm_mday};
         QTime time {tm.tm_hour,tm.tm_min,tm.tm_sec};
@@ -184,8 +184,8 @@ void AddOrderView::fillProductTab(){
 }
 
 //insertTab
-std::vector<QString> AddOrderView::getCheckedIDs(QTableWidget* table){
-    std::vector<QString> ids;
+std::vector<std::string> AddOrderView::getCheckedIDs(QTableWidget* table){
+    std::vector<std::string> ids;
     for(int row=0; row<table->rowCount(); row++){
         auto wg = static_cast<QWidget*>(table->cellWidget(row,0));
         QVariant v = wg->property("CB");
@@ -193,19 +193,19 @@ std::vector<QString> AddOrderView::getCheckedIDs(QTableWidget* table){
         auto state = check_box->checkState();
         if(state==Qt::Checked){
             auto item = table->item(row,1);
-            ids.emplace_back(item->data(Role::id).value<QString>());
+            ids.emplace_back(item->data(Role::id).value<std::string>());
         }
     }
     return ids;
 }
 
 void AddOrderView::commitOrder(){
-    std::vector<QString> client_ids = getCheckedIDs(&clientTab);
-    std::vector<QString> product_ids = getCheckedIDs(&productTab);
+    std::vector<std::string> client_ids = getCheckedIDs(&clientTab);
+    std::vector<std::string> product_ids = getCheckedIDs(&productTab);
 
     std::vector<QTreeWidgetItem*> buyers;
     for(const auto& c : client_ids){
-        QStringList name {mgr.getCM().findClient(c.toStdString()).getName().c_str()};
+        std::stringList name {mgr.getCM().findClient(c.toStdString()).getName().c_str()};
         auto buyer = new QTreeWidgetItem(orderTree,name);
         buyer->setData(0, Role::id, c);
         buyers.emplace_back(buyer);
@@ -241,15 +241,15 @@ void AddOrderView::addOrder(){
     }
     for(int i=0; i<orderTree->topLevelItemCount(); i++){
         auto client = orderTree->topLevelItem(i);
-        QString client_id = client->data(0, Role::id).value<QString>();
+        std::string client_id = client->data(0, Role::id).value<std::string>();
         std::vector<OrderModel::bill> products;
         for(int j=0; j<client->childCount(); j++){
             auto product = client->child(j);
             auto qty_box = static_cast<QSpinBox*>(orderTree->itemWidget(product,2));
-            QString pid = product->data(0, Role::id).value<QString>();
+            std::string pid = product->data(0, Role::id).value<std::string>();
             auto target_product = mgr.getPM().findProduct(pid.toStdString());
             if(target_product.getQty()<(unsigned int)qty_box->value()){
-                QMessageBox::warning(this, tr("Warning"), tr("%1's total stock is less than %2").arg(QString(target_product.getName().c_str())).arg(qty_box->value()));
+                QMessageBox::warning(this, tr("Warning"), tr("%1's total stock is less than %2").arg(std::string(target_product.getName().c_str())).arg(qty_box->value()));
                 return;
             }
 
@@ -270,7 +270,7 @@ AddOrderView::~AddOrderView(){
 
 
 
-AddParticipantView::AddParticipantView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label)
+AddParticipantView::AddParticipantView(Manager& mgr, Tree &tabs, const QIcon icon, const std::string label)
     : NView{mgr, tabs, icon,label} {
     initUI();
 
@@ -316,10 +316,10 @@ void AddParticipantView::initUI(){
     //splitter->setSizes({1,0,1});
 
 
-    QList<QString> headers {tr("ID"),tr("Name")};
+    QList<std::string> headers {tr("ID"),tr("Name")};
     ui.clientList->setColumnCount(headers.size());
     ui.clientList->setHorizontalHeaderLabels(headers);
-    QList<QString> p_list_headers {tr("ID"),tr("Name")};
+    QList<std::string> p_list_headers {tr("ID"),tr("Name")};
     ui.participantList->setColumnCount(p_list_headers.size());
     ui.participantList->setHorizontalHeaderLabels(p_list_headers);
 }
@@ -330,7 +330,7 @@ void AddParticipantView::addParticipant(){
     for(auto range : ranges){
         for(int top = range.topRow(); top<= range.bottomRow(); top++){
             auto id_item = ui.clientList->item(top,0);
-            QString id = id_item->data(Role::id).value<QString>();
+            std::string id = id_item->data(Role::id).value<std::string>();
             auto client = mgr.getCM().copyClient(id.toStdString());
             mgr.getSM().addClient(client);
         }
@@ -344,7 +344,7 @@ void AddParticipantView::dropParticipant(){
     for(auto range : ranges){
         for(int top = range.topRow(); top<= range.bottomRow(); top++) {
             auto id_item = ui.participantList->item(top,0);
-            QString id = id_item->data(Role::id).value<QString>();
+            std::string id = id_item->data(Role::id).value<std::string>();
             mgr.getSM().dropClient(id);
         }
     }

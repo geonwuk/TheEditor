@@ -37,15 +37,13 @@ const CM::Client ClientManager::findClient(const CM::CID id) const {
     auto query = find(id.c_str());
     query.exec();
     if(query.next()){
-        string id = query.value("id").toString().toStdString();
-        string name = query.value("name").toString().toStdString();
-        string phone_number = query.value("phone_number").toString().toStdString();
-        string address = query.value("address").toString().toStdString();
+        const string id = query.value("id").toString().toStdString();
+        const string name = query.value("name").toString().toStdString();
+        const string phone_number = query.value("phone_number").toString().toStdString();
+        const string address = query.value("address").toString().toStdString();
         return CM::Client(id,name,phone_number,address);
     }
-    else{
         return CM::no_client;
-    }
 }
 bool ClientManager::addClient(std::string id, std::string name, std::string phone_number, std::string address){
     auto query = add(id.c_str(),name.c_str(),phone_number.c_str(),address.c_str());
