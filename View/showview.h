@@ -11,10 +11,9 @@ class ShowClientView : public CView
 {
     Q_OBJECT
 public:
-    explicit ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    explicit ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~ShowClientView();
     void update();
-
 private:
     void fillContents();
     bool is_edit_mode;       //읽기 수정 모드 설정 변수
@@ -25,7 +24,6 @@ private:
     bool eraseClient(int row);
     const int id_col;
     QShortcut* shortcut;            //delete키를 누르면 그행이 삭제되는 단축키
-
 private slots:
     void cellChanged(int,int);
     void returnPressed();
@@ -36,14 +34,13 @@ class ShowProductView : public PView
 {
     Q_OBJECT
 public:
-    explicit ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    explicit ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~ShowProductView();
     void update();
 private:
-    using UI_PRODUCT = Ui::showClient;
-    UI_PRODUCT ui {};
-    QTableWidget* table;
-    QCheckBox* editBox;
+    Ui::showClient ui {};
+    QTableWidget* table;        //ui가 삭제
+    QCheckBox* editBox;         //ui가 삭제
     bool is_edit_mode =false;       //읽기 수정 모드 설정 변수
     QLineEdit* searchLineEdit;
     bool eraseProduct(int row);
@@ -59,7 +56,7 @@ class ShowOrderView : public OView
 {
     Q_OBJECT
 public:
-    explicit ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    explicit ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~ShowOrderView();
     void update();
 public slots:
@@ -67,8 +64,8 @@ public slots:
 
 private:
     Ui::showOrder ui {};
-    QTableWidget *orderTable;
-    QTableWidget *orderInfoTable;
+    QTableWidget *orderTable;       //ui 자원이므로 ui에서 삭제
+    QTableWidget *orderInfoTable;   //ui 자원이므로 ui에서 삭제
     void fillContents();
 };
 
@@ -82,16 +79,13 @@ class ServerManager;
 class ShowChatView : public NView
 {
     Q_OBJECT
-
-//    std::vector<std::shared_ptr<NetClient>> participants;
 public:
-    ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const QString label=QString());
+    ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~ShowChatView();
     Ui::chatRoom ui;
     void update();
     void clientLogin();
     void addLog(const ServerManager::ChatMessage& );
-
 private:
     void fillclientTree();
     LogThread* log_thread;              //소멸자에서 삭제
@@ -108,7 +102,6 @@ private:
 private slots:
     void on_clientTreeWidget_customContextMenuRequested(const QPoint &pos);
     void savePressed();
-
     void addConsumer();
     void delteConsumer();
 };

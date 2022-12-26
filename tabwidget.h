@@ -10,6 +10,7 @@ class TabWidget : public QTabWidget
     Q_OBJECT
 public:
     TabWidget(MainWindow* parent=nullptr);
+    ~TabWidget();
 public slots:
     void tabClosed(int);
     void tabCurrentChanged(int index);

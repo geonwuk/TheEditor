@@ -1,11 +1,15 @@
 #include "server.h"
+
+#include <algorithm>
+#include <cassert>
+
 #include<QtGui>
 #include<QtWidgets>
 #include<QtNetwork>
-#include <algorithm>
-#include <cassert>
+
 #include "Network/message.h"
 #include "Network/servermanager.h"
+
 using namespace std;
 
 Server::Server(ServerManager& mgr, QWidget *parent)
@@ -21,6 +25,14 @@ Server::Server(ServerManager& mgr, QWidget *parent)
     }
     qDebug()<<QString("The server is running on port %1").arg(tcpServer->serverPort());
 }
+
+Server::~Server()
+{
+    assert(tcpServer->disconnect());
+    delete tcpServer;
+    tcpServer=nullptr;
+}
+
 void Server::clientConnect(){
     QTcpSocket* clientConnection = tcpServer->nextPendingConnection();
     assert(connect(clientConnection, SIGNAL(disconnected()), SLOT(clientDisconnected())));
@@ -28,7 +40,7 @@ void Server::clientConnect(){
     qDebug()<<QString("new connection is established");
 }
 void Server::clientDisconnected(){
-    QTcpSocket* socket = static_cast<QTcpSocket*>(sender());
+    QTcpSocket* socket = qobject_cast<QTcpSocket*>(sender());
     assert(socket!=nullptr);
     qDebug()<<socket<<QString("connection disconnected");
 }
@@ -66,10 +78,5 @@ void Server::disconnectSocket(const QTcpSocket* socket_){
     assert(result==1);
     socket->deleteLater();
 }
-Server::~Server()
-{
-    tcpServer->disconnect();
-    delete tcpServer;
-    tcpServer=nullptr;
-}
+
 

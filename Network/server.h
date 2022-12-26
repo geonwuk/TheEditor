@@ -25,7 +25,7 @@ private slots:
     void clientDisconnected();
     void readData();
 private:
-    QTcpServer* tcpServer;
+    QTcpServer* tcpServer;          //소멸자에서 삭제
     struct Data {
         bool is_ready=false;
         QByteArray data;

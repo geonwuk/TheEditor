@@ -13,9 +13,9 @@ public:
     explicit LogThread(QObject *parent = nullptr);
 
 private:
-    void run();
+    void run() override;
     QList<QTreeWidgetItem*> itemList;               //QTreeWidget에서 데이터 추출
-    QString filename;                               //저장할 파일 이름
+    std::string filename;                               //저장할 파일 이름
 
 signals:
     void send(int data);

@@ -50,17 +50,17 @@ private:
     Ui::addOrder ui {};
     enum Page {Client=0, Product};
 
-    QTabWidget* CPTab;
-    QTableWidget* infoTab;
-    QTreeWidget* orderTree;
-    QShortcut* shortcut;
+    QTabWidget* CPTab;          //ui에서 삭제
+    QTableWidget* infoTab;      //ui에서 삭제
+    QTreeWidget* orderTree;     //ui에서 삭제
+    QShortcut* shortcut;        //소멸자에서 삭제
     QTableWidget clientTab;
     QTableWidget productTab;
 
     void fillClientTab();
     void fillProductTab();
-    void fillClientInfoTab(QList<std::string>);
-    void fillProductInfoTab(QList<std::string>);
+    void fillClientInfoTab(const std::list<std::string>);
+    void fillProductInfoTab(const std::list<std::string>);
     std::vector<std::string> getCheckedIDs(QTableWidget* table);
 };
 

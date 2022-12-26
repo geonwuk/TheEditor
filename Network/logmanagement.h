@@ -40,10 +40,10 @@ private:
 
 class LogConsumer{
 public:
-    LogConsumer(LogBroker& broker, QString file_name);
+    LogConsumer(LogBroker& broker, std::string file_name);
     void consume(int session);
     ~LogConsumer();
-    QString file_name;
+    std::string file_name;
 private:
     void threaded_consume(int session);
     LogBroker& broker;

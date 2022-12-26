@@ -1,11 +1,12 @@
 #include "message.h"
+
 #include <QDebug>
 #include <QIODevice>
-#include <iostream>
 #include <QDataStream>
 #include <QFile>
 #include <QProgressDialog>
 #include <QFileInfo>
+
 Message::Message(QString str, REQUEST req): type(req) {
    data.append(str.toUtf8());
 }
@@ -27,7 +28,6 @@ ReadMessage::ReadMessage(QByteArray& data) : data{data} {
     in.readRawData(&type,1);
     data.remove(0,1);
 }
-
 
 ReadMessage::operator const char() const{
     return type;

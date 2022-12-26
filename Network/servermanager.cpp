@@ -1,11 +1,19 @@
 #include "servermanager.h"
 
-#include "View/showview.h"
 #include <QTcpSocket>
-#include "Network/server.h"
 #include <QDateTime>
 #include <QFile>
-ServerManager::ServerManager(Manager& mgr): mgr{mgr} {}
+
+#include "Network/server.h"
+#include "View/showview.h"
+
+using std::string;
+using CM::Client;
+
+ServerManager::ServerManager(Manager& mgr): mgr{mgr} {
+    log_no=1;
+    server=nullptr;
+}
 ServerManager::~ServerManager(){
     delete server;
     server = nullptr;
@@ -14,10 +22,12 @@ ServerManager::~ServerManager(){
 }
 void ServerManager::addClient(const Client& c)
 {
-    assert(net_clients.emplace(make_pair(c.getId(),NetClient{c,0})).second);
+    bool result=false;
+    tie(std::ignore, result) = net_clients.emplace(make_pair(c.getId(),NetClient{c,0}));
+    assert(result);
 }
-void ServerManager::login(const QTcpSocket* const socket, const QString& id){
-    auto nc_itr = net_clients.find(id.toStdString());                               //로그인할 id로 고객 정보를 찾습니다
+void ServerManager::login(const QTcpSocket* const socket, const string& id){
+    auto nc_itr = net_clients.find(id);                               //로그인할 id로 고객 정보를 찾습니다
     if(nc_itr==net_clients.end()){                                                  //만약 addChatView에서 고객을 채팅 참여자로 설정하지 않았다면 net_clients에 추가가 안되었다는 의미입니다
         server->sendMessage(socket,Message{"NO_ID",Chat_Login});                    //로그인을 시도한 클라이언트에게 해당 ID로는 채팅에 참여할 수 없다고 메시지를 보냅니다
         return;
@@ -32,7 +42,7 @@ void ServerManager::login(const QTcpSocket* const socket, const QString& id){
 void ServerManager::logOut(const QTcpSocket* const socket){
     if(socket==nullptr)
         return;
-    auto itr = socket_to_nclient.find(socket);
+    const auto itr = socket_to_nclient.find(socket);
     if(itr==socket_to_nclient.end()){
         server->sendMessage(socket, Message{"BAD_REQUEST",Chat_LogOut});
         return;
@@ -43,8 +53,8 @@ void ServerManager::logOut(const QTcpSocket* const socket){
     socket_to_nclient.erase(itr);
     notify();
 }
-void ServerManager::dropClient(QString id){
-    auto it = net_clients.find(id.toStdString());                   //채팅방 참여자의 id로 고객정보를 찾습니다
+void ServerManager::dropClient(string id){
+    auto it = net_clients.find(id);                   //채팅방 참여자의 id로 고객정보를 찾습니다
     assert(it!=net_clients.end());                                  //채팅방 참여자에서 drop을한다는 것은 이미 net_clients에 id가 있도록 GUI를 구성했으므로 못 찾는 경우는 코드 오류입니다
     auto socket = it->second.socket;
     if(it->second.isOnline()){                                      //온라인이면 메시지 보내기
@@ -63,20 +73,21 @@ void ServerManager::chatTalk(const QTcpSocket * const socket, const QByteArray& 
         server->sendMessage(socket, Message{"BAD_REQUEST",Chat_Talk});  //BAD_REQUEST를 보내고 채팅시도를 차단합니다
         return;
     }
-    auto nc = itr->second;  //소켓으로 채팅방 참여자 정보(net_client)를 획득합니다
+    const auto nc = itr->second;  //소켓으로 채팅방 참여자 정보(net_client)를 획득합니다
 
-    QString ip = socket->peerAddress().toString();
-    QString port = QString::number(socket->peerPort());
-    QString id = nc->self.getId().c_str();
-    QString name = nc->self.getName().c_str();
-    QString chat {data};
-    QString time = QDateTime::currentDateTime().toString();
-    const ChatMessage msg{ip,port,id,name,chat,time};   //ip,port,id,name,채팅 내용,시각을 담은 메시지를 생성합니다(로그에 기록할 용도)
+    const string ip = socket->peerAddress().toString().toStdString();
+    const string port = QString::number(socket->peerPort()).toStdString();
+    const string id = nc->self.getId();
+    const string name = nc->self.getName().c_str();
+    const QString chat {data};
+    const string time = QDateTime::currentDateTime().toString().toStdString();
+    const ChatMessage msg{ip,port,id,name,chat.toStdString(),time};   //ip,port,id,name,채팅 내용,시각을 담은 메시지를 생성합니다(로그에 기록할 용도)
     for(auto& itr : net_clients){                       //채팅방에 참여한 모든 멤버들에 대해서
         if(itr.second.isOnline()){                      //온라인이면
             auto peer_socket = itr.second.socket;       //소켓을 획득한 후
             if(peer_socket!=socket){                    //채팅 메시지를 보내는 본인을 제외하고 메시지를 보냅니다
-                QString str = id + ',' + chat;
+                QString str = QString::fromStdString(id) + ',';
+                str += chat;
                 server->sendMessage(peer_socket,Message(str,Chat_Talk));    //채팅 메시지를 송신합니다
             }
         }
@@ -104,7 +115,7 @@ void ServerManager::processMessage(const QTcpSocket* const socket, QByteArray da
     switch(type){                           //수신된 데이터의 타입에 따라 그 타입에 맞는 함수를 호출합니다
     case Chat_Login:{               //로그인인 경우
         QString rmsg {data};        //rmsg는 로그인에 필요한 정보(ID)를 갖습니다
-        login(socket, rmsg);}       //로그인 함수를 호출해 채팅 참여자라면 로그인 시키고 아니라면 BAD_REQUEST를 보냅니다
+        login(socket, rmsg.toStdString());}       //로그인 함수를 호출해 채팅 참여자라면 로그인 시키고 아니라면 BAD_REQUEST를 보냅니다
         break;
     case Chat_LogOut:               //로그아웃인 경우
         logOut(socket);             //소켓으로 ID를 알 수 있으므로 소켓만 로그아웃 함수에 입력합니다.

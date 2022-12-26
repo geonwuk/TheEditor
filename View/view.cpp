@@ -1,11 +1,16 @@
 #include "view.h"
-#include "mainwindow.h"
+
+#include <iomanip>
+#include <sstream>
+
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QTableWidgetItem>
-#include <iomanip>
-#include <sstream>
 #include <QDateTimeEdit>
+
+#include "mainwindow.h"
+
+using std::vector;
 
 View::View(Manager& mgr, Tree& tree, const QIcon &icon=QPixmap(), const std::string label=std::string()) : icon{icon}, label{label}, mgr{mgr},tree{tree} {
     is_update=false;
@@ -48,7 +53,7 @@ void CView::addClient(const std::string ID, const std::string name, const std::s
     notify<NView>();        //모든 뷰에 대해 채팅과 관련된 뷰라면 업데이트 한다 (채팅 참여자 목록에 추가가 가능하도록 업데이트)
 }
 
-bool CView::modifyClient(const std::string id, const QList<std::string> ls){
+bool CView::modifyClient(const std::string id, const vector<std::string> ls){
     bool re = mgr.getCM().modifyClient(id, CM::Client{id, ls[0],ls[1], ls[2]});    //id는 바꾸지 않고 나머지 항목들에 대해 업데이트 한다(list로부터 값을 획득)
     notify<CView>();        //모든 뷰에 대해 고객 관리에 관련된 뷰라면 업데이트 한다
     notify<OView>();        //모든 뷰에 대해 주문 관리에 관련된 뷰라면 업데이트 한다
@@ -67,7 +72,7 @@ bool PView::addProduct(const std::string name, const std::string price, const st
     notify<OView>();        //OView 상속 받는 View 업데이트 (주문)
     return result;
 }
-bool PView::modifyProduct(const std::string id, const QList<std::string> ls){
+bool PView::modifyProduct(const std::string id, const vector<std::string> ls){
     tm time;
     std::istringstream ss( ls[3] );       //물품 이름, 물품 가격, 물품 재고량, 물품 시각에서 3번째 시각 / Todo: ls[3]을 수정
     ss >> std::get_time(&time, "%D %T");                //시각 포맷

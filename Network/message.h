@@ -1,6 +1,9 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
-#include <QString>
+
+#include <string>
+
+#include <QByteArray>
 
 enum REQUEST{
     Chat_Login,                 //로그인 시, 클라이언트가 서버에게 보내는 값

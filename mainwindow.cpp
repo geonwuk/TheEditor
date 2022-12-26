@@ -1,24 +1,69 @@
 #include "mainwindow.h"
+
+#include <fstream>
+
 #include <QLabel>
 #include <QList>
-#include "ui_mainwindow.h"
-#include "Tree.h"
-#include "View/view.h"
 #include <QSplitter>
-#include "Network/server.h"
-#include <QFileDialog>
-#include <fstream>
-#include <QMessageBox>
+
 #include "ui_dashboard.h"
+#include <QFileDialog>
+#include <QMessageBox>
 #include <QDialog>
 #include <QPushButton>
 #include <QListWidget>
-#include<QMessageBox>
+#include <QMessageBox>
+#include <QStyleFactory>
+
+#include "Network/server.h"
 #include "DB/DB_ClientManager.h"
 #include "DB/DB_OrderManager.h"
 #include "DB/DB_ProductManager.h"
-#include <QStyleFactory>
+#include "ui_mainwindow.h"
+#include "Tree.h"
+#include "View/view.h"
+#include "Manager/ClientManager.h"
+#include "Manager/ProductManager.h"
+#include "Manager/OrderManager.h"
+
 using namespace std;
+
+Manager::Manager(MainWindow& mw) : mw{mw} {
+    cm = new CM::ClientManager;
+    pm = new PM::ProductManager;
+    om = new OM::OrderManager{*cm,*pm};
+}
+
+Manager::~Manager(){
+    delete cm;
+    cm=nullptr;
+    delete pm;
+    pm=nullptr;
+    delete om;
+    om=nullptr;
+    observers.clear();
+}
+
+void Manager::updateAll(){          //파일을 불러오기한 경우 모두 업데이트 한다
+    for (auto o : observers) {
+        o->update();
+    }
+}
+
+void Manager::attachObserver(View* o){
+    observers.emplace_back(o);
+}
+void Manager::detachObserver(View* o){
+    observers.remove(o);
+}
+void Manager::reset(){
+    delete cm;
+    cm=nullptr;
+    delete pm;
+    pm=nullptr;
+    delete om;
+    om=nullptr;
+}
 
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 탭 화면을 스플리터로 나누는 함수
     QSplitter* splitter = new QSplitter;
@@ -69,21 +114,8 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 
-void Manager::updateAll(){          //파일을 불러오기한 경우 모두 업데이트 한다
-    for (auto o : observers) {
-        o->update();
-    }
-}
 
-Manager::~Manager(){
-    delete cm;
-    cm=nullptr;
-    delete pm;
-    pm=nullptr;
-    delete om;
-    om=nullptr;
-    observers.clear();
-}
+
 
 void MainWindow::onRadioButtonDBClicked(){
     try{
@@ -337,19 +369,4 @@ MainWindow::~MainWindow()
     ui=nullptr;
     delete dash_board;
     dash_board=nullptr;
-}
-
-void Manager::attachObserver(View* o){
-    observers.emplace_back(o);
-}
-void Manager::detachObserver(View* o){
-    observers.remove(o);
-}
-void Manager::reset(){
-    delete cm;
-    cm=nullptr;
-    delete pm;
-    pm=nullptr;
-    delete om;
-    om=nullptr;
 }

@@ -1,7 +1,7 @@
 #ifndef VIEW_H
 #define VIEW_H
 
-#include <list>
+#include <vector>
 #include <string>
 
 #include "Manager/OrderManager.h"
@@ -49,7 +49,7 @@ public:
     CView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const std::string label=std::string()) : View{mgr, tabs, icon,label} {}
     void addClient(const std::string ID, const std::string name, const std::string phone_number = "NONE", const std::string address = "NONE");
     bool eraseClient(const std::string id);
-    bool modifyClient(const std::string id, const QList<std::string> client_info);
+    bool modifyClient(const std::string id, const std::vector<std::string> client_info);
     const CM::Client findClient(const CM::CID id) const{
         return mgr.getCM().findClient(id);
     }
@@ -62,7 +62,7 @@ class PView : public View{
 public:
     PView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const std::string label=std::string()) : View{mgr, tabs, icon,label} {}
     bool addProduct(const std::string name, const std::string price, const std::string qty);
-    bool modifyProduct(const std::string id, const QList<std::string> ls);
+    bool modifyProduct(const std::string id, const std::vector<std::string> ls);
     bool eraseProduct(const std::string id);
     const PM::Product findProduct(const std::string id) const;
     const unsigned int getSize() const;

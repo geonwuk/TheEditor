@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace CM{
-using CID = std::string;
+typedef std::string CID;
 class Client {
     friend class ClientManager;
 public:
@@ -32,7 +32,7 @@ bool operator== (const Client& c, const NoClient&);
 } //namespace CM
 
 namespace PM {
-using PID = std::string;
+typedef std::string PID;
 class Product{
 public:
     Product(std::string name, unsigned int price, unsigned int qty, std::tm date) :
@@ -64,7 +64,7 @@ bool operator== (const Product& p, const NoProduct&);
 
 
 namespace OM {
-using Order_ID = unsigned int;          //주문의 경우 1부터 시작하는 정수 ID를 갖습니다
+typedef unsigned int Order_ID;          //주문의 경우 1부터 시작하는 정수 ID를 갖습니다
 struct OrderedProduct{                  //Order 클래스에서 주문한 상품
     const PM::Product product;
     unsigned int qty;
@@ -72,7 +72,7 @@ struct OrderedProduct{                  //Order 클래스에서 주문한 상품
 };
 struct Order {
 public:
-    using qty = unsigned int;
+    typedef unsigned int qty;
 private:
     friend class OrderManager;
     Order_ID order_id;                          //주문번호 (1부터 시작)

@@ -1,7 +1,7 @@
 #include "showview.h"
 
 #include <cassert>
-
+#include <vector>
 #include <fstream>
 
 #include <QDate>
@@ -13,9 +13,12 @@
 #include <QMenu>
 #include <QProgressDialog>
 
-
 #include <QMessageBox>
-ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : CView{mgr, tabs,icon,label}, id_col{0}
+
+using std::string;
+using std::vector;
+
+ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const string label) : CView{mgr, tabs,icon,label}, id_col{0}
 {
     is_edit_mode=false;
     ui.setupUi(this);
@@ -27,7 +30,7 @@ ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const
     table->setColumnCount(header_labels.size());
     table->setHorizontalHeaderLabels(header_labels);
     fillContents();                                                                         //테이블 내용을 채운다
-    assert(connect(ui.checkBox,&QCheckBox::stateChanged, [=](int status){  //읽기모드 수정모드 변환 시그널 연결
+    assert(connect(ui.checkBox,&QCheckBox::stateChanged, this, [=](int status){  //읽기모드 수정모드 변환 시그널 연결
        is_edit_mode=status;
        using ET = QAbstractItemView::EditTrigger;
        is_edit_mode ? table->setEditTriggers(ET(ET::AllEditTriggers & ~ET::SelectedClicked &~ET::CurrentChanged)) : table->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -41,6 +44,9 @@ ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const
     });
 }
 ShowClientView::~ShowClientView(){
+    assert(disconnect(this));
+    assert(disconnect(table));
+    assert(disconnect(searchLineEdit));
     delete shortcut;        //delete 단축키 삭제
 }
 
@@ -77,11 +83,11 @@ void ShowClientView::cellChanged(int row, int col){
     }
     if(is_edit_mode){                                               //읽기모드인 경우 아무것도 하지 않는다
         auto id_item = table->item(row,0);
-        QString id = id_item->data(Role::id).value<QString>();      //id가 들어있는 열로부터 id값을 얻는다
-        QList<QString> ls;
+        const string id = id_item->data(Role::id).value<QString>().toStdString();      //id가 들어있는 열로부터 id값을 얻는다
+        vector<string> ls;
         int d = table->columnCount();
         for(int i=1; i<d; i++){ //id를 제외한 이름,전화번호,주소를 리스트에 추가한다
-            ls<<table->item(row, i)->text();
+            ls.push_back(table->item(row, i)->text().toStdString());
         }
         table->blockSignals(true);
         modifyClient(id,ls);    //id를 제외한 나머지 필드 값으로 고객 정보를 수정한다
@@ -111,7 +117,7 @@ void ShowClientView::returnPressed(){                       //엔터를 칠 경�
 
 bool ShowClientView::eraseClient(int row){
     auto item = table->item(row,id_col);
-    QString id = item->data(Role::id).value<QString>();
+    const string id = item->data(Role::id).value<QString>().toStdString();
     bool result = CView::eraseClient(id);
     if(!result) return false;
     table->removeRow(row);
@@ -124,7 +130,7 @@ bool ShowClientView::eraseClient(int row){
 
 
 //Product_------------------------------------------------------------
-ShowProductView::ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : PView{mgr, tabs,icon,label} {
+ShowProductView::ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon, const string label) : PView{mgr, tabs,icon,label} {
     ui.setupUi(this);
     table=ui.tableWidget;
     editBox=ui.checkBox;
@@ -134,7 +140,7 @@ ShowProductView::ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon, con
     table->setColumnCount(labels.size());
     table->setHorizontalHeaderLabels(labels);
     fillContents();
-    assert(connect(ui.checkBox,&QCheckBox::stateChanged, [=](int status){
+    assert(connect(ui.checkBox,&QCheckBox::stateChanged, this, [=](int status){
        is_edit_mode=status;
        using ET = QAbstractItemView::EditTrigger;
        is_edit_mode ? table->setEditTriggers(ET(ET::AllEditTriggers & ~ET::SelectedClicked &~ET::CurrentChanged)) : table->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -158,8 +164,14 @@ ShowProductView::ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon, con
         if(!is_edit_mode) return;
         eraseProduct(table->currentRow());
     });
-
 }
+ShowProductView::~ShowProductView(){
+    assert(disconnect(this));
+    assert(disconnect(table));
+    assert(disconnect(searchLineEdit));
+    delete shortcut;
+}
+
 void ShowProductView::fillContents(){
     table->blockSignals(true);
     table->clearContents();
@@ -177,7 +189,7 @@ void ShowProductView::fillContents(){
         QTime time {tm.tm_hour,tm.tm_min,tm.tm_sec};
         QDateTime dateTime {date,time};
         QDateTimeEdit* dt = View::getDateTimeEditWidget(dateTime,this);
-        assert(connect(dt,&QDateTimeEdit::dateTimeChanged,[=]{
+        assert(connect(dt,&QDateTimeEdit::dateTimeChanged, this, [=]{
             cellChanged(i,j);
         }));
         table->setCellWidget(i,j++,dt);
@@ -195,6 +207,7 @@ void ShowProductView::update(){
     else{
     }
 }
+
 void ShowProductView::returnPressed(){
     fillContents();
     QString str = searchLineEdit->text();
@@ -217,18 +230,19 @@ void ShowProductView::returnPressed(){
         compensation++;
     }
 }
+
 void ShowProductView::cellChanged(int row, int){
     if(is_edit_mode){
         auto id_item = table->item(row,0);
-        QString id = id_item->data(Role::id).value<QString>();
+        const string id = id_item->data(Role::id).value<QString>().toStdString();
 
-        QList<QString> ls;
+        vector<string> ls;
         for(int i=1; i<4; i++){
-            ls<<table->item(row, i)->text();
+            ls.push_back(table->item(row, i)->text().toStdString());
         }
         QDateTimeEdit* dt = qobject_cast<QDateTimeEdit*>(table->cellWidget(row,4));
         assert(dt!=nullptr);
-        ls<<dt->dateTime().toString("MM/dd/yy hh:mm:ss");
+        ls.push_back(dt->dateTime().toString("MM/dd/yy hh:mm:ss").toStdString());
         //CM::Client client {0,ls[0],ls[1],ls[3]};
         table->blockSignals(true);
         modifyProduct(id,ls);
@@ -238,7 +252,7 @@ void ShowProductView::cellChanged(int row, int){
 
 bool ShowProductView::eraseProduct(int row){
     auto item = table->item(row,id_col);
-    QString id = item->data(Role::id).value<QString>();
+    const string id = item->data(Role::id).value<QString>().toStdString();
     bool result = PView::eraseProduct(id);
 
     if(!result) return false;
@@ -247,12 +261,9 @@ bool ShowProductView::eraseProduct(int row){
     return result;
 }
 
-ShowProductView::~ShowProductView(){
-    delete shortcut;
-}
 
 //ORDER-------------------------------------------------------------------------------------------------------
-ShowOrderView::ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : OView{mgr, tabs,icon,label} {
+ShowOrderView::ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon, const string label) : OView{mgr, tabs,icon,label} {
     ui.setupUi(this);
     orderTable=ui.orderTable;
     orderInfoTable=ui.orderInfoTable;
@@ -269,7 +280,9 @@ ShowOrderView::ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon, const Q
     QList<QString> pr_cell_names {tr("Product Name"),tr("Unit Price"),tr("Quantity"),tr("Total Price")};
     orderInfoTable->setColumnCount(pr_cell_names.size());
     orderInfoTable->setHorizontalHeaderLabels(pr_cell_names);
-
+}
+ShowOrderView::~ShowOrderView(){
+    assert(disconnect(orderTable));
 }
 
 void ShowOrderView::fillContents() {
@@ -280,7 +293,7 @@ void ShowOrderView::fillContents() {
     int i=0;
     for(const auto& order : mgr.getOM()){
         int j=0;
-        orderTable->setItem(i,j++,ceateTableItem(QString::number(order.getID()), QString::number(order.getID())));
+        orderTable->setItem(i,j++,ceateTableItem(QString::number(order.getID()).toStdString(), QString::number(order.getID()).toStdString()));
         auto client = order.getClient();
         orderTable->setItem(i,j++, new QTableWidgetItem(client.getName().c_str()));
         unsigned int price=0;
@@ -289,10 +302,10 @@ void ShowOrderView::fillContents() {
             price += product.getPrice()*ordered_product.qty;
         }
         orderTable->setItem(i,j++, new QTableWidgetItem(QString::number(price)));
-        auto tm = order.getDate();
-        QDate date {tm.tm_year+1900,tm.tm_mon+1,tm.tm_mday};
-        QTime time {tm.tm_hour,tm.tm_min,tm.tm_sec};
-        QDateTime dateTime {date,time};
+        const auto tm = order.getDate();
+        const QDate date {tm.tm_year+1900,tm.tm_mon+1,tm.tm_mday};
+        const QTime time {tm.tm_hour,tm.tm_min,tm.tm_sec};
+        const QDateTime dateTime {date,time};
         orderTable->setItem(i,j++,new QTableWidgetItem(dateTime.toString("MM/dd/yy hh:mm:ss")));
         i++;
     }
@@ -317,7 +330,7 @@ void ShowOrderView::orderItemSelectionChanged_(){
     const auto& product_data = order.getProducts();
     orderInfoTable->setRowCount((int)product_data.size());
     int i=0;
-    for(auto pd : product_data){
+    for(const auto& pd : product_data){
         int j=0;
         auto product = pd.product;
         orderInfoTable->setItem(i, j++, new QTableWidgetItem(product.getName().c_str()));
@@ -339,11 +352,11 @@ void ShowOrderView::update(){       //옵저버 패턴의 update
     }
 }
 #include <thread>
-ShowOrderView::~ShowOrderView(){}
+
 //---------------------------------------------------
 
 
-ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QString label) : NView{mgr, tabs,icon,label}, smgr{mgr.getSM()}, producer{broker} {
+ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const string label) : NView{mgr, tabs,icon,label}, smgr{mgr.getSM()}, producer{broker} {
     ui.setupUi(this);
     log_thread=new LogThread(this);
     addCosumerButton= ui.addButton;
@@ -358,10 +371,10 @@ ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QSt
     //ui.clientTreeWidget->selectionMode()
 
     removeAction = new QAction(tr("&Kick out"));
-    assert(connect(removeAction, &QAction::triggered, [&]{                         //Kick out 컨텍스트 메뉴를 클릭하면 강퇴하기
+    assert(connect(removeAction, &QAction::triggered, this, [&]{                         //Kick out 컨텍스트 메뉴를 클릭하면 강퇴하기
         for(auto& item : ui.clientTreeWidget->selectedItems()) {
             QString id = item->text(1);
-            mgr.getSM().dropClient(id);
+            mgr.getSM().dropClient(id.toStdString());
         }
         notify<NView>();
     }));
@@ -377,6 +390,24 @@ ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const QSt
     log_thread->start();
     assert(connect(ui.savePushButton, SIGNAL(pressed()), SLOT(savePressed())));
 }
+
+ShowChatView::~ShowChatView(){
+    assert(disconnect(removeAction));
+    assert(disconnect(removeAction));
+
+    mgr.getSM().unregisterChatView(this);
+    log_thread->terminate();
+    log_thread->deleteLater();
+
+    delete progressDialog;
+    progressDialog=nullptr;
+    delete menu;
+    menu=nullptr;
+    delete removeAction;
+    removeAction=nullptr;
+}
+
+
 void ShowChatView::savePressed(){
     QString filename = QFileDialog::getSaveFileName(this);
     std::ofstream out(filename.toStdString());
@@ -396,8 +427,8 @@ void ShowChatView::savePressed(){
     file.close();
 }
 void ShowChatView::addConsumer(){
-    QString file_name = QFileDialog::getSaveFileName(this,tr("Save file"),"",tr("text (*.txt *.text )"));
-    if(file_name.size()==0){
+    const std::string file_name = QFileDialog::getSaveFileName(this,tr("Save file"),"",tr("text (*.txt *.text )")).toStdString();
+    if(file_name.empty()){
         return;
     }
     consumers.emplace_back(broker, file_name);
@@ -420,29 +451,16 @@ void ShowChatView::delteConsumer(){
     update();
 }
 
-ShowChatView::~ShowChatView(){
-    mgr.getSM().unregisterChatView(this);
-    log_thread->terminate();
-    log_thread->deleteLater();
-
-    delete progressDialog;
-    progressDialog=nullptr;
-    delete menu;
-    menu=nullptr;
-    delete removeAction;
-    removeAction=nullptr;
-}
-
 void ShowChatView::clientLogin(){}
 
 void ShowChatView::addLog(const ServerManager::ChatMessage& msg ){
     QTreeWidgetItem* item = new QTreeWidgetItem(ui.messageTreeWidget);
-    item->setText(0, msg.ip);
-    item->setText(1, msg.port);
-    item->setText(2, msg.id);
-    item->setText(3, msg.name);
-    item->setText(4, msg.message);
-    item->setText(5, msg.time);
+    item->setText(0, QString::fromStdString(msg.ip));
+    item->setText(1, QString::fromStdString(msg.port));
+    item->setText(2, QString::fromStdString(msg.id));
+    item->setText(3, QString::fromStdString(msg.name));
+    item->setText(4, QString::fromStdString(msg.message));
+    item->setText(5, QString::fromStdString(msg.time));
     for(int i=0; i<ui.messageTreeWidget->columnCount(); i++){
         ui.messageTreeWidget->resizeColumnToContents(i);
     }
@@ -471,7 +489,7 @@ void ShowChatView::fillclientTree(){
         ui.clientTreeWidget->resizeColumnToContents(i);
     }
     for(auto & e : consumers){
-        new QTreeWidgetItem(consumerTreeWidget, {e.file_name});
+        new QTreeWidgetItem(consumerTreeWidget, {QString::fromStdString(e.file_name)});
     }
 }
 

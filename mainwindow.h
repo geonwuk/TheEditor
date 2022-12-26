@@ -1,15 +1,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include "Manager/ClientManager.h"
-#include "Manager/ProductManager.h"
-#include "Manager/OrderManager.h"
-#include "tabwidget.h"
-#include "Tree.h"
 #include <list>
+
+#include <QMainWindow>
+
+#include "tabwidget.h"
 #include "Network/servermanager.h"
 #include "Model/Model.h"
+#include "Tree.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow;
@@ -22,11 +21,7 @@ class QStackedWidget;
 class Manager {
     friend class MainWindow;
 public:
-    Manager(MainWindow& mw) : mw{mw} {
-        cm = new CM::ClientManager;
-        pm = new PM::ProductManager;
-        om = new OM::OrderManager{*cm,*pm};
-    }
+    Manager(MainWindow& mw);
     ~Manager();
     template<typename F>
     void notify(F notify_){
@@ -42,13 +37,12 @@ public:
     void attachObserver(View* o);
     void detachObserver(View* o);
     void reset();
-
 private:
     std::list<View*> observers;
     MainWindow& mw;
-    ClientModel* cm;
-    ProductModel* pm;
-    OrderModel* om;
+    ClientModel* cm;                //소멸자에서 삭제
+    ProductModel* pm;               //소멸자에서 삭제
+    OrderModel* om;                 //소멸자에서 삭제
     ServerManager sm{*this};
 };
 
@@ -65,17 +59,14 @@ private slots:
     void load();
     void onRadioButtonDBClicked();
     void onRadioMemoryButtonClicked();
-
 private:
     Ui::MainWindow *ui;     //소멸자에서 지움
     Ui::dashboard* dash_board;      //소멸자에서 지움
     Manager mgrs{*this};
     TabWidget management_tw{this};
     ManagementTree management_tree{this,&management_tw};
-
     TabWidget network_tw{this};
     NetworkTree network_tree{this,&network_tw};
-
     QStackedWidget* sw;     //ui가 자원을 지움
 };
 #endif // MAINWINDOW_H

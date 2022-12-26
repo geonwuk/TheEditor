@@ -44,8 +44,8 @@ void LogProducer::produce(ChatMessage msg, int life_time){  //life_time:데이�
 }
 
 
-LogConsumer::LogConsumer(LogBroker& broker, QString file_name) : file_name{file_name},broker{broker} {
-    file = new QFile(file_name);
+LogConsumer::LogConsumer(LogBroker& broker, string file_name) : file_name{file_name},broker{broker} {
+    file = new QFile(QString::fromStdString(file_name));
     file->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append );
 }
 void LogConsumer::consume(int session){
@@ -73,7 +73,12 @@ void LogConsumer::threaded_consume(int session){
         }
     }
     auto& data = output.msg;
-    out<<data.ip<<","<<data.port<<","<<data.id<<","<<data.name<<","<<data.message<<","<<data.time<<"\n";
+    out<<QString::fromStdString(data.ip)<<",";
+    out<<QString::fromStdString(data.port)<<",";
+    out<<QString::fromStdString(data.id)<<",";
+    out<<QString::fromStdString(data.name)<<",";
+    out<<QString::fromStdString(data.message)<<",";
+    out<<QString::fromStdString(data.time)<<"\n";
 }
 LogConsumer::~LogConsumer(){
     file->close();
