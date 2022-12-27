@@ -1,17 +1,19 @@
 #ifndef SHOWVIEW_H
 #define SHOWVIEW_H
-#include "View/view.h"
+#include "View/GeneralView.h"
 #include "ui_showClient.h"
 #include "ui_showOrder.h"
+#include "MainManager.h"
+
 
 class QCheckBox;
 class MainWindow;
 
-class ShowClientView : public CView
+class ShowClientView : public ClinetView
 {
     Q_OBJECT
 public:
-    explicit ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
+    explicit ShowClientView(MainManager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~ShowClientView();
     void update();
 private:
@@ -30,11 +32,11 @@ private slots:
 };
 
 
-class ShowProductView : public PView
+class ShowProductView : public ProductView
 {
     Q_OBJECT
 public:
-    explicit ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
+    explicit ShowProductView(MainManager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~ShowProductView();
     void update();
 private:
@@ -52,11 +54,11 @@ private slots:
     void returnPressed();
 };
 
-class ShowOrderView : public OView
+class ShowOrderView : public OrderView
 {
     Q_OBJECT
 public:
-    explicit ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
+    explicit ShowOrderView(MainManager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~ShowOrderView();
     void update();
 public slots:
@@ -76,11 +78,11 @@ class ServerManager;
 #include "ui_chatRoom.h"
 #include "Network/logthread.h"
 #include "Network/logmanagement.h"
-class ShowChatView : public NView
+class ShowChatView : public NetworkView
 {
     Q_OBJECT
 public:
-    ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
+    ShowChatView(MainManager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~ShowChatView();
     Ui::chatRoom ui;
     void update();

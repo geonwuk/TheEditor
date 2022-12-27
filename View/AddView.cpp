@@ -5,17 +5,17 @@
 #include <QShortcut>
 #include <QSpinBox>
 #include <QMessageBox>
-AddClientView::AddClientView(Manager& mgr, Tree& tabs, const QIcon icon, const std::string label) : CView{mgr,tabs,icon,label} {
+AddClientView::AddClientView(MainManager& mgr, Tree& tabs, const QIcon icon, const std::string label) : ClinetView{mgr,tabs,icon,label} {
     ui.setupUi(this);
     assert(connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addClient()))); //고객 추가 버튼과 고객 추가 메소드를 시그널&슬롯으로 연결합니다
 }
 
-void AddClientView::addClient(){                                //고객 추가 UI에 있는 QLineEdit으로부터 스트링 데이터를 얻어서 Manager클래스의 Map에 추가합니다.
+void AddClientView::addClient(){                                //고객 추가 UI에 있는 QLineEdit으로부터 스트링 데이터를 얻어서 MainManager클래스의 Map에 추가합니다.
     const std::string ID = ui.IDLineEdit->text().toStdString();                         //ID 스트링 데이터를 QLineEdit으로부터 얻습니다
     const std::string name = ui.NameEdit->text().toStdString();                         //name 스트링 데이터를 QLineEdit으로부터 얻습니다
     const std::string phone_number = ui.PhoneNumberEdit->text().toStdString();          //전화번호 스트링 데이터를 QLineEdit으로부터 얻습니다
     const std::string address = ui.AddressEdit->text().toStdString();                   //주소 스트링 데이터를 QLineEdit으로부터 얻습니다
-    CView::addClient(ID,name,phone_number,address);
+    ClinetView::addClient(ID,name,phone_number,address);
 }
 
 
@@ -24,16 +24,16 @@ AddClientView::~AddClientView(){
 }
 
 //Product
-AddProductView::AddProductView(Manager& mgr, Tree& tabs, const QIcon icon, const std::string label) : PView{mgr,tabs,icon,label}  {
+AddProductView::AddProductView(MainManager& mgr, Tree& tabs, const QIcon icon, const std::string label) : ProductView{mgr,tabs,icon,label}  {
     ui.setupUi(this);
     assert(connect(ui.addButton,SIGNAL(pressed()),this,SLOT(addProduct())));    //고객 추가 버튼과 고객 추가 메소드를 시그널&슬롯으로 연결합니다
 }
 
-void AddProductView::addProduct(){              //상품 추가 UI에 있는 QLineEdit으로부터 스트링 데이터를 얻어서 Manager클래스의 Map에 추가합니다.(상품의 경우 ID는 자동으로 생성합니다)
+void AddProductView::addProduct(){              //상품 추가 UI에 있는 QLineEdit으로부터 스트링 데이터를 얻어서 MainManager클래스의 Map에 추가합니다.(상품의 경우 ID는 자동으로 생성합니다)
     const std::string name = ui.NameEdit->text().toStdString();         //상품 이름 스트링 데이터를 QLineEdit으로부터 얻습니다
     const std::string price = ui.PriceEdit->text().toStdString();       //상품 가격 데이터를 QLineEdit으로부터 얻습니다
     const std::string qty = ui.QuantityEdit->text().toStdString();      //상품 구매 개수 데이터를 QLineEdit으로부터 얻습니다
-    PView::addProduct(name,price,qty);          //Map에 상품을 추가합니다
+    ProductView::addProduct(name,price,qty);          //Map에 상품을 추가합니다
 }
 
 
@@ -43,7 +43,7 @@ AddProductView::~AddProductView(){
 
 
 //Order================================================================================
-AddOrderView::AddOrderView(Manager& mgr, Tree& tabs, const QIcon icon, const std::string label) : OView{mgr,tabs,icon,label} {
+AddOrderView::AddOrderView(MainManager& mgr, Tree& tabs, const QIcon icon, const std::string label) : OrderView{mgr,tabs,icon,label} {
     ui.setupUi(this);
     CPTab=ui.CPTab;             //고객과 상품을 선택할 수 있게 하는 QTabWidget
     infoTab=ui.infoTable;       //CPTab에서 마우스로 아이템을 선택하는 경우 그 아이템에 대한 정보를 보여주는 QTableWidget
@@ -89,12 +89,12 @@ AddOrderView::~AddOrderView(){
 
 void AddOrderView::fillClientTab(){
     clientTab.clear();
-    clientTab.setRowCount(mgr.getCM().getSize());
+    clientTab.setRowCount(mgr.getClientModel().getSize());
     clientTab.setColumnCount(3);
     clientTab.setHorizontalHeaderLabels({tr("Select"),tr("ID"),tr("Name")});
 
     int i=0;
-    for(auto& client : mgr.getCM()){
+    for(auto& client : mgr.getClientModel()){
         clientTab.setCellWidget(i,0, getCheckBoxWidget(this));
         clientTab.setItem(i,1,ceateTableItem(client.getId().c_str(), client.getId().c_str()));
         clientTab.setItem(i,2,new QTableWidgetItem(client.getName().c_str()));
@@ -136,12 +136,12 @@ void AddOrderView::itemSelectionChanged_(){
 
 void AddOrderView::fillClientInfoTab(const std::list<std::string> clients_ids){
     infoTab->clear();
-    infoTab->setRowCount(clients_ids.size());
+    infoTab->setRowCount((int)clients_ids.size());
     infoTab->setColumnCount(4);
     infoTab->setHorizontalHeaderLabels({tr("ID"),tr("Name"),tr("Phone Number"),tr("Address")});
     int i=0;
     for(const auto& client_id : clients_ids){
-        const auto client = mgr.getCM().findClient(client_id);
+        const auto client = mgr.getClientModel().findClient(client_id);
         infoTab->setItem(i,0, new QTableWidgetItem(client.getId().c_str()));
         infoTab->setItem(i,1, new QTableWidgetItem(client.getName().c_str()));
         infoTab->setItem(i,2, new QTableWidgetItem(client.getPhoneNumber().c_str()));
@@ -154,12 +154,12 @@ void AddOrderView::fillClientInfoTab(const std::list<std::string> clients_ids){
 
 void AddOrderView::fillProductInfoTab(const std::list<std::string> product_ids){
     infoTab->clear();
-    infoTab->setRowCount(product_ids.size());
+    infoTab->setRowCount((int)product_ids.size());
     infoTab->setColumnCount(5);
     infoTab->setHorizontalHeaderLabels({tr("ID"),tr("Name"),tr("Price"),tr("Qty"),tr("Date")});
     int i=0;
     for(const auto& product_id : product_ids){
-        const auto product = mgr.getPM().findProduct(product_id);
+        const auto product = mgr.getProductModel().findProduct(product_id);
         infoTab->setItem(i,0, new QTableWidgetItem(product.getId().c_str()));
         infoTab->setItem(i,1, new QTableWidgetItem(product.getName().c_str()));
         infoTab->setItem(i,2,new QTableWidgetItem(QString::number(product.getPrice())));
@@ -177,11 +177,11 @@ void AddOrderView::fillProductInfoTab(const std::list<std::string> product_ids){
 
 void AddOrderView::fillProductTab(){
     productTab.clear();
-    productTab.setRowCount(mgr.getPM().getSize());
+    productTab.setRowCount(mgr.getProductModel().getSize());
     productTab.setColumnCount(3);
     productTab.setHorizontalHeaderLabels({tr("Select"),tr("ID"),tr("Name")});
     int i=0;
-    for(const auto& product : mgr.getPM()){
+    for(const auto& product : mgr.getProductModel()){
         productTab.setCellWidget(i,0, getCheckBoxWidget(this));
         productTab.setItem(i,1,ceateTableItem(product.getId().c_str(), product.getId().c_str()));
         productTab.setItem(i,2,new QTableWidgetItem(product.getName().c_str()));
@@ -213,7 +213,7 @@ void AddOrderView::commitOrder(){
 
     std::vector<QTreeWidgetItem*> buyers;
     for(const auto& c : client_ids){
-        QStringList name {mgr.getCM().findClient(c).getName().c_str()};
+        QStringList name {mgr.getClientModel().findClient(c).getName().c_str()};
         auto buyer = new QTreeWidgetItem(orderTree,name);
         buyer->setData(0, Role::id, QString::fromStdString(c));
         buyers.emplace_back(buyer);
@@ -226,7 +226,7 @@ void AddOrderView::commitOrder(){
             auto elem = buyers[row];
             auto product = new QTreeWidgetItem(elem);
             product->setData(0, Role::id, QString::fromStdString(p));
-            product->setText(1,mgr.getPM().findProduct(p).getName().c_str());
+            product->setText(1,mgr.getProductModel().findProduct(p).getName().c_str());
             QSpinBox* spin_box = new QSpinBox;
             spin_box->setValue(1);
             orderTree->setItemWidget(product,2,spin_box);
@@ -255,7 +255,7 @@ void AddOrderView::addOrder(){
             auto product = client->child(j);
             auto qty_box = static_cast<QSpinBox*>(orderTree->itemWidget(product,2));
             std::string pid = product->data(0, Role::id).value<std::string>();
-            auto target_product = mgr.getPM().findProduct(pid);
+            auto target_product = mgr.getProductModel().findProduct(pid);
             if(target_product.getQty()<(unsigned int)qty_box->value()){
                 QMessageBox::warning(this, tr("Warning"), tr("%1's total stock is less than %2").arg(QString::fromStdString(target_product.getName())).arg(qty_box->value()));
                 return;
@@ -264,7 +264,7 @@ void AddOrderView::addOrder(){
             products.emplace_back(pid, qty_box->value());
         }
         bool result;
-        std::tie(std::ignore,result)=OView::addOrder(client_id,std::move(products));
+        std::tie(std::ignore,result)=OrderView::addOrder(client_id,std::move(products));
     }
     orderTree->clear();
 }
@@ -274,8 +274,8 @@ void AddOrderView::addOrder(){
 
 
 
-AddParticipantView::AddParticipantView(Manager& mgr, Tree &tabs, const QIcon icon, const std::string label)
-    : NView{mgr, tabs, icon,label} {
+AddParticipantView::AddParticipantView(MainManager& mgr, Tree &tabs, const QIcon icon, const std::string label)
+    : NetworkView{mgr, tabs, icon,label} {
     initUI();
 
     fillContents();
@@ -338,12 +338,12 @@ void AddParticipantView::addParticipant(){
         for(int top = range.topRow(); top<= range.bottomRow(); top++){
             auto id_item = ui.clientList->item(top,0);
             std::string id = id_item->data(Role::id).value<std::string>();
-            auto client = mgr.getCM().copyClient(id);
-            mgr.getSM().addClient(client);
+            auto client = mgr.getClientModel().copyClient(id);
+            mgr.getServerManager().addClient(client);
         }
     }
     fillContents();
-    notify<NView>();
+    notify<NetworkView>();
 }
 void AddParticipantView::dropParticipant(){
     const auto ranges = ui.participantList->selectedRanges();
@@ -352,24 +352,24 @@ void AddParticipantView::dropParticipant(){
         for(int top = range.topRow(); top<= range.bottomRow(); top++) {
             auto id_item = ui.participantList->item(top,0);
             std::string id = id_item->data(Role::id).value<std::string>();
-            mgr.getSM().dropClient(id);
+            mgr.getServerManager().dropClient(id);
         }
     }
     fillContents();
-    notify<NView>();
+    notify<NetworkView>();
 }
 
 void AddParticipantView::fillContents(){
     //고객 리스트로부터 채팅방 참여자를 결정할 수 있습니다.
     //ClientManager와 ServerManager 모두 고객 ID를 맵으로 저장하고 있기 때문에 고객 ID가 정렬되어 있습니다. 서로 정렬된 ID를 비교해서 채팅방 참여자인지 아닌지 O(n)의 시간 복잡도로 결정할 수 있습니다
     ui.clientList->clearContents();
-    ui.clientList->setRowCount(mgr.getCM().getSize());
+    ui.clientList->setRowCount(mgr.getClientModel().getSize());
 
     int i=0;
-    const auto& cm = mgr.getCM();
-    auto participants = mgr.getSM().begin();
+    const auto& cm = mgr.getClientModel();
+    auto participants = mgr.getServerManager().begin();
     for(auto client_iter = cm.begin(); client_iter!=cm.end(); ++client_iter){   //두개 리스트 모두 고객 ID로 정렬된 상태에서 ClientManager가 갖고있는 고객 ID를 기준으로 채팅방 참여자가 아닌 고객 ID에 한하여 QListWidget에 그 ID로 추가합니다
-        while(participants!=mgr.getSM().end() && client_iter!=cm.end() && ((*client_iter).getId()==participants->second.getClient().getId())){ //만약 고객 id와 참여자 id가 같다면 이는 고객을 보여주는 QListWidget에 아이템을 추가하지 않고 넘어가야 합니다(채팅방 참여자로 추가해야 하므로)
+        while(participants!=mgr.getServerManager().end() && client_iter!=cm.end() && ((*client_iter).getId()==participants->second.getClient().getId())){ //만약 고객 id와 참여자 id가 같다면 이는 고객을 보여주는 QListWidget에 아이템을 추가하지 않고 넘어가야 합니다(채팅방 참여자로 추가해야 하므로)
             ++client_iter;
             ++participants;
             continue;
@@ -377,7 +377,7 @@ void AddParticipantView::fillContents(){
         if(client_iter == cm.end())
             break;
         int j=0;
-        const Client client = *client_iter; //채팅 참여자리스트가 아닌 참여가능한 고객리스트에 추가할 고객 정보를 얻습니다.
+        const CM::Client client = *client_iter; //채팅 참여자리스트가 아닌 참여가능한 고객리스트에 추가할 고객 정보를 얻습니다.
         ui.clientList->setItem(i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()) );  //ID정보를 갖는 셀을 생성합니다.
         ui.clientList->setItem(i,j++,new QTableWidgetItem(client.getName().c_str()));   //이름 정보를 갖는 셀을 생성합니다.
         i++;
@@ -386,9 +386,9 @@ void AddParticipantView::fillContents(){
     ui.clientList->resizeColumnsToContents();   //크기조절
     ui.clientList->resizeRowsToContents();      //크기조절
 
-    ui.participantList->setRowCount((int)mgr.getSM().getSize());
+    ui.participantList->setRowCount((int)mgr.getServerManager().getSize());
     int p_i=0;
-    for(const auto& participant : mgr.getSM()){   //고객리스트는 이전에 이미 출력했으므로 채팅방 참여자 리스트만
+    for(const auto& participant : mgr.getServerManager()){   //고객리스트는 이전에 이미 출력했으므로 채팅방 참여자 리스트만
         int j=0;
         auto& client = participant.second.getClient();
         ui.participantList->setItem(p_i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()) );

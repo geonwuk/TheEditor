@@ -13,6 +13,7 @@ SOURCES += \
     DB/DB_Manager.cpp \
     DB/DB_OrderManager.cpp \
     DB/DB_ProductManager.cpp \
+    MainManager.cpp \
     Manager/ClientManager.cpp \
     Manager/OrderManager.cpp \
     Manager/ProductManager.cpp \
@@ -25,8 +26,9 @@ SOURCES += \
     Network/servermanager.cpp \
     Tree.cpp \
     View/AddView.cpp \
+    View/GeneralView.cpp \
+    View/ViewFactory.cpp \
     View/showview.cpp \
-    View/view.cpp \
     main.cpp \
     mainwindow.cpp \
     tabwidget.cpp
@@ -36,6 +38,7 @@ HEADERS += \
     DB/DB_Manager.h \
     DB/DB_OrderManager.h \
     DB/DB_ProductManager.h \
+    MainManager.h \
     Manager/ClientManager.h \
     Manager/OrderManager.h \
     Manager/ProductManager.h \
@@ -48,8 +51,9 @@ HEADERS += \
     Network/servermanager.h \
     Tree.h \
     View/AddView.h \
+    View/GeneralView.h \
+    View/ViewFactory.h \
     View/showview.h \
-    View/view.h \
     mainwindow.h \
     tabwidget.h
 

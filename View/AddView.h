@@ -1,15 +1,15 @@
 #ifndef ADDVIEW_H
 #define ADDVIEW_H
-#include "View/view.h"
+#include "View/GeneralView.h"
 #include "ui_addClient.h"
 #include "ui_addProduct.h"
 #include "ui_addOrder.h"
 
-class AddClientView : public CView
+class AddClientView : public ClinetView
 {
     Q_OBJECT
 public: 
-    explicit AddClientView(Manager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
+    explicit AddClientView(MainManager& mgr, Tree& tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~AddClientView();
     void update() {}
 
@@ -20,11 +20,11 @@ private:
     Ui::addClient ui {};
 };
 
-class AddProductView : public PView
+class AddProductView : public ProductView
 {
     Q_OBJECT
 public:
-    explicit AddProductView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
+    explicit AddProductView(MainManager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~AddProductView();
     void update() {}
 
@@ -35,11 +35,11 @@ private:
     Ui::addProduct ui {};
 };
 
-class AddOrderView : public OView
+class AddOrderView : public OrderView
 {
     Q_OBJECT
 public:
-    explicit AddOrderView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
+    explicit AddOrderView(MainManager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~AddOrderView();
     void update();
 public slots:
@@ -65,10 +65,10 @@ private:
 };
 
 #include "ui_addParticipantView.h"
-class AddParticipantView : public NView{
+class AddParticipantView : public NetworkView{
     Q_OBJECT
 public:
-    explicit AddParticipantView(Manager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
+    explicit AddParticipantView(MainManager& mgr, Tree &tabs, const QIcon icon=QPixmap(), const std::string label=std::string());
     ~AddParticipantView();
     void update();
 private:

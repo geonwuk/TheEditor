@@ -21,49 +21,13 @@
 #include "DB/DB_ProductManager.h"
 #include "ui_mainwindow.h"
 #include "Tree.h"
-#include "View/view.h"
 #include "Manager/ClientManager.h"
 #include "Manager/ProductManager.h"
 #include "Manager/OrderManager.h"
 
 using namespace std;
 
-Manager::Manager(MainWindow& mw) : mw{mw} {
-    cm = new CM::ClientManager;
-    pm = new PM::ProductManager;
-    om = new OM::OrderManager{*cm,*pm};
-}
 
-Manager::~Manager(){
-    delete cm;
-    cm=nullptr;
-    delete pm;
-    pm=nullptr;
-    delete om;
-    om=nullptr;
-    observers.clear();
-}
-
-void Manager::updateAll(){          //파일을 불러오기한 경우 모두 업데이트 한다
-    for (auto o : observers) {
-        o->update();
-    }
-}
-
-void Manager::attachObserver(View* o){
-    observers.emplace_back(o);
-}
-void Manager::detachObserver(View* o){
-    observers.remove(o);
-}
-void Manager::reset(){
-    delete cm;
-    cm=nullptr;
-    delete pm;
-    pm=nullptr;
-    delete om;
-    om=nullptr;
-}
 
 static QSplitter* initTreeAndTab(Tree& tree, TabWidget& tw){        //트리와 탭 화면을 스플리터로 나누는 함수
     QSplitter* splitter = new QSplitter;
@@ -103,7 +67,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->ChatButton, &QToolButton::pressed, this, [=]{ sw->setCurrentIndex(1); });      //네트워크
     connect(ui->memoryButton, &QToolButton::pressed, this, [=]{ sw->setCurrentIndex(2); });      //메모리
 
-    mgrs.getSM().setServer(new Server{mgrs.getSM()}); //mgrs.sm이 Server delete                                  //서버 생성 후 포인터로 설정
+    mgrs.getServerManager().setServer(new Server{mgrs.getServerManager()}); //mgrs.sm이 Server delete                                  //서버 생성 후 포인터로 설정
 
     connect(ui->actionSave,SIGNAL(triggered()),SLOT(save()));       //저장
     connect(ui->actionOpen,SIGNAL(triggered()),SLOT(load()));       //불러오기
@@ -128,18 +92,18 @@ void MainWindow::onRadioButtonDBClicked(){
         }
         try{
             DBM::ClientManager save_client{"save_client",file_name};
-            for(const auto& c : mgrs.getCM()){
+            for(const auto& c : mgrs.getClientModel()){
                 bool re = save_client.addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
                 if(!re)
                     throw ClientModel::ERROR_WHILE_LOADING{};
             }
             DBM::ProductManager save_product{"save_product",file_name};
-            for(const auto& p : mgrs.getPM()){
+            for(const auto& p : mgrs.getProductModel()){
                 save_product.loadProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
             }
-            DBM::OrderManager save_order{mgrs.getCM(),mgrs.getPM(),"save_order",file_name};
+            DBM::OrderManager save_order{mgrs.getClientModel(),mgrs.getProductModel(),"save_order",file_name};
             vector<OM::Order> orders;
-            for(const auto& o : mgrs.getOM()){
+            for(const auto& o : mgrs.getOrderModel()){
                 orders.emplace_back(o);
             }
             save_order.loadOrder(orders);
@@ -155,9 +119,9 @@ void MainWindow::onRadioButtonDBClicked(){
         auto dbpm = new DBM::ProductManager {"product",file_name};
         auto dbom = new DBM::OrderManager {*dbcm,*dbpm,"order",file_name};
         mgrs.reset();
-        mgrs.cm = dbcm;
-        mgrs.pm = dbpm;
-        mgrs.om = dbom;
+        mgrs.m_client_model = dbcm;
+        mgrs.m_product_model = dbpm;
+        mgrs.m_order_model = dbom;
         auto db_path_item = dash_board->tableWidgetDB->item(2,0);
         db_path_item->setText(file_name);
         QFileInfo fi{file_name};
@@ -178,26 +142,26 @@ void MainWindow::onRadioMemoryButtonClicked(){
         auto mpm = new PM::ProductManager;
         auto mom = new OM::OrderManager{*mcm, *mpm};
 
-        for(const auto& c : mgrs.getCM()){
+        for(const auto& c : mgrs.getClientModel()){
             bool re = mcm->addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
             if(!re)
                 throw ClientModel::ERROR_WHILE_LOADING{};
         }
-        for(const auto& p : mgrs.getPM()){
+        for(const auto& p : mgrs.getProductModel()){
             bool re = mpm->loadProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
             if(!re)
                 throw ProductModel::ERROR_WHILE_LOADING{};
         }
         vector<OM::Order> orders;
-        for(const auto& o : mgrs.getOM()){
+        for(const auto& o : mgrs.getOrderModel()){
             orders.emplace_back(o);
         }
         mom->loadOrder(orders);
 
         mgrs.reset();
-        mgrs.cm = mcm;
-        mgrs.pm = mpm;
-        mgrs.om = mom;
+        mgrs.m_client_model = mcm;
+        mgrs.m_product_model = mpm;
+        mgrs.m_order_model = mom;
         auto db_path_item = dash_board->tableWidgetDB->item(2,0);
         db_path_item->setText(tr("NONE"));
         dash_board->tableWidgetDB->item(1,0)->setText(tr("NONE"));
@@ -219,15 +183,15 @@ static int createListDialog(QWidget* parent, QStringList ls){       //저장이�
     for(const auto& e : ls){
         list->addItem(e);
     }
-    QPushButton* ok= new QPushButton("OK",dialog.get());
-    QPushButton* cancel = new QPushButton("cancel",dialog.get());
-    QVBoxLayout* v_layout = new QVBoxLayout;
-    v_layout->addWidget(list);
-    v_layout->addWidget(ok);
-    v_layout->addWidget(cancel);
-    dialog->setLayout(v_layout);
-    QObject::connect(ok,SIGNAL(clicked()),dialog.get(),SLOT(accept()));
-    QObject::connect(cancel,SIGNAL(clicked()),dialog.get(),SLOT(reject()));
+    QPushButton ok = QPushButton("OK",dialog.get());
+    QPushButton cancel = QPushButton("cancel",dialog.get());
+    QVBoxLayout v_layout;
+    v_layout.addWidget(list);
+    v_layout.addWidget(&ok);
+    v_layout.addWidget(&cancel);
+    dialog->setLayout(&v_layout);
+    QObject::connect(&ok,SIGNAL(clicked()),dialog.get(),SLOT(accept()));
+    QObject::connect(&cancel,SIGNAL(clicked()),dialog.get(),SLOT(reject()));
     dialog->exec();
     int result = dialog->result()!=QDialog::Accepted ? -1 : list->currentRow();
     return result;
@@ -242,18 +206,18 @@ void MainWindow::save(){                                                //파일
                 return;
             }
             DBM::ClientManager save_client{"save_client",file_name};
-            for(const auto& c : mgrs.getCM()){
+            for(const auto& c : mgrs.getClientModel()){
                 bool re = save_client.addClient(c.getId(),c.getName(),c.getPhoneNumber(),c.getAddress());
                 if(!re)
                     throw -1;
             }
             DBM::ProductManager save_product{"save_product",file_name};
-            for(const auto& p : mgrs.getPM()){
+            for(const auto& p : mgrs.getProductModel()){
                 save_product.loadProduct(p.getId(),p.getName(),p.getPrice(),p.getQty(),p.getDate());
             }
-            DBM::OrderManager save_order{mgrs.getCM(),mgrs.getPM(),"save_order",file_name};
+            DBM::OrderManager save_order{mgrs.getClientModel(),mgrs.getProductModel(),"save_order",file_name};
             vector<OM::Order> orders;
-            for(const auto& o : mgrs.getOM()){
+            for(const auto& o : mgrs.getOrderModel()){
                 orders.emplace_back(o);
             }
             save_order.loadOrder(orders);
@@ -273,19 +237,19 @@ void MainWindow::save(){                                                //파일
             switch(mode){
             case 0://client CSV로 export
                 out<<"client id,"<<"name,"<<"phone number,"<<"address"<<','<<endl;
-                for (const auto& c : mgrs.getCM()) {
+                for (const auto& c : mgrs.getClientModel()) {
                     out << c <<',' << endl;
                 }
                 break;
             case 1://product CSV로 export
                 out<<"product id,"<<"name,"<<"price,"<<"qty,"<<"date"<<','<<endl;
-                for (const auto& p : mgrs.getPM()){
+                for (const auto& p : mgrs.getProductModel()){
                     out << p <<',' << endl;
                 }
                 break;
             case 2://order CSV로 export
                 out<<"order id,"<<"buyer,"<<"date,"<<"product id,"<<"product name,"<<"product qty"<<"product date,"<<"..."<<endl;
-                for (const auto& o : mgrs.getOM()){
+                for (const auto& o : mgrs.getOrderModel()){
                     out << o <<',' << endl;
                 }
                 break;
@@ -326,9 +290,9 @@ void MainWindow::load(){
             for(const auto& o : load_order){
                 orders.emplace_back(o);
             }
-            mgrs.getCM().loadClient(clients);
-            mgrs.getPM().loadProduct(products);
-            mgrs.getOM().loadOrder(orders);
+            mgrs.getClientModel().loadClient(clients);
+            mgrs.getProductModel().loadProduct(products);
+            mgrs.getOrderModel().loadOrder(orders);
         }
             break;
         default:

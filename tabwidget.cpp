@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-#include "View/view.h"
+#include "View/GeneralView.h"
 
 void TabWidget::tabClosed(int index){
     blockSignals(true);

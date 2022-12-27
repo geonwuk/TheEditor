@@ -6,11 +6,11 @@
 
 #include "Network/server.h"
 #include "View/showview.h"
-
+#include "MainManager.h"
 using std::string;
 using CM::Client;
 
-ServerManager::ServerManager(Manager& mgr): mgr{mgr} {
+ServerManager::ServerManager(MainManager& mgr): mgr{mgr} {
     log_no=1;
     server=nullptr;
 }

@@ -16,7 +16,7 @@ NetClientModel을 새로 만들어야 함.
 
 class ShowChatView;
 class Server;
-class Manager;
+class MainManager;
 class ServerManager{
 public:
     struct ChatMessage{
@@ -40,7 +40,7 @@ private:
         const bool isOnline() const{ return is_online; }
         const CM::Client& getClient() const{ return self; }
     };
-    Manager& mgr;
+    MainManager& mgr;
     Server* server;
     std::vector<ChatMessage> logs;
     unsigned int log_no;
@@ -48,7 +48,7 @@ private:
     std::vector<ShowChatView*> chat_views;
     std::unordered_map<const QTcpSocket*, NetClient*> socket_to_nclient;
 public:
-    ServerManager(Manager&);
+    ServerManager(MainManager&);
     ~ServerManager();
     void setServer(Server* server_){server=server_;}
     void addClient(const CM::Client& c);

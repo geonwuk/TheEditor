@@ -18,7 +18,7 @@
 using std::string;
 using std::vector;
 
-ShowClientView::ShowClientView(Manager& mgr, Tree &tabs, const QIcon icon, const string label) : CView{mgr, tabs,icon,label}, id_col{0}
+ShowClientView::ShowClientView(MainManager& mgr, Tree &tabs, const QIcon icon, const string label) : ClinetView{mgr, tabs,icon,label}, id_col{0}
 {
     is_edit_mode=false;
     ui.setupUi(this);
@@ -55,7 +55,7 @@ void ShowClientView::fillContents(){
     table->clearContents();             //모든 항목을 지운다
     table->setRowCount(getSize());      //고객 수 만큼 행 크기를 설정한다
     int i=0;
-    for(const auto& client : mgr.getCM()){  //모든 고객에 대해 반복
+    for(const auto& client : mgr.getClientModel()){  //모든 고객에 대해 반복
         int j=0;    //행의 위치를 결정
         table->setItem(i,j++,ceateTableItem(client.getId().c_str(), client.getId().c_str()));       //고객 ID
         table->setItem(i,j++,new QTableWidgetItem(client.getName().c_str()));                       //고객 이름
@@ -118,7 +118,7 @@ void ShowClientView::returnPressed(){                       //엔터를 칠 경�
 bool ShowClientView::eraseClient(int row){
     auto item = table->item(row,id_col);
     const string id = item->data(Role::id).value<QString>().toStdString();
-    bool result = CView::eraseClient(id);
+    bool result = ClinetView::eraseClient(id);
     if(!result) return false;
     table->removeRow(row);
     table->update();
@@ -130,7 +130,7 @@ bool ShowClientView::eraseClient(int row){
 
 
 //Product_------------------------------------------------------------
-ShowProductView::ShowProductView(Manager& mgr, Tree &tabs, const QIcon icon, const string label) : PView{mgr, tabs,icon,label} {
+ShowProductView::ShowProductView(MainManager& mgr, Tree &tabs, const QIcon icon, const string label) : ProductView{mgr, tabs,icon,label} {
     ui.setupUi(this);
     table=ui.tableWidget;
     editBox=ui.checkBox;
@@ -177,7 +177,7 @@ void ShowProductView::fillContents(){
     table->clearContents();
     table->setRowCount(getSize());
     int i=0;
-    for(const auto& product : mgr.getPM()){
+    for(const auto& product : mgr.getProductModel()){
         int j =0;
         table->setItem(i,j++,ceateTableItem(product.getId().c_str(), product.getId().c_str()));
         table->setItem(i,j++,new QTableWidgetItem(product.getName().c_str()));
@@ -185,9 +185,9 @@ void ShowProductView::fillContents(){
         table->setItem(i,j++,new QTableWidgetItem(QString::number(product.getQty())));
         auto tm = product.getDate();
 
-        QDate date {tm.tm_year+1900,tm.tm_mon+1,tm.tm_mday};
-        QTime time {tm.tm_hour,tm.tm_min,tm.tm_sec};
-        QDateTime dateTime {date,time};
+        const QDate date {tm.tm_year+1900,tm.tm_mon+1,tm.tm_mday};
+        const QTime time {tm.tm_hour,tm.tm_min,tm.tm_sec};
+        const QDateTime dateTime {date,time};
         QDateTimeEdit* dt = View::getDateTimeEditWidget(dateTime,this);
         assert(connect(dt,&QDateTimeEdit::dateTimeChanged, this, [=]{
             cellChanged(i,j);
@@ -253,7 +253,7 @@ void ShowProductView::cellChanged(int row, int){
 bool ShowProductView::eraseProduct(int row){
     auto item = table->item(row,id_col);
     const string id = item->data(Role::id).value<QString>().toStdString();
-    bool result = PView::eraseProduct(id);
+    bool result = ProductView::eraseProduct(id);
 
     if(!result) return false;
     table->removeRow(row);
@@ -263,7 +263,7 @@ bool ShowProductView::eraseProduct(int row){
 
 
 //ORDER-------------------------------------------------------------------------------------------------------
-ShowOrderView::ShowOrderView(Manager& mgr, Tree &tabs, const QIcon icon, const string label) : OView{mgr, tabs,icon,label} {
+ShowOrderView::ShowOrderView(MainManager& mgr, Tree &tabs, const QIcon icon, const string label) : OrderView{mgr, tabs,icon,label} {
     ui.setupUi(this);
     orderTable=ui.orderTable;
     orderInfoTable=ui.orderInfoTable;
@@ -291,7 +291,7 @@ void ShowOrderView::fillContents() {
     orderTable->setRowCount((int)getSize());
 
     int i=0;
-    for(const auto& order : mgr.getOM()){
+    for(const auto& order : mgr.getOrderModel()){
         int j=0;
         orderTable->setItem(i,j++,ceateTableItem(QString::number(order.getID()).toStdString(), QString::number(order.getID()).toStdString()));
         auto client = order.getClient();
@@ -356,7 +356,7 @@ void ShowOrderView::update(){       //옵저버 패턴의 update
 //---------------------------------------------------
 
 
-ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const string label) : NView{mgr, tabs,icon,label}, smgr{mgr.getSM()}, producer{broker} {
+ShowChatView::ShowChatView(MainManager& mgr, Tree &tabs, const QIcon icon, const string label) : NetworkView{mgr, tabs,icon,label}, smgr{mgr.getServerManager()}, producer{broker} {
     ui.setupUi(this);
     log_thread=new LogThread(this);
     addCosumerButton= ui.addButton;
@@ -374,9 +374,9 @@ ShowChatView::ShowChatView(Manager& mgr, Tree &tabs, const QIcon icon, const str
     assert(connect(removeAction, &QAction::triggered, this, [&]{                         //Kick out 컨텍스트 메뉴를 클릭하면 강퇴하기
         for(auto& item : ui.clientTreeWidget->selectedItems()) {
             QString id = item->text(1);
-            mgr.getSM().dropClient(id.toStdString());
+            mgr.getServerManager().dropClient(id.toStdString());
         }
-        notify<NView>();
+        notify<NetworkView>();
     }));
     menu = new QMenu;
     menu->addAction(removeAction);
@@ -395,7 +395,7 @@ ShowChatView::~ShowChatView(){
     assert(disconnect(removeAction));
     assert(disconnect(removeAction));
 
-    mgr.getSM().unregisterChatView(this);
+    mgr.getServerManager().unregisterChatView(this);
     log_thread->terminate();
     log_thread->deleteLater();
 

@@ -5,23 +5,26 @@
 
 #include "View/AddView.h"
 #include "View/showview.h"
+#include "View/ViewFactory.h"
 
-Tree::Tree(MainWindow* mw, TabWidget *tw, int tabs_item_position) : QTreeWidget{mw}, mw{mw}, mgr{*mw->getMgr()}, tabs{nullptr}, tw{tw}, prev_tabs_index{0},  tabs_item_position{tabs_item_position}
+#include "mainwindow.h"
+
+Tree::Tree(MainWindow* mw, TabWidget *tab_window, int tabs_item_position) : QTreeWidget{mw}, m_main_window{mw}, m_manager{*mw->getMgr()}, tabs{nullptr}, m_tab_window{tab_window}, prev_tabs_index{0},  tabs_item_position{tabs_item_position}
 {
     setHeaderHidden(true);
     assert(connect(this, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)), this, SLOT(_itemDoubleClicked(QTreeWidgetItem*,int))));
-    assert(connect(tw, SIGNAL(tabCurrentChanged_(int)), SLOT(tabCurrnetChanged(int))));
+    assert(connect(m_tab_window, SIGNAL(tabCurrentChanged_(int)), SLOT(tabCurrnetChanged(int))));
 }
 
 Tree::~Tree(){
     assert(disconnect(this));
-    assert(disconnect(tw));
+//    assert(disconnect(tw)); -> TabWidget이 disconnect 해야함
     delete tabs;
     tabs=nullptr;
 }
 
 void Tree::tabCurrnetChanged(int index){
-    //활성화된 아이템의 텍스트를 볼드처리함으로써 무슨 탭이 활성화 됐는지 알려주는 기능을 구현합니다
+    //활성화된 아이템의 텍스트를 볼드처리함으로써$ 무슨 탭이 활성화 됐는지 알려주는 기능을 구현합니다
     if(index==-1)                                       //탭이 하나도 없을 경우 리턴
         return;
     auto tabs = topLevelItem(tabs_item_position);
@@ -47,23 +50,23 @@ void Tree::_itemDoubleClicked(QTreeWidgetItem* item, int){
 
 View* Tree::makeView(ViewFactory* factory){
     View* view = factory->make(this);                       //make: 팩토리 패턴의 생성자 추상화
-    mgr.attachObserver(view);                               //옵저버 패턴을 위해 생성 후 관리자에게 등록한다
+    m_manager.attachObserver(view);                               //옵저버 패턴을 위해 생성 후 관리자에게 등록한다
     return view;                                            //
 }
 
 void FocusTabItem::doubleClicked(){     //더블 클릭하면 QTabWidget에서 열려진 기존의 Tab을 현재 위젯으로 설정합니다
-    tree.tw->setCurrentWidget(view);
+    tree.m_tab_window->setCurrentWidget(view);
 }
 
 void ToTabItem::doubleClicked(){
     View* view = tree.makeView(view_factory);           //상태 패턴+팩토리 패턴 (view는 TabWidget에서 삭제)
-    tree.tw->addTab(view, view->icon, view->label.c_str());     //tree.tw <- QTabWidget을 상속받는 탭 위젯으로 탭에 추가
-    tree.tw->setCurrentWidget(view);
+    tree.m_tab_window->addTab(view, view->icon, view->label.c_str());     //tree.tw <- QTabWidget을 상속받는 탭 위젯으로 탭에 추가
+    tree.m_tab_window->setCurrentWidget(view);
 }
 
 ManagementTree::ManagementTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,3} {
-    QList<ViewFactory*> add_views { new ViewMaker<AddClientView>{mgr,QIcon(":/Icons/client.png"),tr("Add Client").toStdString()},new ViewMaker<AddProductView>{mgr,QIcon(":/Icons/product.png"),tr("Add Product").toStdString()},new ViewMaker<AddOrderView>{mgr,QIcon(":/Icons/order.png"),tr("Add Order").toStdString()}};
-    QList<ViewFactory*> show_views { new ViewMaker<ShowClientView>{mgr,QIcon(":/Icons/client.png"),tr("Show Client").toStdString()},new ViewMaker<ShowProductView>{mgr,QIcon(":/Icons/product.png"),tr("Show Product").toStdString()},new ViewMaker<ShowOrderView>{mgr,QIcon(":/Icons/order.png"),tr("Show Order").toStdString()}};
+    QList<ViewFactory*> add_views { new ViewMaker<AddClientView>{m_manager,QIcon(":/Icons/client.png"),tr("Add Client").toStdString()},new ViewMaker<AddProductView>{m_manager,QIcon(":/Icons/product.png"),tr("Add Product").toStdString()},new ViewMaker<AddOrderView>{m_manager,QIcon(":/Icons/order.png"),tr("Add Order").toStdString()}};
+    QList<ViewFactory*> show_views { new ViewMaker<ShowClientView>{m_manager,QIcon(":/Icons/client.png"),tr("Show Client").toStdString()},new ViewMaker<ShowProductView>{m_manager,QIcon(":/Icons/product.png"),tr("Show Product").toStdString()},new ViewMaker<ShowOrderView>{m_manager,QIcon(":/Icons/order.png"),tr("Show Order").toStdString()}};
     //add_view: 데이터 추가하는 View 클래스 모음
     //show_view: 데이터를 보여주고 수정하는 View 클래스 모음
 
@@ -92,8 +95,8 @@ ManagementTree::ManagementTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,3} {
 }
 
 NetworkTree::NetworkTree(MainWindow* mw, TabWidget* tw) : Tree{mw,tw,1}{
-    QList<ViewFactory*> add_views { new ViewMaker<AddParticipantView>{mgr,QIcon(),tr("Add Paticipants").toStdString()}};
-    QList<ViewFactory*> show_views {new ViewMaker<ShowChatView>{mgr,QIcon(":/Icons/chat.png"),tr("Show Chat").toStdString()}};
+    QList<ViewFactory*> add_views { new ViewMaker<AddParticipantView>{m_manager,QIcon(),tr("Add Paticipants").toStdString()}};
+    QList<ViewFactory*> show_views {new ViewMaker<ShowChatView>{m_manager,QIcon(":/Icons/chat.png"),tr("Show Chat").toStdString()}};
     QStringList top_ls = {tr("Network Management")};
 
     int i=0;

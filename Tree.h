@@ -1,48 +1,29 @@
 #ifndef TREE_H
 #define TREE_H
+
 #include <QTreeWidget>
 
+class ViewFactory;
 class MainWindow;
 class View;
-class Manager;
-class Tree;
+class MainManager;
 class TabWidget;
-class ViewFactory {             //팩토리 패턴을 위한 클래스입니다. QTabWidget의 이름과 아이콘을 멤버로 갖습니다. make 함수를 상속받는 클래스가 정의하도록 하였습니다
-protected:
-    const std::string title;
-    const QIcon icon;
-public:
-    ViewFactory(const QIcon& icon, const std::string title) : title{title}, icon{icon} {}
-    virtual ~ViewFactory(){}
-    virtual View* make(Tree*)=0;                    //ViewFactory 클래스를 상속하는 클래스는 make 함수를 재정의 해야하며 View*를 리턴해야 합니다. 이 View는 QTabWidget에 쓰입니다
-    std::string getTitle() const { return title; }
-    const QIcon& getIcon() const { return icon; }
-};
-template<typename T>
-class ViewMaker : public ViewFactory{       //addView, ShowView에 있는 클래스를 생성하는 클래스입니다. 팩토리 구현 부
-    Manager& mgr;
-public:
-    ViewMaker(Manager& mgr,const QIcon& icon,std::string title) : mgr{mgr}, ViewFactory{icon,title} {}
-    ~ViewMaker() override {}
-    View* make(Tree* tree) override { return new T{mgr,*tree,icon,title}; }   //addView, showView 모두 같은 인자로 생성가능 합니다
-};
-
 
 class Tree : public QTreeWidget {
     Q_OBJECT
     friend class ToTabItem;
     friend class FocusTabItem;
 public:
-    ~Tree();
     Tree(MainWindow* , TabWidget* tw, int tabs_item_position);
+    ~Tree();
     QTreeWidgetItem& getTabs() const {return *tabs;}
     View* makeView(ViewFactory* factory);
 protected:
-    MainWindow* mw;             //Main이 삭제
+    MainWindow* m_main_window;             //Main이 삭제
     void tabCurrnetChanged(int index, int top_level_item_position);
-    Manager& mgr;
+    MainManager& m_manager;
     QTreeWidgetItem* tabs;      //소멸자에서 삭제  (트리에서 가장 밑에 있는 ToplevelItem)
-    TabWidget* tw;              //MainWindow에서 삭제함
+    TabWidget* m_tab_window;              //MainWindow에서 삭제함
     int prev_tabs_index;        //트리에서 가장 밑에 있는 ToplevleItem의 자식 중에서 현재 선택된
     int tabs_item_position;
 public slots:
